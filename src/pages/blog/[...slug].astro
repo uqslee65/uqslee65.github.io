@@ -1,0 +1,136 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog');
+  return posts.map(post => ({
+    params: { slug: post.id },
+    props: { post },
+  }));
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+const readingTime = Math.max(1, Math.round(post.body!.split(/\s+/).length / 200));
+---
+
+<BaseLayout title={`${post.data.title} — Monius`} description={post.data.excerpt}>
+  <article class="blog-post">
+    <header class="post-header">
+      <time class="post-date">
+        {new Date(post.data.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+      </time>
+      <span class="post-reading">{readingTime} min read</span>
+      <h1 class="post-title">{post.data.title}</h1>
+      {post.data.tags.length > 0 && (
+        <div class="post-tags">
+          {post.data.tags.map((t: string) => <span class="tag">{t}</span>)}
+        </div>
+      )}
+    </header>
+    <div class="post-content">
+      <Content />
+    </div>
+    <footer class="post-footer">
+      <a href="/blog">&larr; All posts</a>
+    </footer>
+  </article>
+</BaseLayout>
+
+<style>
+  .blog-post {
+    max-width: 42rem;
+    margin: 0 auto;
+  }
+  .post-header {
+    padding: 2rem 0 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+  .post-date {
+    font-size: 0.8rem;
+    color: var(--fg-3);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .post-reading {
+    font-size: 0.8rem;
+    color: var(--fg-3);
+    margin-left: 1rem;
+  }
+  .post-title {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--fg);
+    line-height: 1.2;
+    margin-top: 0.75rem;
+  }
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.75rem;
+  }
+  .post-content {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--fg);
+  }
+  .post-content :global(h2) {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .post-content :global(h3) {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  .post-content :global(p) {
+    margin-bottom: 1.25rem;
+  }
+  .post-content :global(ul), .post-content :global(ol) {
+    margin-bottom: 1.25rem;
+    padding-left: 1.5rem;
+  }
+  .post-content :global(li) {
+    margin-bottom: 0.35rem;
+  }
+  .post-content :global(code) {
+    background: var(--stat-bg);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.875em;
+  }
+  .post-content :global(pre) {
+    background: var(--stat-bg);
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    overflow-x: auto;
+    margin-bottom: 1.25rem;
+  }
+  .post-content :global(pre code) {
+    background: none;
+    padding: 0;
+  }
+  .post-content :global(blockquote) {
+    border-left: 3px solid var(--accent);
+    padding-left: 1rem;
+    color: var(--fg-2);
+    margin-bottom: 1.25rem;
+  }
+  .post-content :global(.katex-display) {
+    margin: 1.5rem 0;
+    overflow-x: auto;
+  }
+  .post-footer {
+    border-top: 1px solid var(--border);
+    padding-top: 1.5rem;
+    margin-top: 3rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+</style>

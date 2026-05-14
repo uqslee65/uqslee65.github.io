@@ -1,0 +1,59 @@
+---
+const links = [
+  { href: '/cv.pdf', label: 'CV', icon: '&#128196;' },
+  { href: 'https://github.com/Mon-ius', label: 'GitHub', icon: '&#128187;' },
+  { href: 'mailto:contact@m0nius.com', label: 'Email', icon: '&#9993;' },
+  { href: 'https://cloud.umami.is/share/MtURVJimHe1g6wJJ', label: 'Analytics', icon: '&#128202;' },
+];
+---
+
+<div class="card quick-links">
+  <h3 class="ql-heading">Quick Links</h3>
+  <div class="ql-grid">
+    {links.map(link => (
+      <a href={link.href} target={link.href.startsWith('/') ? undefined : '_blank'} rel={link.href.startsWith('/') ? undefined : 'noopener'} class="ql-item">
+        <span class="ql-icon" set:html={link.icon} />
+        <span class="ql-label">{link.label}</span>
+      </a>
+    ))}
+  </div>
+</div>
+
+<style>
+  .quick-links {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .ql-heading {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--fg-2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .ql-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .ql-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    background: var(--stat-bg);
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--fg);
+    transition: background 0.15s;
+  }
+  .ql-item:hover {
+    background: var(--border);
+    color: var(--accent);
+  }
+  .ql-icon {
+    font-size: 1rem;
+  }
+</style>

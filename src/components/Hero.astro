@@ -1,0 +1,42 @@
+---
+interface Props {
+  name: string;
+  title: string;
+  tagline: string;
+}
+const { name, title, tagline } = Astro.props;
+---
+
+<section class="hero fade-in">
+  <h1 class="hero-name">{name}</h1>
+  <p class="hero-title">{title}</p>
+  <p class="hero-tagline">{tagline}</p>
+</section>
+
+<style>
+  .hero {
+    text-align: center;
+    padding: 3rem 0 2rem;
+  }
+  .hero-name {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: var(--fg);
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+  .hero-title {
+    font-size: 1.1rem;
+    color: var(--accent);
+    font-weight: 600;
+    margin-top: 0.5rem;
+  }
+  .hero-tagline {
+    font-size: 0.95rem;
+    color: var(--fg-2);
+    margin-top: 0.5rem;
+    max-width: 36rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+</style>

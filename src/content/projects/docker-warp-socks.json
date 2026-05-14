@@ -1,0 +1,7 @@
+{
+  "name": "Docker-Warp-Socks",
+  "description": "Containerized Cloudflare WARP client providing SOCKS5 proxy in Docker.",
+  "repo": "https://github.com/Mon-ius/Docker-Warp-Socks",
+  "tags": ["Docker", "networking", "Cloudflare"],
+  "order": 6
+}

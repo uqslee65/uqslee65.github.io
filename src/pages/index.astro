@@ -1,0 +1,90 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import StatsBar from '../components/StatsBar.tsx';
+import ProjectCard from '../components/ProjectCard.astro';
+import BlogCard from '../components/BlogCard.astro';
+import QuickLinks from '../components/QuickLinks.astro';
+import { getCollection } from 'astro:content';
+
+const projects = await getCollection('projects');
+const featured = projects
+  .filter(p => p.data.featured)
+  .sort((a, b) => a.data.order - b.data.order)[0];
+
+const blogPosts = await getCollection('blog');
+const latestPost = blogPosts.sort((a, b) =>
+  new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+)[0];
+---
+
+<BaseLayout title="Monius — PhD Finance Researcher">
+  <Hero
+    name="Monius"
+    title="PhD Finance Researcher"
+    tagline="Experimental Economics, Market Microstructure, LLM Agents"
+  />
+
+  <StatsBar client:visible />
+
+  <div class="dashboard-grid">
+    {featured && (
+      <ProjectCard
+        name={featured.data.name}
+        description={featured.data.description}
+        url={featured.data.url}
+        repo={featured.data.repo}
+        tags={featured.data.tags}
+        stars={featured.data.stars}
+        featured={true}
+      />
+    )}
+
+    {latestPost ? (
+      <BlogCard
+        title={latestPost.data.title}
+        date={latestPost.data.date}
+        excerpt={latestPost.data.excerpt}
+        slug={latestPost.id}
+        tags={latestPost.data.tags}
+      />
+    ) : (
+      <div class="card placeholder-card">
+        <h3 class="placeholder-heading">Blog</h3>
+        <p class="placeholder-text">Research notes and project writeups coming soon.</p>
+      </div>
+    )}
+
+    <QuickLinks />
+  </div>
+</BaseLayout>
+
+<style>
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 768px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .placeholder-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .placeholder-heading {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--fg-2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .placeholder-text {
+    font-size: 0.875rem;
+    color: var(--fg-3);
+  }
+</style>

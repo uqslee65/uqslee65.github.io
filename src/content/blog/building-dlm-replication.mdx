@@ -1,0 +1,36 @@
+---
+title: "Building a Browser-Based Replication of DLM (2005)"
+date: "2025-05-01"
+tags: ["experimental-economics", "LLM", "replication"]
+excerpt: "How I built an interactive browser-based replication of Dufwenberg, Lindqvist & Moore's asset market bubble experiment with AI agents."
+featured: true
+---
+
+## Motivation
+
+Dufwenberg, Lindqvist & Moore (AER 2005) demonstrated that asset market bubbles can arise even among agents with common knowledge of fundamental values. Replicating this result with modern LLM agents raises a natural question: do language models exhibit the same behavioral biases that drive human bubble formation?
+
+## Architecture
+
+The experiment runs entirely in the browser — zero server dependencies. Key design choices:
+
+- **Canvas-based charts** instead of D3 or Chart.js for minimal bundle size
+- **Seeded PRNG** for reproducible experiment runs
+- **KaTeX** for inline math rendering of utility functions and belief update equations
+- **Three-plan factorial design**: Plan I (algorithmic), Plan II (LLM + utility forms), Plan III (LLM + risk label)
+
+## The Belief Update Mechanism
+
+Each agent forms a prior over fundamental value using a weighted combination of their private signal and market history. The posterior belief is:
+
+$$
+V_{i,t}^{\text{post}} = \omega_i \cdot V_{i,t}^{\text{prior}} + (1 - \omega_i) \cdot \bar{m}_t
+$$
+
+where $\omega_i$ is the agent's stubbornness parameter and $\bar{m}_t$ is the mean market price at period $t$.
+
+## Results Preview
+
+The three-plan comparison reveals distinct bubble dynamics. Algorithmic agents (Plan I) produce bubbles closest to the original DLM findings, while LLM agents show more heterogeneous behavior depending on how risk preferences are communicated.
+
+Full interactive results are available at the [live demo](https://assets.m0nius.com).

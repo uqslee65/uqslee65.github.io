@@ -1,0 +1,9 @@
+tunnel: phd-api
+credentials-file: /root/.cloudflared/<tunnel-id>.json
+
+ingress:
+  - hostname: api.m0nius.com
+    service: http://localhost:3000
+  - hostname: analytics.m0nius.com
+    service: http://localhost:3001
+  - service: http_status:404

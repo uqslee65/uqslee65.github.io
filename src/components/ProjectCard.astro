@@ -1,0 +1,74 @@
+---
+interface Props {
+  name: string;
+  description: string;
+  url?: string;
+  repo?: string;
+  tags?: string[];
+  stars?: number;
+  featured?: boolean;
+}
+const { name, description, url, repo, tags = [], stars, featured = false } = Astro.props;
+---
+
+<div class:list={['card', 'project-card', { featured }]}>
+  <div class="project-header">
+    <h3 class="project-name">{name}</h3>
+    {stars !== undefined && <span class="project-stars">&#9733; {stars}</span>}
+  </div>
+  <p class="project-desc">{description}</p>
+  {tags.length > 0 && (
+    <div class="project-tags">
+      {tags.map(t => <span class="tag">{t}</span>)}
+    </div>
+  )}
+  <div class="project-links">
+    {url && <a href={url} target="_blank" rel="noopener">Live Demo</a>}
+    {repo && <a href={repo} target="_blank" rel="noopener">GitHub</a>}
+  </div>
+</div>
+
+<style>
+  .project-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  .project-card.featured {
+    border-color: var(--accent);
+    border-width: 2px;
+  }
+  .project-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .project-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--fg);
+  }
+  .project-stars {
+    font-size: 0.8rem;
+    color: var(--fg-2);
+    white-space: nowrap;
+  }
+  .project-desc {
+    font-size: 0.875rem;
+    color: var(--fg-2);
+    line-height: 1.5;
+  }
+  .project-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .project-links {
+    display: flex;
+    gap: 1rem;
+    margin-top: auto;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+</style>
