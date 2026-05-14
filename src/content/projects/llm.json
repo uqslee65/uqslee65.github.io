@@ -1,7 +1,0 @@
-{
-  "name": "LLM Agent Markets",
-  "description": "LLM-powered autonomous agents participating in experimental asset markets.",
-  "repo": "https://github.com/Mon-ius/llm",
-  "tags": ["LLM", "autonomous-agents", "finance"],
-  "order": 4
-}

@@ -1,7 +1,0 @@
-{
-  "name": "Stock Analysis",
-  "description": "Quantitative stock analysis tools and data pipelines for financial research.",
-  "repo": "https://github.com/Mon-ius/stock",
-  "tags": ["finance", "data-analysis", "Python"],
-  "order": 5
-}

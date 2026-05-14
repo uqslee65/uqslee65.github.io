@@ -1,7 +1,0 @@
-{
-  "name": "Deception Game",
-  "description": "Experimental economics replication studying deception and strategic communication in games.",
-  "repo": "https://github.com/Mon-ius/lying",
-  "tags": ["experimental-economics", "game-theory"],
-  "order": 2
-}

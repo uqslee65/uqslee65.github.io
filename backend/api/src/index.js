@@ -4,9 +4,9 @@ import { serve } from '@hono/node-server';
 
 const app = new Hono();
 
-const GITHUB_USER = process.env.GITHUB_USER || 'Mon-ius';
+const GITHUB_USER = process.env.GITHUB_USER || 'lszeray';
 const FORMULAS_URL = process.env.FORMULAS_URL || 'http://formulas:8000';
-const CORS_ORIGIN = process.env.CORS_ORIGIN || 'https://Mon-ius.github.io';
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'https://lszeray.github.io';
 
 app.use('/api/*', cors({ origin: CORS_ORIGIN }));
 

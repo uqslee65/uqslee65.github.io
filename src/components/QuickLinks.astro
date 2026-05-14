@@ -1,9 +1,9 @@
 ---
 const links = [
-  { href: '/cv.pdf', label: 'CV', icon: '&#128196;' },
-  { href: 'https://github.com/Mon-ius', label: 'GitHub', icon: '&#128187;' },
-  { href: 'mailto:contact@m0nius.com', label: 'Email', icon: '&#9993;' },
-  { href: 'https://cloud.umami.is/share/MtURVJimHe1g6wJJ', label: 'Analytics', icon: '&#128202;' },
+  { href: 'https://github.com/lszeray', label: 'GitHub', icon: '&#128187;' },
+  { href: 'mailto:josh@example.com', label: 'Email', icon: '&#9993;' },
+  { href: '/about#connect', label: 'Connect', icon: '&#128172;' },
+  { href: '/research', label: 'Projects', icon: '&#128300;' },
 ];
 ---
 
@@ -11,7 +11,7 @@ const links = [
   <h3 class="ql-heading">Quick Links</h3>
   <div class="ql-grid">
     {links.map(link => (
-      <a href={link.href} target={link.href.startsWith('/') ? undefined : '_blank'} rel={link.href.startsWith('/') ? undefined : 'noopener'} class="ql-item">
+      <a href={link.href} target={link.href.startsWith('http') ? '_blank' : undefined} rel={link.href.startsWith('http') ? 'noopener' : undefined} class="ql-item">
         <span class="ql-icon" set:html={link.icon} />
         <span class="ql-label">{link.label}</span>
       </a>

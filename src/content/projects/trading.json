@@ -1,7 +1,0 @@
-{
-  "name": "Trading Simulator",
-  "description": "Interactive trading simulation platform for market microstructure research.",
-  "repo": "https://github.com/Mon-ius/trading",
-  "tags": ["market-microstructure", "simulation"],
-  "order": 3
-}

@@ -3,24 +3,12 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/Hero.astro';
 import StatsBar from '../components/StatsBar.tsx';
 import ProjectCard from '../components/ProjectCard.astro';
-import BlogCard from '../components/BlogCard.astro';
 import QuickLinks from '../components/QuickLinks.astro';
-import { getCollection } from 'astro:content';
-
-const projects = await getCollection('projects');
-const featured = projects
-  .filter(p => p.data.featured)
-  .sort((a, b) => a.data.order - b.data.order)[0];
-
-const blogPosts = await getCollection('blog');
-const latestPost = blogPosts.sort((a, b) =>
-  new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
-)[0];
 ---
 
-<BaseLayout title="Monius — PhD Finance Researcher">
+<BaseLayout title="Josh — PhD Finance Researcher">
   <Hero
-    name="Monius"
+    name="Josh"
     title="PhD Finance Researcher"
     tagline="Experimental Economics, Market Microstructure, LLM Agents"
   />
@@ -28,32 +16,18 @@ const latestPost = blogPosts.sort((a, b) =>
   <StatsBar client:visible />
 
   <div class="dashboard-grid">
-    {featured && (
-      <ProjectCard
-        name={featured.data.name}
-        description={featured.data.description}
-        url={featured.data.url}
-        repo={featured.data.repo}
-        tags={featured.data.tags}
-        stars={featured.data.stars}
-        featured={true}
-      />
-    )}
+    <ProjectCard
+      name="DLM (2005) Replication"
+      description="Browser-based replication of the Dufwenberg, Lindqvist & Moore asset market bubble experiment with AI agent extensions. Three-plan factorial with interactive dashboard."
+      tags={['experimental-economics', 'LLM', 'market-microstructure']}
+      featured={true}
+    />
 
-    {latestPost ? (
-      <BlogCard
-        title={latestPost.data.title}
-        date={latestPost.data.date}
-        excerpt={latestPost.data.excerpt}
-        slug={latestPost.id}
-        tags={latestPost.data.tags}
-      />
-    ) : (
-      <div class="card placeholder-card">
-        <h3 class="placeholder-heading">Blog</h3>
-        <p class="placeholder-text">Research notes and project writeups coming soon.</p>
-      </div>
-    )}
+    <div class="card placeholder-card">
+      <h3 class="placeholder-heading">Latest Research</h3>
+      <p class="placeholder-text">Research notes and project writeups coming soon.</p>
+      <a href="/research" class="placeholder-link">View all projects &rarr;</a>
+    </div>
 
     <QuickLinks />
   </div>
@@ -86,5 +60,10 @@ const latestPost = blogPosts.sort((a, b) =>
   .placeholder-text {
     font-size: 0.875rem;
     color: var(--fg-3);
+  }
+  .placeholder-link {
+    margin-top: auto;
+    font-size: 0.85rem;
+    font-weight: 600;
   }
 </style>

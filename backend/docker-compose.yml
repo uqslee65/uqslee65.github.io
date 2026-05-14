@@ -30,10 +30,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      GITHUB_USER: Mon-ius
+      GITHUB_USER: lszeray
       UMAMI_URL: http://umami:3000
       FORMULAS_URL: http://formulas:8000
-      CORS_ORIGIN: https://Mon-ius.github.io
+      CORS_ORIGIN: https://lszeray.github.io
     depends_on:
       - formulas
     restart: unless-stopped

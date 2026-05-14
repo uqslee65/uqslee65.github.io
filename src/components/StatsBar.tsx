@@ -37,9 +37,9 @@ function AnimatedNumber({ target, duration = 1200 }: { target: number; duration?
 }
 
 const defaultStats: Stat[] = [
-  { value: 6, label: 'Repositories' },
-  { value: 1, label: 'Papers' },
-  { value: 247, label: 'Stars' },
+  { value: 4, label: 'Projects' },
+  { value: 3, label: 'Replications' },
+  { value: 1, label: 'In Progress' },
 ];
 
 export default function StatsBar({ stats = defaultStats }: { stats?: Stat[] }) {

@@ -1,0 +1,238 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="About — Josh">
+  <h1 class="page-heading">About</h1>
+
+  <section class="about-intro card">
+    <p>PhD Finance researcher focused on experimental economics, market microstructure, and LLM agents. Currently replicating asset market bubble experiments with AI-powered autonomous traders.</p>
+  </section>
+
+  <section class="cv-section">
+    <h2 class="section-heading">Experience</h2>
+
+    <details class="cv-item" open>
+      <summary class="cv-summary">
+        <div class="cv-header">
+          <span class="cv-role">PhD Researcher — Finance</span>
+          <span class="cv-date">Present</span>
+        </div>
+        <span class="cv-org">University</span>
+      </summary>
+      <div class="cv-details">
+        <p>Research focus on experimental economics and market microstructure. Building browser-based replications of classic experiments (DLM 2005) with AI agent extensions. Exploring how LLM agents behave in asset markets under different belief-update mechanisms.</p>
+      </div>
+    </details>
+
+    <details class="cv-item">
+      <summary class="cv-summary">
+        <div class="cv-header">
+          <span class="cv-role">Your Previous Role</span>
+          <span class="cv-date">2022 — 2024</span>
+        </div>
+        <span class="cv-org">Company / Institution</span>
+      </summary>
+      <div class="cv-details">
+        <p>Description of your work, responsibilities, and achievements. Update this with your actual experience.</p>
+      </div>
+    </details>
+
+    <details class="cv-item">
+      <summary class="cv-summary">
+        <div class="cv-header">
+          <span class="cv-role">Another Role</span>
+          <span class="cv-date">2020 — 2022</span>
+        </div>
+        <span class="cv-org">Company / Institution</span>
+      </summary>
+      <div class="cv-details">
+        <p>Description of your work, responsibilities, and achievements. Update this with your actual experience.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="cv-section">
+    <h2 class="section-heading">Education</h2>
+
+    <details class="cv-item" open>
+      <summary class="cv-summary">
+        <div class="cv-header">
+          <span class="cv-role">PhD Finance</span>
+          <span class="cv-date">Present</span>
+        </div>
+        <span class="cv-org">University</span>
+      </summary>
+      <div class="cv-details">
+        <p>Thesis focus, coursework highlights, or relevant details.</p>
+      </div>
+    </details>
+
+    <details class="cv-item">
+      <summary class="cv-summary">
+        <div class="cv-header">
+          <span class="cv-role">Previous Degree</span>
+          <span class="cv-date">Year</span>
+        </div>
+        <span class="cv-org">University</span>
+      </summary>
+      <div class="cv-details">
+        <p>Degree details, honors, relevant coursework.</p>
+      </div>
+    </details>
+  </section>
+
+  <section class="cv-section">
+    <h2 class="section-heading">Skills</h2>
+    <div class="skills-grid">
+      <span class="tag">Python</span>
+      <span class="tag">JavaScript</span>
+      <span class="tag">SymPy</span>
+      <span class="tag">KaTeX</span>
+      <span class="tag">Experimental Design</span>
+      <span class="tag">Market Microstructure</span>
+      <span class="tag">LLM Agents</span>
+      <span class="tag">Data Analysis</span>
+      <span class="tag">Docker</span>
+    </div>
+  </section>
+
+  <section class="cv-section" id="connect">
+    <h2 class="section-heading">Connect</h2>
+    <div class="connect-grid">
+      <a href="https://github.com/lszeray" target="_blank" rel="noopener" class="connect-item card">
+        <span class="connect-icon">&#128187;</span>
+        <span class="connect-label">GitHub</span>
+        <span class="connect-handle">@lszeray</span>
+      </a>
+      <a href="mailto:josh@example.com" class="connect-item card">
+        <span class="connect-icon">&#9993;</span>
+        <span class="connect-label">Email</span>
+        <span class="connect-handle">josh@example.com</span>
+      </a>
+      <a href="https://linkedin.com/in/" target="_blank" rel="noopener" class="connect-item card">
+        <span class="connect-icon">&#128101;</span>
+        <span class="connect-label">LinkedIn</span>
+        <span class="connect-handle">Add your profile</span>
+      </a>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .page-heading {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--fg);
+    margin-bottom: 1.5rem;
+    padding-top: 1rem;
+  }
+  .about-intro {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--fg-2);
+    margin-bottom: 2rem;
+  }
+  .cv-section {
+    margin-bottom: 2rem;
+  }
+  .section-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--fg);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .cv-item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 0.75rem;
+    background: var(--bg-card);
+  }
+  .cv-summary {
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    list-style: none;
+  }
+  .cv-summary::-webkit-details-marker {
+    display: none;
+  }
+  .cv-summary::marker {
+    content: '';
+  }
+  .cv-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+  }
+  .cv-role {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .cv-date {
+    font-size: 0.8rem;
+    color: var(--fg-3);
+    white-space: nowrap;
+  }
+  .cv-org {
+    font-size: 0.85rem;
+    color: var(--accent);
+    margin-top: 0.15rem;
+    display: block;
+  }
+  .cv-details {
+    padding: 0 1.25rem 1rem;
+    font-size: 0.875rem;
+    color: var(--fg-2);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    margin-top: 0;
+    padding-top: 0.75rem;
+  }
+  .cv-item[open] .cv-summary {
+    padding-bottom: 0.75rem;
+  }
+  .skills-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .skills-grid .tag {
+    padding: 0.3rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  .connect-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+  @media (max-width: 640px) {
+    .connect-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .connect-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+  }
+  .connect-icon {
+    font-size: 1.5rem;
+  }
+  .connect-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--fg);
+  }
+  .connect-handle {
+    font-size: 0.8rem;
+    color: var(--fg-3);
+  }
+</style>

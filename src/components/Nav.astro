@@ -2,14 +2,14 @@
 const { pathname } = Astro.url;
 const links = [
   { href: '/', label: 'Dashboard' },
-  { href: '/library', label: 'Library' },
-  { href: '/blog', label: 'Blog' },
+  { href: '/research', label: 'Research' },
+  { href: '/about', label: 'About' },
 ];
 ---
 
 <nav class="site-nav">
   <div class="nav-inner">
-    <a href="/" class="nav-brand">M</a>
+    <a href="/" class="nav-brand">J</a>
     <div class="nav-links">
       {links.map(link => (
         <a
@@ -20,7 +20,10 @@ const links = [
         </a>
       ))}
     </div>
-    <button id="theme-toggle" class="theme-btn" title="Toggle theme" aria-label="Toggle theme">◑</button>
+    <div class="nav-right">
+      <a href="/about#connect" class="connect-btn">Connect</a>
+      <button id="theme-toggle" class="theme-btn" title="Toggle theme" aria-label="Toggle theme">◑</button>
+    </div>
   </div>
 </nav>
 
@@ -45,7 +48,6 @@ const links = [
   .nav-brand {
     font-size: 1.25rem;
     font-weight: 700;
-    color: var(--fg);
     width: 2rem;
     height: 2rem;
     display: flex;
@@ -75,8 +77,26 @@ const links = [
     color: var(--accent);
     border-bottom-color: var(--accent);
   }
-  .theme-btn {
+  .nav-right {
     margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+  .connect-btn {
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 6px;
+    background: var(--accent);
+    color: white;
+    transition: background 0.15s;
+  }
+  .connect-btn:hover {
+    background: var(--accent-hover);
+    color: white;
+  }
+  .theme-btn {
     background: none;
     border: 1px solid var(--border);
     border-radius: 6px;
