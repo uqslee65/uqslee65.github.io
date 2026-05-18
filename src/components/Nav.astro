@@ -3,7 +3,6 @@ const { pathname } = Astro.url;
 const links = [
   { href: '/', label: 'Dashboard' },
   { href: '/research', label: 'Research' },
-  { href: '/about', label: 'About' },
 ];
 ---
 
@@ -21,7 +20,7 @@ const links = [
       ))}
     </div>
     <div class="nav-right">
-      <a href="/about#connect" class="connect-btn">Connect</a>
+      <a href="/#connect" class="connect-btn">Connect</a>
       <button id="theme-toggle" class="theme-btn" title="Toggle theme" aria-label="Toggle theme">◑</button>
     </div>
   </div>

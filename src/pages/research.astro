@@ -1,76 +1,42 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import TabBar from '../components/TabBar.astro';
-import ProjectCard from '../components/ProjectCard.astro';
 ---
 
 <BaseLayout title="Research — Josh">
   <h1 class="page-heading">Research &amp; Projects</h1>
 
-  <TabBar tabs={['Projects', 'Slides']} />
+  <TabBar tabs={['Projects', 'Replications']} />
 
   <div data-tab-content="Projects" class="tab-panel">
-    <div class="project-grid">
-      <ProjectCard
-        name="DLM (2005) Replication — Virtual Trading Platform"
-        description="Browser-based replication of Dufwenberg, Lindqvist & Moore (AER 2005) asset market bubble experiment. Three-plan factorial: algorithmic belief update, LLM + utility forms, LLM + risk label. Interactive dashboard with 12 chart figures, agent cards, order book, trade feed, and replay."
-        tags={['experimental-economics', 'market-microstructure', 'LLM', 'replication']}
-        featured={true}
-      />
-      <ProjectCard
-        name="Deception Game Experiment"
-        description="Experimental economics replication studying deception and strategic communication in games."
-        tags={['experimental-economics', 'game-theory']}
-      />
-      <ProjectCard
-        name="Trading Simulator"
-        description="Interactive trading simulation platform for market microstructure research."
-        tags={['market-microstructure', 'simulation']}
-      />
-      <ProjectCard
-        name="LLM Agent Markets"
-        description="LLM-powered autonomous agents participating in experimental asset markets."
-        tags={['LLM', 'autonomous-agents', 'finance']}
-      />
+    <div class="timeline">
+      <div class="timeline-entry card">
+        <div class="timeline-date">2025–present</div>
+        <div class="timeline-body">
+          <div class="project-title">DLM (2005) Virtual Trading Platform</div>
+          <p class="project-desc">
+            Browser-based replication of Dufwenberg, Lindqvist &amp; Moore (AER 2005)
+            asset market bubble experiment. Three-plan factorial: algorithmic belief
+            update, LLM + utility forms, LLM + risk label. Interactive dashboard
+            with 12 chart figures, agent cards, order book, trade feed, and replay.
+          </p>
+          <div class="tag-row">
+            <span class="tag">experimental-economics</span>
+            <span class="tag">market-microstructure</span>
+            <span class="tag">LLM</span>
+            <span class="tag">replication</span>
+          </div>
+          <div class="project-footer">
+            <span class="slides-label">Slides: <span class="muted">N/A</span></span>
+            <a href="/simulator" class="launch-link">Launch Simulator →</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div data-tab-content="Slides" class="tab-panel" style="display:none">
-    <div class="slides-section">
-      <div class="card slide-card">
-        <h3 class="slide-title">DLM Replication — Methodology &amp; Results</h3>
-        <p class="slide-desc">22-slide deck covering the DLM (2005) replication methodology, Plan I/II/III factorial design, and results.</p>
-        <div class="slide-placeholder">
-          <div class="slide-mock">
-            <div class="slide-mock-header"></div>
-            <div class="slide-mock-body">
-              <div class="slide-mock-line w75"></div>
-              <div class="slide-mock-line w50"></div>
-              <div class="slide-mock-line w90"></div>
-              <div class="slide-mock-line w60"></div>
-            </div>
-            <div class="slide-mock-footer"></div>
-          </div>
-          <p class="slide-note">Slide deck scaffold — replace with your presentation</p>
-        </div>
-      </div>
-
-      <div class="card slide-card">
-        <h3 class="slide-title">Research Presentation Template</h3>
-        <p class="slide-desc">Blank scaffold for academic presentations. Add your slides as PDF or embed from Google Slides / Slidev.</p>
-        <div class="slide-placeholder">
-          <div class="slide-mock">
-            <div class="slide-mock-header"></div>
-            <div class="slide-mock-body">
-              <div class="slide-mock-line w50"></div>
-              <div class="slide-mock-line w75"></div>
-            </div>
-            <div class="slide-mock-footer"></div>
-          </div>
-          <p class="slide-note">Add your slide embed URL or PDF here</p>
-        </div>
-      </div>
-    </div>
+  <div data-tab-content="Replications" class="tab-panel" style="display:none">
+    <p class="empty-state">No replications yet.</p>
   </div>
 </BaseLayout>
 
@@ -85,93 +51,92 @@ import ProjectCard from '../components/ProjectCard.astro';
   .tab-panel {
     padding-top: 1.5rem;
   }
-  .project-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-  }
-  @media (max-width: 640px) {
-    .project-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-  .slides-section {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-  }
-  @media (max-width: 640px) {
-    .slides-section {
-      grid-template-columns: 1fr;
-    }
-  }
-  .slide-card {
+
+  /* Timeline */
+  .timeline {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 1.25rem;
   }
-  .slide-title {
-    font-size: 1.05rem;
+  .timeline-entry {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 1rem;
+    padding: 1.25rem;
+  }
+  .timeline-date {
+    font-family: monospace;
+    font-size: 0.8rem;
+    color: var(--fg-3);
+    padding-top: 0.15rem;
+    white-space: nowrap;
+  }
+  .timeline-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  .project-title {
+    font-size: 1rem;
     font-weight: 700;
     color: var(--fg);
   }
-  .slide-desc {
-    font-size: 0.85rem;
+  .project-desc {
+    font-size: 0.875rem;
     color: var(--fg-2);
-    line-height: 1.5;
+    line-height: 1.55;
+    margin: 0;
   }
-  .slide-placeholder {
+  .tag-row {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+  .project-footer {
+    display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 1rem;
-    background: var(--stat-bg);
-    border-radius: 8px;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.25rem;
   }
-  .slide-mock {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    display: flex;
-    flex-direction: column;
-    padding: 0.75rem;
-    gap: 0.5rem;
+  .slides-label {
+    font-size: 0.8rem;
+    color: var(--fg-2);
   }
-  .slide-mock-header {
-    height: 8px;
-    width: 40%;
-    background: var(--accent);
-    border-radius: 3px;
-    opacity: 0.5;
-  }
-  .slide-mock-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    justify-content: center;
-  }
-  .slide-mock-line {
-    height: 5px;
-    background: var(--border);
-    border-radius: 2px;
-  }
-  .w50 { width: 50%; }
-  .w60 { width: 60%; }
-  .w75 { width: 75%; }
-  .w90 { width: 90%; }
-  .slide-mock-footer {
-    height: 4px;
-    width: 20%;
-    background: var(--border);
-    border-radius: 2px;
-    align-self: flex-end;
-  }
-  .slide-note {
-    font-size: 0.75rem;
+  .muted {
     color: var(--fg-3);
+  }
+
+  /* Launch Simulator button */
+  .launch-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: var(--accent);
+    color: white;
+    border-radius: 6px;
+    transition: background 0.15s;
+    text-decoration: none;
+  }
+  .launch-link:hover {
+    background: var(--accent-hover);
+    color: white;
+  }
+
+  /* Empty state */
+  .empty-state {
+    font-size: 0.875rem;
+    color: var(--fg-3);
+    margin: 0;
+  }
+
+  /* Mobile: collapse date into stacked layout */
+  @media (max-width: 640px) {
+    .timeline-entry {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
