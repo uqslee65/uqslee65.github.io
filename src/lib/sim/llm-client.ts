@@ -1,4 +1,4 @@
-import type { LLMConfig, LLMDecision } from './types';
+import type { LLMConfig, LLMDecision, ApiFormat } from './types';
 
 interface ChatMessage {
   role: 'system' | 'user' | 'assistant';
@@ -39,6 +39,86 @@ function getSemaphore(maxConcurrent: number): Semaphore {
 }
 
 const DEFAULT_DECISION: LLMDecision = { action: 'HOLD', spread: 0.05 };
+
+function buildRequest(config: LLMConfig, messages: ChatMessage[]): { url: string; options: RequestInit } {
+  const format = config.apiFormat ?? 'ollama';
+
+  switch (format) {
+    case 'ollama':
+      return {
+        url: `${config.baseUrl}/api/chat`,
+        options: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: config.model, messages, stream: false }),
+        },
+      };
+
+    case 'openai-compat':
+      return {
+        url: `${config.baseUrl}/v1/chat/completions`,
+        options: {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${config.apiKey}`,
+          },
+          body: JSON.stringify({ model: config.model, messages, stream: false }),
+        },
+      };
+
+    case 'anthropic':
+      return {
+        url: `${config.baseUrl}/v1/messages`,
+        options: {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': config.apiKey,
+            'anthropic-version': '2023-06-01',
+          },
+          body: JSON.stringify({
+            model: config.model,
+            max_tokens: 1024,
+            messages: messages.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content })),
+            system: messages.find(m => m.role === 'system')?.content,
+          }),
+        },
+      };
+
+    case 'gemini': {
+      const url = `${config.baseUrl}/v1beta/models/${config.model}:generateContent?key=${config.apiKey}`;
+      return {
+        url,
+        options: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: messages
+              .filter(m => m.role !== 'system')
+              .map(m => ({ role: m.role === 'assistant' ? 'model' : 'user', parts: [{ text: m.content }] })),
+            systemInstruction: messages.find(m => m.role === 'system')
+              ? { parts: [{ text: messages.find(m => m.role === 'system')!.content }] }
+              : undefined,
+          }),
+        },
+      };
+    }
+  }
+}
+
+function extractContent(data: any, format: ApiFormat): string {
+  switch (format) {
+    case 'ollama':
+      return data.message?.content ?? '';
+    case 'openai-compat':
+      return data.choices?.[0]?.message?.content ?? '';
+    case 'anthropic':
+      return data.content?.[0]?.text ?? '';
+    case 'gemini':
+      return data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  }
+}
 const TIMEOUT_MS = 30000;
 const MAX_RETRIES = 1;
 
@@ -79,22 +159,12 @@ export async function callLLM(
   const sem = getSemaphore(config.maxConcurrent);
   await sem.acquire();
 
+  const format = config.apiFormat ?? 'ollama';
   try {
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        const resp = await fetchWithTimeout(
-          `${config.baseUrl}/api/chat`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              model: config.model,
-              messages,
-              stream: false,
-            }),
-          },
-          TIMEOUT_MS,
-        );
+        const { url, options } = buildRequest(config, messages);
+        const resp = await fetchWithTimeout(url, options, TIMEOUT_MS);
 
         if (resp.status === 429 || resp.status >= 500) {
           if (attempt < MAX_RETRIES) {
@@ -107,7 +177,7 @@ export async function callLLM(
         if (!resp.ok) return DEFAULT_DECISION;
 
         const data = await resp.json();
-        const content = data.message?.content ?? '';
+        const content = extractContent(data, format);
         return parseDecision(content);
       } catch (e) {
         if (attempt < MAX_RETRIES) {
@@ -126,19 +196,8 @@ export async function callLLM(
 
 export async function testConnection(config: LLMConfig): Promise<boolean> {
   try {
-    const resp = await fetchWithTimeout(
-      `${config.baseUrl}/api/chat`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: config.model,
-          messages: [{ role: 'user', content: 'Reply with: ok' }],
-          stream: false,
-        }),
-      },
-      5000,
-    );
+    const { url, options } = buildRequest(config, [{ role: 'user', content: 'Reply with: ok' }]);
+    const resp = await fetchWithTimeout(url, options, 5000);
     return resp.ok;
   } catch {
     return false;

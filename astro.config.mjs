@@ -21,6 +21,11 @@ export default defineConfig({
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/ollama/, ''),
         },
+        '/anthropic': {
+          target: 'https://api.anthropic.com',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/anthropic/, ''),
+        },
       },
     },
   },

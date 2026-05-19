@@ -1,19 +1,17 @@
 import { OrderBook, PRNG } from './engine';
-import { fundamentalValue as computeFV, generateFVPath } from './assets';
+import { fundamentalValue as computeFV, generateDividend, generateFVPath } from './assets';
 import { callLLM } from './llm-client';
 import { buildPrompt } from './llm-prompts';
 import type {
   LLMAgentState, LLMConfig, LLMDecision, LLMPeriodRecord,
   LLMSessionResult, PlanType, RiskPreference, SimConfig, TickProgress,
+  ExperienceCurveConfig,
 } from './types';
 
 // Private LLM-specific constants not yet promoted to SimConfig
 const LLM_PRIVATE = {
   trustLambda: 0.30,
   biasMagnitude: 0.15,
-  omegaBase: 0.60,
-  omegaStep: 0.10,
-  omegaKmax: 3,
 };
 
 function sampleRho(pref: RiskPreference, rng: PRNG): number {
@@ -49,7 +47,7 @@ function createAgents(config: SimConfig, rng: PRNG): LLMAgentState[] {
       cash: Math.round(rng.uniform(endowmentCash[0], endowmentCash[1])),
       shares: rng.choice(endowmentShares),
       bias: biasDir * LLM_PRIVATE.biasMagnitude,
-      omega: LLM_PRIVATE.omegaBase,
+      omega: config.experience.omega0,
       belief: fv1 * (1 + biasDir * LLM_PRIVATE.biasMagnitude),
       roundsCompleted: 0,
       lastAction: null,
@@ -57,14 +55,14 @@ function createAgents(config: SimConfig, rng: PRNG): LLMAgentState[] {
   });
 }
 
-function computeOmega(roundsCompleted: number): number {
-  const k = Math.min(roundsCompleted, LLM_PRIVATE.omegaKmax);
-  return LLM_PRIVATE.omegaBase + k * LLM_PRIVATE.omegaStep;
+function computeOmega(roundsCompleted: number, exp: ExperienceCurveConfig): number {
+  const k = Math.min(roundsCompleted, exp.kMax);
+  return exp.omega0 + k * exp.deltaOmega;
 }
 
-function updateBeliefs(agents: LLMAgentState[], vwap: number, fv: number) {
+function updateBeliefs(agents: LLMAgentState[], vwap: number, fv: number, exp: ExperienceCurveConfig) {
   for (const agent of agents) {
-    agent.omega = computeOmega(agent.roundsCompleted);
+    agent.omega = computeOmega(agent.roundsCompleted, exp);
     const prior = agent.belief * (1 + agent.bias);
     const peerSignal = vwap > 0 ? vwap : fv;
     agent.belief = agent.omega * prior + (1 - agent.omega) * peerSignal;
@@ -178,7 +176,7 @@ export async function runLLMSession(
           cash: Math.round(rng.uniform(endowmentCash[0], endowmentCash[1])),
           shares: rng.choice(endowmentShares),
           bias: (rng.next() < 0.33 ? 1 : rng.next() < 0.5 ? -1 : 0) * LLM_PRIVATE.biasMagnitude,
-          omega: LLM_PRIVATE.omegaBase,
+          omega: config.experience.omega0,
           belief: computeFV(1, nPeriods, config, fvPath),
           roundsCompleted: 0,
           lastAction: null,
@@ -217,7 +215,7 @@ export async function runLLMSession(
       };
 
       const decisionPromises = agents.map(agent => {
-        const { system, user } = buildPrompt(plan, agent, ctx);
+        const { system, user } = buildPrompt(plan, agent, ctx, config);
         return callLLM(config.llm!, [
           { role: 'system', content: system },
           { role: 'user', content: user },
@@ -258,8 +256,8 @@ export async function runLLMSession(
         }
       }
 
-      // Period-end: dividend payment (draw from config.dividends)
-      const dividend = rng.choice(config.dividends as number[]);
+      // Period-end: dividend payment (asset-aware)
+      const dividend = generateDividend(rng, config, period, fvPath, nPeriods);
       for (const agent of agents) agent.cash += agent.shares * dividend;
 
       // Period-end: compute VWAP and update beliefs + trust
@@ -268,7 +266,7 @@ export async function runLLMSession(
         : lastPrice * 0.95;
       lastPrice = vwap;
 
-      updateBeliefs(agents, vwap, fv);
+      updateBeliefs(agents, vwap, fv, config.experience);
       updateTrust(trustMatrix, agents, vwap);
 
       const periodRecord: LLMPeriodRecord = {
@@ -285,7 +283,7 @@ export async function runLLMSession(
     // Round end: learn
     for (const agent of agents) {
       agent.roundsCompleted++;
-      agent.omega = computeOmega(agent.roundsCompleted);
+      agent.omega = computeOmega(agent.roundsCompleted, config.experience);
     }
   }
 

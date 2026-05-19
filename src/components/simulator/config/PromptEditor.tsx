@@ -47,20 +47,23 @@ const preStyle: React.CSSProperties = {
 export function PromptEditor() {
   const { config } = useSimulator();
   const plan = config.plan === 'plan-i' ? 'plan-ii' : config.plan;
-  const { system, user } = buildPrompt(plan, MOCK_AGENT, MOCK_CTX);
+  const { system, user } = buildPrompt(plan, MOCK_AGENT, MOCK_CTX, config);
 
   return (
     <div>
-      <p style={{
-        fontSize: '0.72rem', color: 'var(--fg-3)', margin: '0 0 0.75rem',
-        padding: '0.4rem 0.6rem',
-        background: 'color-mix(in srgb, var(--accent) 8%, var(--bg-card))',
-        borderRadius: '6px',
+      <span style={{
+        display: 'inline-block',
+        fontSize: '0.65rem',
+        fontWeight: 600,
+        padding: '0.15rem 0.4rem',
+        borderRadius: '4px',
+        background: 'color-mix(in srgb, var(--accent) 12%, var(--bg-card))',
+        color: 'var(--accent)',
         border: '1px solid color-mix(in srgb, var(--accent) 20%, var(--border))',
-      }}>
-        Prompt editing coming in a future update. Showing sample prompt for{' '}
-        <strong>{plan === 'plan-ii' ? 'Plan II (CRRA)' : 'Plan III (label-only)'}</strong>.
-      </p>
+        marginBottom: '0.5rem',
+      }} title="Prompt editing coming in a future update">
+        Read-only preview ({plan === 'plan-ii' ? 'Plan II' : 'Plan III'})
+      </span>
 
       <p style={{ fontSize: '0.72rem', color: 'var(--fg-3)', margin: '0 0 0.3rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         System Prompt

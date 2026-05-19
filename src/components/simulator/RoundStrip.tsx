@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { useSimulator } from './SimulatorProvider';
 
 // Round colour palette
@@ -104,6 +105,11 @@ export function RoundStrip() {
     : [];
 
   const currentGlobalIdx = activeIdx;
+  const activeRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    activeRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [currentGlobalIdx]);
 
   return (
     <div style={{
@@ -122,55 +128,107 @@ export function RoundStrip() {
         marginBottom: '6px',
       }}>
         {activePeriods && activePeriods.length > 0 ? (
-          activePeriods.map((period, globalIdx) => {
-            const isCurrent = globalIdx === currentGlobalIdx;
-            const roundColor = ROUND_COLORS[period.round] ?? 'var(--accent)';
-            return (
-              <button
-                key={globalIdx}
-                onClick={() => seek(globalIdx)}
-                title={`R${period.round} P${period.period}`}
-                style={{
-                  flexShrink: 0,
-                  width: '36px',
-                  height: '28px',
-                  border: isCurrent
-                    ? `2px solid ${roundColor}`
-                    : '1px solid var(--border)',
-                  borderRadius: '5px',
-                  background: isCurrent ? roundColor : 'var(--stat-bg)',
-                  color: isCurrent ? 'white' : 'var(--fg-3)',
-                  fontSize: '0.65rem',
-                  fontWeight: isCurrent ? 700 : 400,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  lineHeight: 1.2,
-                  transition: 'all 0.1s',
-                }}
-              >
-                <span>{period.period}</span>
-                <span style={{ fontSize: '0.55rem', opacity: 0.8 }}>R{period.round}</span>
-              </button>
-            );
-          })
+          (() => {
+            const groups: { round: number; items: { period: typeof activePeriods[0]; globalIdx: number }[] }[] = [];
+            activePeriods.forEach((period, globalIdx) => {
+              const last = groups[groups.length - 1];
+              if (!last || last.round !== period.round) {
+                groups.push({ round: period.round, items: [{ period, globalIdx }] });
+              } else {
+                last.items.push({ period, globalIdx });
+              }
+            });
+
+            return groups.map(({ round, items }) => {
+              const roundColor = ROUND_COLORS[round] ?? 'var(--accent)';
+              return (
+                <div key={`group-r${round}`} style={{ display: 'flex', gap: '2px', marginRight: '10px', alignItems: 'center' }}>
+                  <div
+                    style={{
+                      fontSize: '0.6rem',
+                      fontWeight: 700,
+                      color: 'white',
+                      background: roundColor,
+                      borderRadius: '3px',
+                      padding: '2px 5px',
+                      flexShrink: 0,
+                      marginRight: '2px',
+                    }}
+                  >
+                    R{round}
+                  </div>
+                  {items.map(({ period, globalIdx }) => {
+                    const isCurrent = globalIdx === currentGlobalIdx;
+                    return (
+                      <button
+                        key={globalIdx}
+                        ref={isCurrent ? activeRef : undefined}
+                        onClick={() => seek(globalIdx)}
+                        title={`R${period.round} P${period.period}`}
+                        style={{
+                          flexShrink: 0,
+                          width: '36px',
+                          height: '24px',
+                          border: isCurrent
+                            ? `2px solid ${roundColor}`
+                            : '1px solid color-mix(in srgb, var(--fg-3) 30%, var(--bg-card))',
+                          borderRadius: '5px',
+                          background: isCurrent ? roundColor : 'color-mix(in srgb, var(--fg-3) 10%, var(--bg-card))',
+                          color: isCurrent ? 'white' : 'var(--fg-3)',
+                          fontSize: '0.65rem',
+                          fontWeight: isCurrent ? 700 : 400,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          transition: 'all 0.1s',
+                        }}
+                      >
+                        {period.period}
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            });
+          })()
         ) : (
-          // Placeholder cells
-          Array.from({ length: nRounds * nPeriods }, (_, i) => (
-            <div
-              key={i}
-              style={{
-                flexShrink: 0,
-                width: '36px',
-                height: '28px',
-                border: '1px solid var(--border)',
-                borderRadius: '5px',
-                background: 'var(--stat-bg)',
-              }}
-            />
-          ))
+          (() => {
+            return rounds.map((round) => {
+              const roundColor = ROUND_COLORS[round] ?? 'var(--accent)';
+              return (
+                <div key={`group-r${round}`} style={{ display: 'flex', gap: '2px', marginRight: '10px', alignItems: 'center' }}>
+                  <div
+                    style={{
+                      fontSize: '0.6rem',
+                      fontWeight: 700,
+                      color: 'white',
+                      background: roundColor,
+                      borderRadius: '3px',
+                      padding: '2px 5px',
+                      flexShrink: 0,
+                      marginRight: '2px',
+                    }}
+                  >
+                    R{round}
+                  </div>
+                  {Array.from({ length: nPeriods }, (_, i) => (
+                    <div
+                      key={`placeholder-r${round}-p${i}`}
+                      style={{
+                        flexShrink: 0,
+                        width: '36px',
+                        height: '24px',
+                        border: '1px dashed color-mix(in srgb, var(--fg-3) 40%, var(--bg-card))',
+                        borderRadius: '5px',
+                        background: 'color-mix(in srgb, var(--fg-3) 12%, var(--bg-card))',
+                      }}
+                    />
+                  ))}
+                </div>
+              );
+            });
+          })()
         )}
       </div>
 

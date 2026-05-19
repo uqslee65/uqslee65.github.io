@@ -13,6 +13,9 @@ export type AssetClass =
   | 'random-walk'
   | 'jump-crash';
 
+export type LLMProvider = 'deepseek' | 'ollama' | 'openai' | 'anthropic' | 'gemini' | 'custom';
+export type ApiFormat = 'ollama' | 'openai-compat' | 'anthropic' | 'gemini';
+
 export interface LLMAgentState {
   id: number;
   riskPref: RiskPreference;
@@ -37,6 +40,8 @@ export interface LLMConfig {
   apiKey: string;
   model: string;
   maxConcurrent: number;
+  provider?: LLMProvider;
+  apiFormat?: ApiFormat;
 }
 
 export interface BoundedRationalityConfig {
@@ -102,7 +107,7 @@ export interface SimConfig {
 // --- Shared defaults for sub-configs ---
 
 export const DEFAULT_EXPERIENCE: ExperienceCurveConfig = {
-  alpha0: 1.0,
+  alpha0: 0.0,
   sigma0: 5.0,
   omega0: 0.60,
   gammaAlpha: 0.15,

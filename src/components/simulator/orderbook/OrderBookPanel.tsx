@@ -77,7 +77,7 @@ function OrderSide({
 }
 
 export function OrderBookPanel() {
-  const { currentPeriod, llmRunning } = useSimulator();
+  const { currentPeriod } = useSimulator();
 
   // No persistent order book in the data model — show live trade prices when running
   const recentTrades = currentPeriod?.trades.slice(-5) ?? [];
@@ -101,21 +101,6 @@ export function OrderBookPanel() {
 
   return (
     <div>
-      {!hasData && (
-        <p style={{ fontSize: '0.8rem', color: 'var(--fg-3)', margin: '0 0 0.75rem' }}>
-          Order book displays live during simulation.
-          {llmRunning && ' Showing current period activity as agents trade.'}
-          {!llmRunning && ' Run the simulation to see order activity.'}
-        </p>
-      )}
-
-      {hasData && (
-        <div style={{ fontSize: '0.7rem', color: 'var(--fg-3)', marginBottom: '0.5rem' }}>
-          Derived from last {recentTrades.length} trades in current period.
-          Order book persistence per-tick is a future enhancement.
-        </div>
-      )}
-
       <div style={{ display: 'flex', gap: '0.5rem' }}>
         <OrderSide rows={bids} side="bid" />
 

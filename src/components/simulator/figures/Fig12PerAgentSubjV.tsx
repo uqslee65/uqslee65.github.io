@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Figure } from '../Figure';
 import { useSimulator } from '../SimulatorProvider';
 import { useCanvas } from '../hooks/useCanvas';
+import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 
 const AGENT_COLORS = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16'];
 
@@ -108,9 +109,10 @@ export function Fig12PerAgentSubjV() {
     <Figure
       figNum="12"
       title="Per-Agent Subjective Valuation"
+      titleTooltip={FIGURE_TOOLTIPS['fig12']}
       note="Each line = one agent's subjective valuation. Amber dashed = FV."
     >
-      <canvas ref={canvasRef} style={{ width: '100%', height: '240px', display: 'block' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: 'var(--fig-canvas-h, 240px)', display: 'block' }} />
     </Figure>
   );
 }

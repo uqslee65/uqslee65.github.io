@@ -4,6 +4,7 @@ import { useSimulator } from '../SimulatorProvider';
 import { useCanvas } from '../hooks/useCanvas';
 import type { LLMPeriodRecord } from '../../../lib/sim/types';
 import type { PeriodRecord } from '../../../lib/sim/engine';
+import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 
 const DEFAULT_RHO = 1; // log utility fallback
 
@@ -145,10 +146,11 @@ export function Fig7NormalizedUtility() {
     <Figure
       figNum="7"
       title="Normalized CRRA Utility"
+      titleTooltip={FIGURE_TOOLTIPS['fig7']}
       equation="U(w;\\rho) = \\frac{w^{1-\\rho}}{1-\\rho}"
       note="Normalized by initial period utility. Red=risk-loving, gray=neutral, green=averse."
     >
-      <canvas ref={canvasRef} style={{ width: '100%', height: '160px', display: 'block' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: 'var(--fig-canvas-h, 160px)', display: 'block' }} />
     </Figure>
   );
 }

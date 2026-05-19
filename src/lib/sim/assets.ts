@@ -4,14 +4,19 @@
  * Asset classes:
  *   linear-declining   — SSW/DLM original: FV falls linearly to 0 as dividends run out
  *   constant-perpetual — Gordon growth model at g=0: FV = expectedDiv / discountRate
- *   linear-growth      — Rising FV: FV[t] = fv1 + expectedDiv * (t - 1)
- *   cyclical           — Sinusoidal FV around fv1
+ *   linear-growth      — Gordon perpetuity on rising dividend: FV_t = (a + b*t) / r
+ *   cyclical           — Gordon perpetuity on cyclical dividend: FV_t = (5 + 2*sin(2pi(t-1)/10)) / r
  *   random-walk        — Pre-seeded Gaussian random walk; use generateFVPath first
  *   jump-crash         — Pre-seeded drift with 10% crash events; use generateFVPath first
  */
 
 import { PRNG } from './engine';
 import type { AssetClass, SimConfig } from './types';
+
+const LG_INTERCEPT = 2;
+const LG_SLOPE = 0.3;
+const CY_AMPLITUDE = 2;
+const CY_CYCLE_LENGTH = 10;
 
 // ---------------------------------------------------------------------------
 // Fundamental value
@@ -47,12 +52,12 @@ export function fundamentalValue(
       return expectedDiv / discountRate;
 
     case 'linear-growth':
-      // Rising FV starting at fv1; increases by expectedDiv each period
-      return fv1 + expectedDiv * (period - 1);
+      // Gordon perpetuity on rising dividend: FV_t = (a + b*t) / r
+      return (LG_INTERCEPT + LG_SLOPE * period) / discountRate;
 
     case 'cyclical':
-      // Sinusoidal oscillation around fv1 with ±40% amplitude
-      return fv1 * (1 + 0.4 * Math.sin(2 * Math.PI * (period - 1) / totalPeriods));
+      // Gordon perpetuity on cyclical dividend: FV_t = (5 + 2*sin(2pi(t-1)/10)) / r
+      return (5 + CY_AMPLITUDE * Math.sin(2 * Math.PI * (period - 1) / CY_CYCLE_LENGTH)) / discountRate;
 
     case 'random-walk':
     case 'jump-crash':
@@ -118,15 +123,39 @@ export function generateFVPath(
 // ---------------------------------------------------------------------------
 
 /**
- * Draw a dividend for the current period by picking uniformly from
- * config.dividends.  All asset classes use the same mechanism; the
- * asset class only determines FV, not the dividend draw.
+ * Draw a dividend for the current period.
+ *
+ * linear-declining / constant-perpetual: uniform draw from config.dividends.
+ * linear-growth: E[d_t] = a + b*t with Gaussian noise sigma=1.
+ * cyclical: E[d_t] = 5 + 2*sin(2pi(t-1)/10) with Gaussian noise sigma=1.
+ * random-walk / jump-crash: d_t = FV_t - FV_{t+1}/(1+r), floored at 0.
  */
 export function generateDividend(
-  rng: { choice<T>(arr: T[]): T },
-  config: Pick<SimConfig, 'dividends'>,
+  rng: { choice<T>(arr: T[]): T; normal(mean: number, std: number): number },
+  config: Pick<SimConfig, 'dividends' | 'assetClass' | 'discountRate'>,
+  period: number = 1,
+  fvPath: number[] = [],
+  totalPeriods: number = 20,
 ): number {
-  return rng.choice(config.dividends as number[]);
+  switch (config.assetClass) {
+    case 'linear-declining':
+    case 'constant-perpetual':
+      return rng.choice(config.dividends as number[]);
+    case 'linear-growth':
+      return Math.max(0, rng.normal(LG_INTERCEPT + LG_SLOPE * period, 1));
+    case 'cyclical':
+      return Math.max(0, rng.normal(
+        5 + CY_AMPLITUDE * Math.sin(2 * Math.PI * (period - 1) / CY_CYCLE_LENGTH), 1));
+    case 'random-walk':
+    case 'jump-crash': {
+      const fvt = fvPath.length >= period ? fvPath[period - 1] : 100;
+      const fvNext = (period < totalPeriods && fvPath.length >= period + 1)
+        ? fvPath[period] : 0;
+      return Math.max(0, fvt - fvNext / (1 + config.discountRate));
+    }
+    default:
+      return rng.choice(config.dividends as number[]);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -161,8 +190,8 @@ export const ASSET_PRESETS: Record<AssetClass, Partial<Pick<
   },
   'linear-growth': {
     dividends: [0, 10],
-    expectedDiv: 5,
-    fv1: 60,
+    expectedDiv: 2.3,
+    fv1: 46,
     nPeriods: 20,
     discountRate: 0.05,
   },

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Figure } from '../Figure';
 import { useSimulator } from '../SimulatorProvider';
 import { useCanvas } from '../hooks/useCanvas';
+import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 
 const N_BINS = 20;
 
@@ -125,9 +126,10 @@ export function Fig4DensityHeatmap() {
     <Figure
       figNum="4"
       title="Price Density Heatmap"
+      titleTooltip={FIGURE_TOOLTIPS['fig4']}
       note="Color intensity = trade density. Amber dashed = FV staircase."
     >
-      <canvas ref={canvasRef} style={{ width: '100%', height: '200px', display: 'block' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: 'var(--fig-canvas-h, 200px)', display: 'block' }} />
     </Figure>
   );
 }

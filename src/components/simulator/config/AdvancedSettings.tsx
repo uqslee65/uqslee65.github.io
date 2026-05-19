@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { useSimulator } from '../SimulatorProvider';
+import { TOOLTIPS } from '../../../lib/sim/tooltips';
 
 function SliderRow({
-  label, value, min, max, step = 1, onChange, mono = false,
+  label, value, min, max, step = 1, onChange, mono = false, tooltip,
 }: {
   label: string; value: number; min: number; max: number;
-  step?: number; onChange: (v: number) => void; mono?: boolean;
+  step?: number; onChange: (v: number) => void; mono?: boolean; tooltip?: string;
 }) {
   const display = step < 1 ? value.toFixed(step < 0.1 ? 2 : 2) : String(value);
   return (
     <div style={{ marginBottom: '0.6rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.2rem' }}>
-        <label style={{ fontSize: '0.72rem', color: 'var(--fg-2)' }}>{label}</label>
+        <label style={{ fontSize: '0.72rem', color: 'var(--fg-2)' }} title={tooltip}>{label}</label>
         <span style={{
           fontSize: '0.72rem', fontWeight: 700,
           color: 'var(--accent)',
@@ -76,16 +77,16 @@ export function AdvancedSettings() {
             <p style={{ fontSize: '0.7rem', color: 'var(--fg-3)', margin: '0 0 0.5rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               Experience Anchors
             </p>
-            <SliderRow label="α₀ (novice fundamental weight)" value={exp.alpha0}
-              min={0} max={1} step={0.05} onChange={v => setConfig({ experience: { ...exp, alpha0: v } })} mono />
-            <SliderRow label="σ₀ (novice valuation noise)" value={exp.sigma0}
-              min={0} max={40} step={0.5} onChange={v => setConfig({ experience: { ...exp, sigma0: v } })} mono />
-            <SliderRow label="ω₀ (novice self-weight)" value={exp.omega0}
-              min={0} max={1} step={0.05} onChange={v => setConfig({ experience: { ...exp, omega0: v } })} mono />
-            <SliderRow label="γ_α (fundamental weight growth)" value={exp.gammaAlpha}
-              min={0} max={0.5} step={0.01} onChange={v => setConfig({ experience: { ...exp, gammaAlpha: v } })} mono />
-            <SliderRow label="γ_σ (noise decay)" value={exp.gammaSigma}
-              min={0} max={1} step={0.05} onChange={v => setConfig({ experience: { ...exp, gammaSigma: v } })} mono />
+            <SliderRow label="α₀" value={exp.alpha0}
+              min={0} max={1} step={0.05} onChange={v => setConfig({ experience: { ...exp, alpha0: v } })} mono tooltip={TOOLTIPS['exp.alpha0']} />
+            <SliderRow label="σ₀" value={exp.sigma0}
+              min={0} max={40} step={0.5} onChange={v => setConfig({ experience: { ...exp, sigma0: v } })} mono tooltip={TOOLTIPS['exp.sigma0']} />
+            <SliderRow label="ω₀" value={exp.omega0}
+              min={0} max={1} step={0.05} onChange={v => setConfig({ experience: { ...exp, omega0: v } })} mono tooltip={TOOLTIPS['exp.omega0']} />
+            <SliderRow label="γ_α" value={exp.gammaAlpha}
+              min={0} max={0.5} step={0.01} onChange={v => setConfig({ experience: { ...exp, gammaAlpha: v } })} mono tooltip={TOOLTIPS['exp.gammaAlpha']} />
+            <SliderRow label="γ_σ" value={exp.gammaSigma}
+              min={0} max={1} step={0.05} onChange={v => setConfig({ experience: { ...exp, gammaSigma: v } })} mono tooltip={TOOLTIPS['exp.gammaSigma']} />
           </div>
 
           <div style={{ borderTop: '1px solid var(--border)', margin: '0.75rem 0 0.75rem', paddingTop: '0.75rem' }}>

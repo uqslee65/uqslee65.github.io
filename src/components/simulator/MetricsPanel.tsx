@@ -1,5 +1,6 @@
 import { useSimulator, PUBLISHED } from './SimulatorProvider';
 import { Figure } from './Figure';
+import { TOOLTIPS, FIGURE_TOOLTIPS } from '../../lib/sim/tooltips';
 
 export function MetricsPanel() {
   const { metrics, currentRound } = useSimulator();
@@ -12,7 +13,7 @@ export function MetricsPanel() {
       ['Amplitude'],
     ];
     return (
-      <Figure figNum="1" title="Bubble Metrics — DLM Table 2">
+      <Figure figNum="1" title="Bubble Metrics" titleTooltip={FIGURE_TOOLTIPS['fig1']}>
         <div style={{ opacity: 0.4 }}>
           <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
             <thead>
@@ -55,7 +56,7 @@ export function MetricsPanel() {
   ];
 
   return (
-    <Figure figNum="1" title="Bubble Metrics — DLM Table 2">
+    <Figure figNum="1" title="Bubble Metrics" titleTooltip={FIGURE_TOOLTIPS['fig1']}>
       <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
         <thead>
           <tr>

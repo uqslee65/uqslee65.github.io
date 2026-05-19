@@ -23,13 +23,12 @@ const TABS: { id: TabId; label: string }[] = [
 ];
 
 const gridStyle: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: '1fr 1fr',
+  display: 'flex',
+  flexDirection: 'column',
   gap: '0.75rem',
 };
 
 const figWrapStyle: React.CSSProperties = {
-  aspectRatio: '4 / 3',
   overflow: 'hidden',
 };
 
@@ -98,9 +97,7 @@ export function FigureGroups() {
             {isPlanI && (
               <div style={figWrapStyle}><Fig6SubjectiveValuation /></div>
             )}
-            {isPlanI && (
-              <div style={figWrapStyle}><Fig12PerAgentSubjV /></div>
-            )}
+            <div style={figWrapStyle}><Fig12PerAgentSubjV /></div>
           </div>
         )}
 
@@ -108,13 +105,13 @@ export function FigureGroups() {
         {activeTab === 'social' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
 
-            {/* Fig9 and Fig10: Plan I only */}
-            {isPlanI && (
-              <div style={gridStyle}>
+            {/* Fig9: Plan I only; Fig10: all plans */}
+            <div style={gridStyle}>
+              {isPlanI && (
                 <div style={figWrapStyle}><Fig9BroadcastMessages /></div>
-                <div style={figWrapStyle}><Fig10TrustMatrix /></div>
-              </div>
-            )}
+              )}
+              <div style={figWrapStyle}><Fig10TrustMatrix /></div>
+            </div>
 
             {/* PromptEditor: Plan II / III only */}
             {isLLM && (

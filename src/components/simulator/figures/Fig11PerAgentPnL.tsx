@@ -4,6 +4,7 @@ import { useSimulator } from '../SimulatorProvider';
 import { useCanvas } from '../hooks/useCanvas';
 import type { LLMPeriodRecord } from '../../../lib/sim/types';
 import type { PeriodRecord } from '../../../lib/sim/engine';
+import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 
 const AGENT_COLORS = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#a855f7','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16'];
 
@@ -134,9 +135,10 @@ export function Fig11PerAgentPnL() {
     <Figure
       figNum="11"
       title="Per-Agent P&L"
+      titleTooltip={FIGURE_TOOLTIPS['fig11']}
       note="Running P&L = current wealth − initial wealth. Dashed = breakeven. Colors: red=risk-loving/speculator, gray=neutral/moderate, green=averse/aware."
     >
-      <canvas ref={canvasRef} style={{ width: '100%', height: '240px', display: 'block' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: 'var(--fig-canvas-h, 240px)', display: 'block' }} />
     </Figure>
   );
 }

@@ -1,10 +1,10 @@
 import { useSimulator } from './SimulatorProvider';
 import type { PlanType } from '../../lib/sim/types';
 
-const PLANS: { value: PlanType; label: string; desc: string }[] = [
-  { value: 'plan-i',   label: 'Plan I',   desc: 'Algorithmic' },
-  { value: 'plan-ii',  label: 'Plan II',  desc: 'LLM + Utility' },
-  { value: 'plan-iii', label: 'Plan III', desc: 'LLM + Risk Label' },
+const PLANS: { value: PlanType; label: string; desc: string; tooltip: string }[] = [
+  { value: 'plan-i',   label: 'Plan I',   desc: 'Algorithmic',     tooltip: 'Algorithmic agents with deterministic belief updates. No API key needed. Fast, reproducible runs.' },
+  { value: 'plan-ii',  label: 'Plan II',  desc: 'LLM + Utility',   tooltip: 'LLM agents receive an explicit CRRA utility function in their prompt. Requires an API key.' },
+  { value: 'plan-iii', label: 'Plan III', desc: 'LLM + Risk Label', tooltip: 'LLM agents receive only a risk-preference label (e.g. \'risk-loving\'). Requires an API key.' },
 ];
 
 export function PlanSelector() {
@@ -28,6 +28,7 @@ export function PlanSelector() {
           return (
             <button
               key={p.value}
+              title={p.tooltip}
               onClick={() => setConfig({ plan: p.value })}
               style={{
                 flex: 1,

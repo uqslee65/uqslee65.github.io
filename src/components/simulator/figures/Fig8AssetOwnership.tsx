@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Figure } from '../Figure';
 import { useSimulator } from '../SimulatorProvider';
 import { useCanvas } from '../hooks/useCanvas';
+import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 
 const MUTED_COLORS = ['#3b82f6','#22c55e','#f59e0b','#a855f7','#ec4899','#14b8a6','#f97316','#6366f1','#84cc16','#ef4444'];
 
@@ -83,9 +84,10 @@ export function Fig8AssetOwnership() {
     <Figure
       figNum="8"
       title="Asset Ownership"
+      titleTooltip={FIGURE_TOOLTIPS['fig8']}
       note="Stacked area: each color = one agent's share holdings. Total height = aggregate shares (conserved)."
     >
-      <canvas ref={canvasRef} style={{ width: '100%', height: '160px', display: 'block' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: 'var(--fig-canvas-h, 160px)', display: 'block' }} />
     </Figure>
   );
 }

@@ -13,11 +13,14 @@ interface MarketContext {
   totalShares: number;
 }
 
-const MARKET_RULES = `You are a trader in an experimental asset market.
-- The asset lives for T periods. At each period end, it pays a dividend of 0¢ or 10¢ (equal probability, expected 5¢).
-- Fundamental value at period t: FV_t = (T - t + 1) × 5¢. The asset expires worthless after period T.
+function marketRules(config?: Pick<SimConfig, 'assetClass' | 'nPeriods'>): string {
+  const assetDesc = config ? assetEnvironmentBlock(config)
+    : 'This asset has a finite life of 20 periods. Each period it pays a dividend of 0 or 10¢ (equal probability). FV declines linearly.';
+  return `You are a trader in an experimental asset market.
+${assetDesc}
 - You trade via a continuous double auction. Each tick you choose ONE action.
 - Your goal: maximize your final wealth (cash + shares × current_value).`;
+}
 
 const DECISION_PRINCIPLES = `Decision principles:
 - BUY_NOW: immediately buy 1 share at the current best ask price (market order)
@@ -30,7 +33,7 @@ const DECISION_PRINCIPLES = `Decision principles:
 const RESPONSE_FORMAT = `Respond with ONLY a raw JSON object. No markdown, no code blocks, no explanation outside the JSON:
 {"action": "BUY_NOW|SELL_NOW|BID|ASK_1|HOLD", "spread": 0.05, "reasoning": "brief reason"}`;
 
-function planIISystemPrompt(agent: LLMAgentState): string {
+function planIISystemPrompt(agent: LLMAgentState, config?: Pick<SimConfig, 'assetClass' | 'nPeriods'>): string {
   const rhoStr = agent.rho.toFixed(3);
   const utilityFn = agent.rho === 0
     ? 'U(w) = ln(w)  (risk-neutral, log utility)'
@@ -42,7 +45,7 @@ function planIISystemPrompt(agent: LLMAgentState): string {
     ? `You are RISK-NEUTRAL (ρ=0). Your utility is linear — you evaluate trades purely by expected monetary value. Buy when price < your expected value, sell when price > your expected value.`
     : `You are RISK-AVERSE (ρ=${rhoStr} > 0). Your utility is concave — you prefer certainty over gambles of equal expected value. You should demand a discount to buy and be willing to sell at or slightly below fundamental value. Avoid concentrated positions.`;
 
-  return `${MARKET_RULES}
+  return `${marketRules(config)}
 
 ${DECISION_PRINCIPLES}
 
@@ -60,14 +63,14 @@ where p_fill ≈ 0.30 (probability a passive order gets filled).
 ${RESPONSE_FORMAT}`;
 }
 
-function planIIISystemPrompt(agent: LLMAgentState): string {
+function planIIISystemPrompt(agent: LLMAgentState, config?: Pick<SimConfig, 'assetClass' | 'nPeriods'>): string {
   const label = agent.riskPref === 'risk-loving'
     ? 'You are a RISK-LOVING trader. You enjoy taking big positions, riding momentum, and are comfortable with large swings in your portfolio value. You tend to buy into rising markets and hold through volatility.'
     : agent.riskPref === 'risk-neutral'
     ? 'You are a RISK-NEUTRAL trader. You make decisions based purely on expected value — if the price is below what you think the asset is worth, you buy; if above, you sell. No emotional attachment to positions.'
     : 'You are a RISK-AVERSE trader. You prefer to protect your capital. You sell early to lock in gains, demand discounts before buying, and keep cash reserves. You avoid large concentrated bets.';
 
-  return `${MARKET_RULES}
+  return `${marketRules(config)}
 
 ${DECISION_PRINCIPLES}
 
@@ -84,7 +87,7 @@ function buildUserMessage(agent: LLMAgentState, ctx: MarketContext): string {
     : 'none yet';
 
   return `Period ${ctx.period}/${ctx.totalPeriods}, Tick ${ctx.tick}/${ctx.ticksPerPeriod}
-FV = ${ctx.fv.toFixed(1)}¢ (declining 5¢/period)
+FV = ${ctx.fv.toFixed(1)}¢
 Your cash: ${agent.cash.toFixed(1)}¢ | Your shares: ${agent.shares} | Wealth: ${wealth.toFixed(1)}¢
 Best bid: ${ctx.bestBid?.toFixed(1) ?? 'none'} | Best ask: ${ctx.bestAsk?.toFixed(1) ?? 'none'}
 Recent trade prices: ${recentPrices}
@@ -96,11 +99,25 @@ export function buildPrompt(
   plan: PlanType,
   agent: LLMAgentState,
   ctx: MarketContext,
+  config?: Pick<SimConfig, 'assetClass' | 'nPeriods' | 'boundedRationality' | 'regulator' | 'nAgents' | 'nFundamentalists' | 'nTrendFollowers' | 'riskSplit' | 'nRounds'>,
 ): { system: string; user: string } {
-  const system = plan === 'plan-ii'
-    ? planIISystemPrompt(agent)
-    : planIIISystemPrompt(agent);
-  const user = buildUserMessage(agent, ctx);
+  let system = plan === 'plan-ii'
+    ? planIISystemPrompt(agent, config)
+    : planIIISystemPrompt(agent, config);
+
+  if (config?.boundedRationality) {
+    system += buildBoundedRationalityBlock(config);
+  }
+
+  let user = buildUserMessage(agent, ctx);
+
+  if (config?.regulator) {
+    const mispricingFraction = ctx.fv > 0
+      ? Math.abs(ctx.vwap - ctx.fv) / ctx.fv : 0;
+    const warning = buildRegulatorWarning(config, mispricingFraction, ctx.period);
+    if (warning) user = warning + user;
+  }
+
   return { system, user };
 }
 
@@ -152,9 +169,9 @@ export function assetEnvironmentBlock(config: { assetClass: AssetClass; nPeriods
     case 'constant-perpetual':
       return `This asset lives forever. Each period it pays 4 or 6¢ (expected 5¢). Discount rate = 5%. Fundamental value = 100¢ (constant).`;
     case 'linear-growth':
-      return `This asset has a finite life of ${T} periods. The expected dividend grows by 1¢ each period. Fundamental value increases over time as dividends compound.`;
+      return `This asset has a finite life of ${T} periods. Expected dividend E[d_t] = 2 + 0.3t (Gaussian noise sigma=1). FV_t = (2 + 0.3t)/0.05 (Gordon perpetuity on rising dividend).`;
     case 'cyclical':
-      return `This asset has a finite life of ${T} periods. The dividend alternates between high (10¢) and low (2¢) phases, creating a cyclical fundamental value profile.`;
+      return `This asset has a finite life of ${T} periods. Expected dividend E[d_t] = 5 + 2*sin(2pi(t-1)/10) (Gaussian noise sigma=1, cycle length 10). FV_t = E[d_t]/0.05.`;
     case 'random-walk':
       return `This asset has a finite life of ${T} periods. The fundamental value follows a random walk seeded each round; there is no predictable trend to exploit.`;
     case 'jump-crash':

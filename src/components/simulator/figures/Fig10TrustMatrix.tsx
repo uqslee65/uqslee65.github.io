@@ -3,6 +3,7 @@ import { Figure } from '../Figure';
 import { useSimulator } from '../SimulatorProvider';
 import { useCanvas } from '../hooks/useCanvas';
 import type { LLMPeriodRecord } from '../../../lib/sim/types';
+import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 
 export function Fig10TrustMatrix() {
   const { currentPeriod, config } = useSimulator();
@@ -80,10 +81,11 @@ export function Fig10TrustMatrix() {
     <Figure
       figNum="10"
       title="Trust Matrix"
+      titleTooltip={FIGURE_TOOLTIPS['fig10']}
       equation="\\tau_{r \\to s} \\leftarrow (1 - \\lambda)\\tau_{r \\to s} + \\lambda \\cdot \\text{closeness}_{rs}"
       note="Light = low trust, dark = high trust. Diagonal masked."
     >
-      <canvas ref={canvasRef} style={{ width: '100%', height: '160px', display: 'block' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: 'var(--fig-canvas-h, 160px)', display: 'block' }} />
     </Figure>
   );
 }

@@ -2,13 +2,14 @@ import { useCallback } from 'react';
 import { Figure } from '../Figure';
 import { useSimulator } from '../SimulatorProvider';
 import { useCanvas } from '../hooks/useCanvas';
+import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 
 export function Fig3Volume() {
   const { activePeriods, activeIdx } = useSimulator();
   const periods = activePeriods ?? [];
 
   const draw = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
-    const pad = { top: 10, right: 12, bottom: 22, left: 36 };
+    const pad = { top: 10, right: 12, bottom: 30, left: 36 };
     if (periods.length === 0) {
       const ch = h - pad.top - pad.bottom;
       ctx.globalAlpha = 0.4;
@@ -76,8 +77,8 @@ export function Fig3Volume() {
   const canvasRef = useCanvas(draw, [periods, activeIdx]);
 
   return (
-    <Figure figNum="3" title="Trade Volume" note="Number of trades per period. Highlighted bar = current period.">
-      <canvas ref={canvasRef} style={{ width: '100%', height: '120px', display: 'block' }} />
+    <Figure figNum="3" title="Trade Volume" titleTooltip={FIGURE_TOOLTIPS['fig3']} note="Number of trades per period. Highlighted bar = current period.">
+      <canvas ref={canvasRef} style={{ width: '100%', height: 'var(--fig-canvas-h, 120px)', display: 'block' }} />
     </Figure>
   );
 }

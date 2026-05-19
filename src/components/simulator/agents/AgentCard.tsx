@@ -45,6 +45,8 @@ const TYPE_COLORS: Record<AgentType, string> = {
   speculator: '#ef4444',
   moderate: '#f59e0b',
   aware: '#22c55e',
+  fundamentalist: '#3b82f6',
+  'trend-follower': '#a855f7',
 };
 
 const PREF_COLORS: Record<string, string> = {
@@ -83,7 +85,7 @@ export function AgentCard({
   const typeLabel = isLLM && llmState
     ? ({ 'risk-loving': 'Risk-Loving', 'risk-neutral': 'Risk-Neutral', 'risk-averse': 'Risk-Averse' }[llmState.riskPref] ?? '?')
     : (!isLLM && planIState
-        ? ({ speculator: 'Speculator', moderate: 'Moderate', aware: 'Aware' }[planIState.type] ?? '?')
+        ? ({ speculator: 'Speculator', moderate: 'Moderate', aware: 'Aware', fundamentalist: 'Fundamentalist', 'trend-follower': 'Trend-Follower' }[planIState.type] ?? '?')
         : '?');
 
   // Wealth history
@@ -149,8 +151,8 @@ export function AgentCard({
             {lastAction}
           </span>
         )}
-        <div style={{ fontSize: '0.55rem', color: 'var(--fg-3)', marginTop: '0.4rem', textAlign: 'right' }}>
-          tap to flip
+        <div style={{ fontSize: '0.7rem', color: 'var(--fg-3)', marginTop: '0.4rem', textAlign: 'right' }} title="Tap to flip">
+          ↻
         </div>
       </div>
 

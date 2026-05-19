@@ -4,6 +4,7 @@ import { useSimulator } from '../SimulatorProvider';
 import { useCanvas } from '../hooks/useCanvas';
 import type { LLMPeriodRecord } from '../../../lib/sim/types';
 import type { PeriodRecord } from '../../../lib/sim/engine';
+import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 
 // Color for LLM actions
 function actionColor(action: string | null): string {
@@ -122,9 +123,10 @@ export function Fig5ActionTimeline() {
     <Figure
       figNum="5"
       title="Agent Action Timeline"
+      titleTooltip={FIGURE_TOOLTIPS['fig5']}
       note="LLM: green=BUY, red=SELL, blue=BID, orange=ASK, gray=HOLD. Plan I: red=speculator, gray=moderate, green=aware."
     >
-      <canvas ref={canvasRef} style={{ width: '100%', height: '240px', display: 'block' }} />
+      <canvas ref={canvasRef} style={{ width: '100%', height: 'var(--fig-canvas-h, 240px)', display: 'block' }} />
     </Figure>
   );
 }

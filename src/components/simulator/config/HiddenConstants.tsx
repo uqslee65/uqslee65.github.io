@@ -11,9 +11,6 @@ export function HiddenConstants() {
 
   return (
     <div>
-      <p style={{ fontSize: '0.7rem', color: 'var(--fg-3)', marginBottom: '0.5rem', fontStyle: 'italic' }}>
-        Simulator implementation constants — not from the paper.
-      </p>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
         <tbody>
           {rows.map(([label, value]) => (

@@ -12,9 +12,6 @@ export function PaperConstants() {
 
   return (
     <div>
-      <p style={{ fontSize: '0.7rem', color: 'var(--fg-3)', marginBottom: '0.5rem' }}>
-        Original DLM (2005) paper parameters for reference.
-      </p>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem' }}>
         <tbody>
           {rows.map(([label, value]) => (

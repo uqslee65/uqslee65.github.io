@@ -25,13 +25,13 @@ const ASSETS: AssetMeta[] = [
   {
     id: 'linear-growth',
     label: 'Linear Growth (LG)',
-    short: 'Rising FV starting at fv1, increases each period',
+    short: 'Gordon perpetuity: FV = (2+0.3t)/r on rising dividend',
     shape: 'M2,14 L18,2',
   },
   {
     id: 'cyclical',
     label: 'Cyclical (CY)',
-    short: 'Sinusoidal FV around fv1 with ±40% amplitude',
+    short: 'Gordon perpetuity on cyclical dividend, cycle length 10',
     shape: 'M2,8 C6,2 10,14 14,2 L18,8',
   },
   {
@@ -62,6 +62,7 @@ export function AssetClassSelector() {
         return (
           <button
             key={a.id}
+            title={a.short}
             onClick={() => handleSelect(a.id)}
             style={{
               textAlign: 'left',
@@ -72,8 +73,7 @@ export function AssetClassSelector() {
               cursor: 'pointer',
               display: 'flex',
               gap: '0.5rem',
-              alignItems: 'flex-start',
-              minHeight: '44px',
+              alignItems: 'center',
             }}
           >
             {/* Tiny SVG shape preview */}
@@ -92,11 +92,8 @@ export function AssetClassSelector() {
               />
             </svg>
             <div>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: active ? 'var(--accent)' : 'var(--fg)', marginBottom: '0.15rem' }}>
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: active ? 'var(--accent)' : 'var(--fg)' }}>
                 {a.label}
-              </div>
-              <div style={{ fontSize: '0.65rem', color: 'var(--fg-3)', lineHeight: 1.3 }}>
-                {a.short}
               </div>
             </div>
           </button>

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Figure } from '../Figure';
 import { useSimulator } from '../SimulatorProvider';
 import { useCanvas } from '../hooks/useCanvas';
+import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 
 /**
  * Fig 9: Broadcast Messages (Plan I only in spirit, but data field doesn't exist yet).
@@ -58,8 +59,8 @@ export function Fig9BroadcastMessages() {
   void hasData; // suppress unused variable
 
   return (
-    <Figure figNum="9" title="Broadcast Messages" note="Dot matrix: rows=agents, columns=periods. Red ring = deceptive message.">
-      <canvas ref={canvasRef} style={{ width: '100%', height: '160px', display: 'block' }} />
+    <Figure figNum="9" title="Broadcast Messages" titleTooltip={FIGURE_TOOLTIPS['fig9']} note="Dot matrix: rows=agents, columns=periods. Red ring = deceptive message.">
+      <canvas ref={canvasRef} style={{ width: '100%', height: 'var(--fig-canvas-h, 160px)', display: 'block' }} />
     </Figure>
   );
 }

@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { Figure } from '../Figure';
 import { useSimulator } from '../SimulatorProvider';
 import { useCanvas } from '../hooks/useCanvas';
+import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 
 export function Fig2SignedMispricing() {
   const { activePeriods } = useSimulator();
@@ -97,12 +98,13 @@ export function Fig2SignedMispricing() {
     <Figure
       figNum="2"
       title="Signed Mispricing"
+      titleTooltip={FIGURE_TOOLTIPS['fig2']}
       equation="\\rho_t = \\frac{P_t - FV_t}{FV_t}"
       note="Blue = premium above FV; red = discount below FV."
     >
       <canvas
         ref={canvasRef}
-        style={{ width: '100%', height: '160px', display: 'block' }}
+        style={{ width: '100%', height: 'var(--fig-canvas-h, 160px)', display: 'block' }}
       />
     </Figure>
   );

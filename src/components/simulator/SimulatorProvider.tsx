@@ -49,6 +49,11 @@ interface SimulatorContextValue {
   canRun: boolean;
   hasData: boolean;
 
+  // Error state
+  error: string | null;
+  setError: (msg: string) => void;
+  clearError: () => void;
+
   // Actions
   setConfig: (partial: Partial<SimConfig>) => void;
   runPlanI: () => void;
@@ -93,6 +98,14 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
   const [replayMode, setReplayMode] = useState<'live' | 'replay'>('live');
   const [replayTick, setReplayTick] = useState(0);
 
+  // Error state
+  const [error, setErrorState] = useState<string | null>(null);
+  const setError = useCallback((msg: string) => {
+    setErrorState(msg);
+    console.error('[Simulator]', msg);
+  }, []);
+  const clearError = useCallback(() => setErrorState(null), []);
+
   // --- Derived values ---
   const isLLM = config.plan !== 'plan-i';
   const activePeriods = isLLM ? llmSession?.periods : session?.periods;
@@ -122,7 +135,8 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
 
   const currentPeriod = activePeriods && activeIdx >= 0 ? activePeriods[activeIdx] : null;
 
-  const canRun = isLLM ? !!(config.llm?.apiKey) && !llmRunning : true;
+  const isOllamaProvider = config.llm?.provider === 'ollama';
+  const canRun = isLLM ? (isOllamaProvider || !!(config.llm?.apiKey)) && !llmRunning : true;
   const hasData = isLLM ? !!llmSession : !!session;
 
   // --- Actions ---
@@ -149,14 +163,18 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
   }, [config.plan]);
 
   const runPlanI = useCallback(() => {
-    const result = runSession({ ...config }, config.seed);
-    setSession(result);
-    setCurrentIdx(0);
-    setPlaying(false);
-  }, [config]);
+    try {
+      const result = runSession({ ...config }, config.seed);
+      setSession(result);
+      setCurrentIdx(0);
+      setPlaying(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Plan I simulation failed');
+    }
+  }, [config, setError]);
 
   const runLLMFn = useCallback(async () => {
-    if (!config.llm?.apiKey) return;
+    if (config.llm?.provider !== 'ollama' && !config.llm?.apiKey) return;
     setLlmRunning(true);
     setLlmSession(null);
     setLlmIdx(-1);
@@ -186,12 +204,12 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
       setLlmSession(result);
       setLlmIdx(result.periods.length - 1);
     } catch (e) {
-      console.error('[SimulatorProvider] LLM run failed:', e);
+      setError(e instanceof Error ? e.message : 'LLM run failed');
     } finally {
       setLlmRunning(false);
       setLlmProgress(null);
     }
-  }, [config]);
+  }, [config, setError]);
 
   const stop = useCallback(() => {
     abortRef.current?.abort();
@@ -257,6 +275,7 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
     setLlmProgress(null);
     setReplayMode('live');
     setReplayTick(0);
+    setErrorState(null);
     // Regenerate seed
     setConfigState(prev => ({ ...prev, seed: Math.floor(Math.random() * 9999) + 1 }));
   }, []);
@@ -308,6 +327,9 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
     metrics,
     canRun,
     hasData,
+    error,
+    setError,
+    clearError,
     setConfig,
     runPlanI,
     runLLM: runLLMFn,

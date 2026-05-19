@@ -1,4 +1,5 @@
 import { useSimulator } from '../SimulatorProvider';
+import { TOOLTIPS } from '../../../lib/sim/tooltips';
 
 export function RiskPreferences() {
   const { config, setConfig } = useSimulator();
@@ -42,9 +43,9 @@ export function RiskPreferences() {
   };
 
   const tiers = [
-    { label: 'Risk-Loving', sublabel: 'ρ ∈ (−1, 0)', pct: lovingPct, color: '#ef4444', idx: 0 as const },
-    { label: 'Risk-Neutral', sublabel: 'ρ = 0', pct: neutralPct, color: '#9ca3af', idx: 1 as const },
-    { label: 'Risk-Averse', sublabel: 'ρ ∈ (0, 1)', pct: aversePct, color: '#22c55e', idx: 2 as const },
+    { label: 'Risk-Loving', sublabel: 'ρ ∈ (−1, 0)', pct: lovingPct, color: '#ef4444', idx: 0 as const, tipKey: 'risk.loving' },
+    { label: 'Risk-Neutral', sublabel: 'ρ = 0', pct: neutralPct, color: '#9ca3af', idx: 1 as const, tipKey: 'risk.neutral' },
+    { label: 'Risk-Averse', sublabel: 'ρ ∈ (0, 1)', pct: aversePct, color: '#22c55e', idx: 2 as const, tipKey: 'risk.averse' },
   ];
 
   return (
@@ -65,7 +66,7 @@ export function RiskPreferences() {
         <div key={t.idx} style={{ marginBottom: '0.75rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
             <div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--fg-2)' }}>{t.label}</span>
+              <span style={{ fontSize: '0.75rem', color: 'var(--fg-2)' }} title={TOOLTIPS[t.tipKey]}>{t.label}</span>
               <span style={{ fontSize: '0.65rem', color: 'var(--fg-3)', marginLeft: '0.4rem' }}>{t.sublabel}</span>
             </div>
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: t.color }}>

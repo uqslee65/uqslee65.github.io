@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSimulator } from './SimulatorProvider';
 import { HelpModal } from './HelpModal';
 import { ExperimentSetupModal } from './ExperimentSetupModal';
@@ -67,15 +67,14 @@ export function ControlBar() {
 
   const handleRun = () => isLLM ? runLLM() : runPlanI();
 
-  // Auto-open at step 3 when an LLM plan is active but no API key is configured.
-  // Guard against opening if the wizard is already open (avoids snapping the user
-  // back to step 3 while they are mid-navigation in steps 1 or 2).
+  // Auto-open setup modal whenever the user switches to a different plan.
+  const prevPlan = useRef(config.plan);
   useEffect(() => {
-    if (isLLM && !config.llm?.apiKey && !showSetup) {
-      setSetupStep(3);
+    if (config.plan !== prevPlan.current) {
+      prevPlan.current = config.plan;
+      setSetupStep(1);
       setShowSetup(true);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [config.plan]);
 
   return (
@@ -109,7 +108,10 @@ export function ControlBar() {
         </div>
 
         {/* Speed */}
-        <div>
+        <div
+          title={isLLM ? 'Speed is controlled by LLM API response time' : undefined}
+          style={isLLM ? { opacity: 0.35, pointerEvents: 'none' as const } : undefined}
+        >
           <label style={labelStyle}>Speed</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
             <input
@@ -134,6 +136,7 @@ export function ControlBar() {
               onClick={handleRun}
               disabled={!canRun}
               style={{ ...btnPrimary, ...(canRun ? {} : btnDisabled) }}
+              title="Execute simulation and generate period data"
             >
               {isLLM ? 'Run LLM' : 'Run'}
             </button>
@@ -143,6 +146,7 @@ export function ControlBar() {
             onClick={playing ? pause : play}
             disabled={!hasData || llmRunning}
             style={{ ...btnBase, ...(!hasData || llmRunning ? btnDisabled : {}) }}
+            title="Animate through generated data at the speed setting"
           >
             {playing ? 'Pause' : 'Play'}
           </button>
@@ -163,7 +167,7 @@ export function ControlBar() {
             style={{ ...( hasData ? btnSuccess : btnBase), ...(!hasData ? btnDisabled : {}) }}
             title={hasData ? 'Export session as JSON' : 'Run the simulation first'}
           >
-            Export
+            Download JSON
           </button>
 
           <button
@@ -182,6 +186,9 @@ export function ControlBar() {
             ?
           </button>
         </div>
+        <p style={{ margin: '0.25rem 0 0', fontSize: '0.65rem', color: 'var(--fg-3)' }}>
+          Run generates data · Play animates it
+        </p>
       </div>
 
       {/* Mobile responsive overrides */}

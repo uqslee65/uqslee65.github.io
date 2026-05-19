@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSimulator } from './SimulatorProvider';
 import { MetricsPanel } from './MetricsPanel';
+import { SessionStats } from './SessionStats';
 import { AgentsPanel } from './agents/AgentsPanel';
 import { OrderBookPanel } from './orderbook/OrderBookPanel';
 import { ReplayPanel } from './replay/ReplayPanel';
@@ -60,40 +61,70 @@ function CollapsibleSection({ title, defaultOpen = false, children }: {
 
 export function SidebarContent() {
   const { currentPeriod } = useSimulator();
+  const [activeTab, setActiveTab] = useState<'live' | 'config'>('live');
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column' }}>
-      {/* Context zone */}
-      <div style={{ borderBottom: '2px solid var(--border)' }}>
-        <div style={{ padding: '0.5rem 0.6rem' }}>
-          <MetricsPanel />
-        </div>
-
-        <CollapsibleSection title="Agents" defaultOpen>
-          <AgentsPanel />
-        </CollapsibleSection>
-
-        <CollapsibleSection title="Order Book">
-          <OrderBookPanel />
-        </CollapsibleSection>
-
-        <CollapsibleSection title="Trade Feed">
-          {currentPeriod ? (
-            <TradeFeed trades={currentPeriod.trades} />
-          ) : (
-            <p style={{ fontSize: '0.75rem', color: 'var(--fg-3)', margin: 0 }}>
-              Run the simulation to see trades.
-            </p>
-          )}
-        </CollapsibleSection>
-
-        <CollapsibleSection title="Replay">
-          <ReplayPanel />
-        </CollapsibleSection>
+      {/* Tab bar */}
+      <div style={{ display: 'flex', borderBottom: '1px solid var(--border)' }}>
+        {(['live', 'config'] as const).map((tab) => {
+          const isActive = activeTab === tab;
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              style={{
+                flex: 1,
+                border: 'none',
+                borderBottom: isActive ? '2px solid var(--accent)' : '2px solid transparent',
+                background: 'transparent',
+                fontSize: '0.75rem',
+                fontWeight: isActive ? 700 : 400,
+                color: isActive ? 'var(--accent)' : 'var(--fg-2)',
+                cursor: 'pointer',
+                padding: '0.45rem 0.5rem',
+                transition: 'all 0.1s',
+              }}
+            >
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Config zone */}
-      <ConfigSidebar />
+      {/* Tab content */}
+      {activeTab === 'live' ? (
+        <>
+          <div style={{ padding: '0.5rem 0.6rem' }}>
+            <SessionStats />
+            <MetricsPanel />
+          </div>
+
+          <CollapsibleSection title="Agents" defaultOpen>
+            <AgentsPanel />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Order Book">
+            <OrderBookPanel />
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Trade Feed">
+            {currentPeriod ? (
+              <TradeFeed trades={currentPeriod.trades} />
+            ) : (
+              <p style={{ fontSize: '0.75rem', color: 'var(--fg-3)', margin: 0 }}>
+                Run the simulation to see trades.
+              </p>
+            )}
+          </CollapsibleSection>
+
+          <CollapsibleSection title="Replay">
+            <ReplayPanel />
+          </CollapsibleSection>
+        </>
+      ) : (
+        <ConfigSidebar />
+      )}
     </div>
   );
 }
@@ -101,7 +132,7 @@ export function SidebarContent() {
 export function Sidebar() {
   return (
     <aside style={{
-      width: '280px',
+      width: '420px',
       flexShrink: 0,
       position: 'sticky',
       top: 0,
