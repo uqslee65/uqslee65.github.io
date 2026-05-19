@@ -108,19 +108,19 @@ export interface SimConfig {
 
 export const DEFAULT_EXPERIENCE: ExperienceCurveConfig = {
   alpha0: 0.0,
-  sigma0: 5.0,
-  omega0: 0.60,
+  sigma0: 12.0,
+  omega0: 0.90,
   gammaAlpha: 0.15,
   gammaSigma: 0.30,
-  deltaOmega: 0.10,
+  deltaOmega: 0.05,
   kMax: 3,
 };
 
 export const DEFAULT_HEURISTICS: HeuristicWeights = {
-  anchor: 0.50,
-  trend: 0.20,
+  anchor: 0.30,
+  trend: 0.35,
   dividend: 0.20,
-  narrative: 0.10,
+  narrative: 0.15,
 };
 
 export const DEFAULT_BOUNDED_RATIONALITY: BoundedRationalityConfig = {
@@ -162,8 +162,8 @@ export const DLM_DEFAULTS: SimConfig = {
   heuristics: DEFAULT_HEURISTICS,
   boundedRationality: DEFAULT_BOUNDED_RATIONALITY,
   regulator: DEFAULT_REGULATOR,
-  priorBias: false,
-  priorNoise: false,
+  priorBias: true,
+  priorNoise: true,
   nFundamentalists: 0,
   nTrendFollowers: 0,
   speed: 500,

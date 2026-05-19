@@ -29,18 +29,18 @@ export const ENDOWMENTS = [
 export { DLM_DEFAULTS } from './types';
 
 export const AGENT_TYPES_INEXP: [number, number, number, number][] = [
-  [0.08, 0.05, 12.0, 0.15], // speculator
-  [0.08, 0.05, 12.0, 0.15],
-  [0.17, 0.11, 11.0, 0.04], // moderate
-  [0.17, 0.11, 11.0, 0.04],
-  [0.35, 0.28, 10.0, 0.0],  // aware
+  [0.07, 0.04, 12.0, 0.58], // speculator — high bias = bubble fuel
+  [0.07, 0.04, 12.0, 0.58],
+  [0.15, 0.09, 11.0, 0.18], // moderate
+  [0.15, 0.09, 11.0, 0.18],
+  [0.35, 0.28, 10.0, 0.0],  // aware — rational anchor
   [0.35, 0.28, 10.0, 0.0],
 ];
 
-const SUBMIT_PROB = 0.33;
+const SUBMIT_PROB = 0.45;
 
-const FEAR_MULTIPLIER = 3.0;
-const FEAR_THRESHOLD = 0.10;
+const FEAR_MULTIPLIER = 2.0;
+const FEAR_THRESHOLD = 0.30;
 
 // --- PRNG (seeded xoshiro128**) ---
 
@@ -209,7 +209,7 @@ export class Agent {
     const omega_i = this.experienceOmega(exp);
     const H = this.heuristic(heuristics, lastPrice, prevPrice, lastDividend, fv, discountRate);
     const blend = alpha_i * fv + (1 - alpha_i) * H;
-    const bias = priorBias ? this.beliefBias * 0.15 : 0;
+    const bias = priorBias ? this.beliefBias : 0;
     const noise = priorNoise ? rng.normal(0, sigma_i) : 0;
     const V_prior = Math.max(0, blend * (1 + bias) + noise);
     const peerSignal = vwap > 0 ? vwap : fv;
@@ -223,10 +223,10 @@ export class Agent {
     const prob = SUBMIT_PROB + this.roundsCompleted * 0.06;
     if (rng.next() > prob) return;
 
-    if (this.shares > 0 && fv < this.belief * 0.65) {
-      const panicProb = 0.30 + this.alpha * 0.5;
+    if (this.shares > 0 && fv < this.belief * 0.35) {
+      const panicProb = 0.15 + this.alpha * 0.3;
       if (rng.next() < panicProb) {
-        const price = fv * rng.uniform(0.1, 0.55);
+        const price = lastPrice * rng.uniform(0.70, 0.95);
         if (price > 0.5) book.submitAsk(price, this.id);
         return;
       }
@@ -278,7 +278,7 @@ export class Agent {
   }
 
   experienceOmega(exp: ExperienceCurveConfig): number {
-    return exp.omega0 + exp.deltaOmega * Math.min(exp.kMax, this.roundsCompleted);
+    return Math.min(1.0, exp.omega0 + exp.deltaOmega * Math.min(exp.kMax, this.roundsCompleted));
   }
 
   heuristic(
@@ -288,8 +288,9 @@ export class Agent {
   ): number {
     const anchor = lastPrice > 0 ? lastPrice : this.belief;
     const trend = this.belief + (lastPrice - prevPrice);
-    const divSignal = discountRate > 0 ? lastDividend / discountRate : lastDividend * 20;
-    const narrative = fv * (1 + this.beliefBias);
+    // Naive signal: anchors on initial FV, doesn't track decline — bubble fuel
+    const divSignal = this.fv1;
+    const narrative = this.fv1 * (1 + this.beliefBias);
     return weights.anchor * anchor + weights.trend * trend
          + weights.dividend * divSignal + weights.narrative * narrative;
   }
