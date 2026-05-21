@@ -21,10 +21,9 @@ function agentColor(p: PeriodRecord | LLMPeriodRecord, ai: number): string {
     if (rp === 'risk-neutral') return '#6b7280';
     return '#22c55e';
   }
-  // Plan I: use type as proxy
-  const t = (a as { type: string }).type;
-  if (t === 'speculator') return '#ef4444';
-  if (t === 'moderate') return '#6b7280';
+  const rp2 = (a as { riskPref?: string }).riskPref;
+  if (rp2 === 'risk-loving') return '#ef4444';
+  if (rp2 === 'risk-neutral') return '#6b7280';
   return '#22c55e';
 }
 

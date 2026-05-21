@@ -107,20 +107,20 @@ export interface SimConfig {
 // --- Shared defaults for sub-configs ---
 
 export const DEFAULT_EXPERIENCE: ExperienceCurveConfig = {
-  alpha0: 0.0,
-  sigma0: 12.0,
-  omega0: 0.90,
+  alpha0: 0.40,
+  sigma0: 15,
+  omega0: 0.60,
   gammaAlpha: 0.15,
   gammaSigma: 0.30,
-  deltaOmega: 0.05,
+  deltaOmega: 0.10,
   kMax: 3,
 };
 
 export const DEFAULT_HEURISTICS: HeuristicWeights = {
-  anchor: 0.30,
-  trend: 0.35,
+  anchor: 0.50,
+  trend: 0.20,
   dividend: 0.20,
-  narrative: 0.15,
+  narrative: 0.10,
 };
 
 export const DEFAULT_BOUNDED_RATIONALITY: BoundedRationalityConfig = {
@@ -139,24 +139,24 @@ export const DEFAULT_REGULATOR: RegulatorConfig = {
 
 /**
  * DLM_DEFAULTS: matches current engine.ts behavior exactly.
- * N=6 agents, T=10 periods, ticks=10, dividends=[0,20], fv1=100.
- * Note: fv1=100 because FV(period=1) = (10-1+1)*10 = 100.
+ * N=6 agents, T=20 periods, ticks=18, dividends=[0,10], fv1=100.
+ * Note: fv1=100 because FV(period=1) = (20-1+1)*5 = 100.
  */
 export const DLM_DEFAULTS: SimConfig = {
   plan: 'plan-i',
   assetClass: 'linear-declining',
   seed: 42,
-  nAgents: 6,
+  nAgents: 10,
   nRounds: 4,
-  nPeriods: 10,
-  ticksPerPeriod: 10,
-  dividends: [0, 20] as const,
-  expectedDiv: 10,
+  nPeriods: 20,
+  ticksPerPeriod: 18,
+  dividends: [0, 10] as const,
+  expectedDiv: 5,
   fv1: 100,
   treatment: 'R4-2/3',
   riskSplit: [0.33, 0.34, 0.33],
-  endowmentCash: [200, 600],
-  endowmentShares: [2, 6],
+  endowmentCash: [800, 1200],
+  endowmentShares: [2, 3, 4],
   discountRate: 0.05,
   experience: DEFAULT_EXPERIENCE,
   heuristics: DEFAULT_HEURISTICS,

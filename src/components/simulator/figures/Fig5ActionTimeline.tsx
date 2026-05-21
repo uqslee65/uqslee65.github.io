@@ -18,13 +18,11 @@ function actionColor(action: string | null): string {
   }
 }
 
-// Color for Plan I agent types
 function typeColor(type: string): string {
   switch (type) {
-    case 'speculator': return '#ef4444';
-    case 'moderate':   return '#6b7280';
-    case 'aware':      return '#22c55e';
-    default:           return '#6b7280';
+    case 'fundamentalist': return '#3b82f6';
+    case 'trend-follower': return '#f59e0b';
+    default:               return '#6b7280';
   }
 }
 
@@ -96,7 +94,8 @@ export function Fig5ActionTimeline() {
           ctx.fillStyle = actionColor(a.lastAction);
         } else {
           const a = (p as PeriodRecord).agentStates[ai];
-          ctx.fillStyle = typeColor(a.type);
+          ctx.fillStyle = a.riskPref === 'risk-loving' ? '#ef4444'
+            : a.riskPref === 'risk-averse' ? '#22c55e' : '#6b7280';
         }
         ctx.beginPath();
         ctx.arc(cx, cy, dotR, 0, Math.PI * 2);

@@ -42,9 +42,7 @@ interface AgentCardProps {
 }
 
 const TYPE_COLORS: Record<AgentType, string> = {
-  speculator: '#ef4444',
-  moderate: '#f59e0b',
-  aware: '#22c55e',
+  utility: '#6b7280',
   fundamentalist: '#3b82f6',
   'trend-follower': '#a855f7',
 };
@@ -85,7 +83,7 @@ export function AgentCard({
   const typeLabel = isLLM && llmState
     ? ({ 'risk-loving': 'Risk-Loving', 'risk-neutral': 'Risk-Neutral', 'risk-averse': 'Risk-Averse' }[llmState.riskPref] ?? '?')
     : (!isLLM && planIState
-        ? ({ speculator: 'Speculator', moderate: 'Moderate', aware: 'Aware', fundamentalist: 'Fundamentalist', 'trend-follower': 'Trend-Follower' }[planIState.type] ?? '?')
+        ? ({ utility: 'Utility', fundamentalist: 'Fundamentalist', 'trend-follower': 'Trend-Follower' }[planIState.type] ?? '?')
         : '?');
 
   // Wealth history

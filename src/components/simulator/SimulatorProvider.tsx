@@ -4,7 +4,6 @@ import {
 } from 'react';
 import {
   runSession, fundamentalValue,
-  ENDOWMENTS,
   type PeriodRecord, type SessionResult,
 } from '../../lib/sim/engine';
 import { computeMetrics, type BubbleMetrics } from '../../lib/sim/metrics';
@@ -20,8 +19,6 @@ export const PUBLISHED: Record<number, BubbleMetrics> = {
   3: { haesselR2: 0.64, normAbsDev: 0.81, normAvgDev: 0.09, amplitude: 0.59, turnover: 0 },
   4: { haesselR2: 0.65, normAbsDev: 1.06, normAvgDev: 0.08, amplitude: 0.55, turnover: 0 },
 };
-
-const DLM_TOTAL_SHARES = ENDOWMENTS.reduce((s, e) => s + e.shares, 0);
 
 // --- Context shape ---
 
@@ -118,12 +115,10 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
     ? activePeriods.filter(p => p.round === currentRound) : [];
   const roundIdx = roundPeriods.findIndex(p => p === activePeriods?.[activeIdx]);
 
-  const totalSharesForMetrics = isLLM
-    ? config.nAgents * Math.round(
-        (config.endowmentShares.reduce((a, b) => a + b, 0) /
-         config.endowmentShares.length)
-      )
-    : DLM_TOTAL_SHARES;
+  const totalSharesForMetrics = config.nAgents * Math.round(
+    (config.endowmentShares.reduce((a, b) => a + b, 0) /
+     config.endowmentShares.length)
+  );
 
   const metrics = roundPeriods.length > 0 && roundIdx >= 0
     ? computeMetrics(

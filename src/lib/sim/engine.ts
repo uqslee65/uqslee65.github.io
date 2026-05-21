@@ -4,43 +4,37 @@
  */
 
 import { fundamentalValue as computeFV, generateDividend, generateFVPath } from './assets';
-import { DLM_DEFAULTS, type SimConfig, type ExperienceCurveConfig, type HeuristicWeights } from './types';
+import { DLM_DEFAULTS, type SimConfig, type ExperienceCurveConfig, type HeuristicWeights, type RiskPreference } from './types';
 
 // --- Legacy constant exports (kept for back-compat; values come from DLM_DEFAULTS) ---
 
-export const N_AGENTS = DLM_DEFAULTS.nAgents;
 export const N_ROUNDS = DLM_DEFAULTS.nRounds;
 export const N_PERIODS = DLM_DEFAULTS.nPeriods;
 export const TICKS_PER_PERIOD = DLM_DEFAULTS.ticksPerPeriod;
 export const DIVIDENDS = DLM_DEFAULTS.dividends;
 export const FV_1 = DLM_DEFAULTS.fv1;
 
-// DLM-calibrated fixed endowments (6 agents: 3 cash-rich/share-light, 3 cash-light/share-rich)
-export const ENDOWMENTS = [
-  { cash: 200, shares: 6 },
-  { cash: 200, shares: 6 },
-  { cash: 200, shares: 6 },
-  { cash: 600, shares: 2 },
-  { cash: 600, shares: 2 },
-  { cash: 600, shares: 2 },
-];
-
 // Re-export DLM_DEFAULTS so call sites can build configs without importing types directly
 export { DLM_DEFAULTS } from './types';
 
-export const AGENT_TYPES_INEXP: [number, number, number, number][] = [
-  [0.07, 0.04, 12.0, 0.58], // speculator — high bias = bubble fuel
-  [0.07, 0.04, 12.0, 0.58],
-  [0.15, 0.09, 11.0, 0.18], // moderate
-  [0.15, 0.09, 11.0, 0.18],
-  [0.35, 0.28, 10.0, 0.0],  // aware — rational anchor
-  [0.35, 0.28, 10.0, 0.0],
-];
+const P_FILL_PASSIVE = 0.30;
 
-const SUBMIT_PROB = 0.45;
+function sampleRho(pref: RiskPreference, rng: PRNG): number {
+  switch (pref) {
+    case 'risk-loving': return rng.uniform(-0.9, -0.1);
+    case 'risk-neutral': return 0;
+    case 'risk-averse': return rng.uniform(0.1, 0.9);
+  }
+}
 
-const FEAR_MULTIPLIER = 2.0;
-const FEAR_THRESHOLD = 0.30;
+function assignRiskPreference(
+  i: number, nAgents: number, riskSplit: [number, number, number],
+): RiskPreference {
+  const fraction = i / nAgents;
+  if (fraction < riskSplit[0]) return 'risk-loving';
+  if (fraction < riskSplit[0] + riskSplit[1]) return 'risk-neutral';
+  return 'risk-averse';
+}
 
 // --- PRNG (seeded xoshiro128**) ---
 
@@ -149,53 +143,48 @@ export class OrderBook {
 
 // --- Agent ---
 
-export type AgentType = 'speculator' | 'moderate' | 'aware' | 'fundamentalist' | 'trend-follower';
+export type AgentType = 'utility' | 'fundamentalist' | 'trend-follower';
 
 export class Agent {
   id: number;
   cash: number;
   shares: number;
-  alpha: number;
-  adaptRate: number;
-  noiseStd: number;
   beliefBias: number;
   belief: number;
   roundsCompleted: number;
   type: AgentType;
+  rho: number;
+  riskPref: RiskPreference;
 
   private fv1: number;
 
   constructor(
     id: number, cash: number, shares: number,
-    alpha: number, adaptRate: number, noiseStd: number,
     beliefBias: number, type: AgentType,
     fv1: number = FV_1,
+    riskPref: RiskPreference = 'risk-neutral',
+    rho: number = 0,
   ) {
     this.id = id;
     this.cash = cash;
     this.shares = shares;
-    this.alpha = alpha;
-    this.adaptRate = adaptRate;
-    this.noiseStd = noiseStd;
     this.beliefBias = beliefBias;
     this.fv1 = fv1;
     this.belief = fv1 * (1 + beliefBias);
     this.roundsCompleted = 0;
     this.type = type;
+    this.riskPref = riskPref;
+    this.rho = rho;
+  }
+
+  crraUtility(w: number): number {
+    const safeW = Math.max(w, 0.01);
+    if (Math.abs(this.rho - 1) < 0.001) return Math.log(safeW);
+    return Math.pow(safeW, 1 - this.rho) / (1 - this.rho);
   }
 
   get isExperienced(): boolean {
     return this.roundsCompleted > 0;
-  }
-
-  updateBelief(lastPrice: number, fv: number) {
-    const fvWeight = this.alpha * 0.35;
-    const target = (1 - fvWeight) * lastPrice + fvWeight * fv;
-    const gap = this.belief > 0 ? (this.belief - target) / this.belief : 0;
-    const rate = gap > FEAR_THRESHOLD
-      ? Math.min(0.95, this.adaptRate * FEAR_MULTIPLIER)
-      : this.adaptRate;
-    this.belief = (1 - rate) * this.belief + rate * target;
   }
 
   valuation(
@@ -204,7 +193,9 @@ export class Agent {
     lastPrice: number, prevPrice: number, lastDividend: number,
     discountRate: number, priorBias: boolean, priorNoise: boolean, vwap: number,
   ): number {
-    const alpha_i = this.experienceAlpha(exp);
+    const alpha_i = this.type === 'fundamentalist' ? 1.0
+      : this.type === 'trend-follower' ? 0.0
+      : this.experienceAlpha(exp);
     const sigma_i = this.experienceNoise(exp);
     const omega_i = this.experienceOmega(exp);
     const H = this.heuristic(heuristics, lastPrice, prevPrice, lastDividend, fv, discountRate);
@@ -220,44 +211,67 @@ export class Agent {
     fv: number, lastPrice: number, period: number, book: OrderBook, rng: PRNG,
     config: SimConfig, prevPrice: number, lastDividend: number, vwap: number,
   ) {
-    const prob = SUBMIT_PROB + this.roundsCompleted * 0.06;
-    if (rng.next() > prob) return;
-
-    if (this.shares > 0 && fv < this.belief * 0.35) {
-      const panicProb = 0.15 + this.alpha * 0.3;
-      if (rng.next() < panicProb) {
-        const price = lastPrice * rng.uniform(0.70, 0.95);
-        if (price > 0.5) book.submitAsk(price, this.id);
-        return;
-      }
-    }
-
     const v = this.valuation(fv, period, rng, config.experience, config.heuristics,
       lastPrice, prevPrice, lastDividend, config.discountRate,
       config.priorBias, config.priorNoise, vwap);
-    const canBuy = this.cash >= Math.max(5.0, fv * 0.3);
-    const canSell = this.shares > 0;
-    if (!canBuy && !canSell) return;
 
-    let side: 'bid' | 'ask';
-    if (canBuy && canSell) {
-      if (v > lastPrice * 1.01) side = 'bid';
-      else if (v < lastPrice * 0.99) side = 'ask';
-      else side = rng.next() > 0.5 ? 'bid' : 'ask';
-    } else if (canBuy) {
-      side = 'bid';
-    } else {
-      side = 'ask';
+    const bestBid = book.bestBidPrice;
+    const bestAsk = book.bestAskPrice;
+    const w0 = this.cash + this.shares * v;
+    const U0 = this.crraUtility(w0);
+
+    type Action = { name: string; eu: number; submit: () => void };
+    const actions: Action[] = [];
+
+    // HOLD — baseline
+    actions.push({ name: 'hold', eu: U0, submit: () => {} });
+
+    // BUY_NOW — market buy at best ask (p_fill = 1.0)
+    if (bestAsk !== null && this.cash >= bestAsk) {
+      const w1 = (this.cash - bestAsk) + (this.shares + 1) * v;
+      actions.push({
+        name: 'buy_now', eu: this.crraUtility(w1),
+        submit: () => book.submitBid(bestAsk + 0.01, this.id),
+      });
     }
 
-    const spread = Math.abs(rng.normal(0, this.noiseStd * 0.25));
-    if (side === 'bid') {
-      const price = v - spread;
-      if (price > 0 && price <= this.cash) book.submitBid(price, this.id);
-    } else {
-      const price = v + spread;
-      if (price > 0) book.submitAsk(price, this.id);
+    // SELL_NOW — market sell at best bid (p_fill = 1.0)
+    if (bestBid !== null && this.shares > 0) {
+      const w1 = (this.cash + bestBid) + (this.shares - 1) * v;
+      actions.push({
+        name: 'sell_now', eu: this.crraUtility(w1),
+        submit: () => book.submitAsk(bestBid - 0.01, this.id),
+      });
     }
+
+    // PASSIVE BID — limit buy improving the bid (p_fill = P_FILL_PASSIVE)
+    const bidPrice = bestBid !== null ? bestBid + 0.5 : fv * 0.95;
+    if (bidPrice > 0 && bidPrice <= this.cash) {
+      const w1 = (this.cash - bidPrice) + (this.shares + 1) * v;
+      const eu = P_FILL_PASSIVE * this.crraUtility(w1) + (1 - P_FILL_PASSIVE) * U0;
+      actions.push({
+        name: 'bid', eu,
+        submit: () => book.submitBid(bidPrice, this.id),
+      });
+    }
+
+    // PASSIVE ASK — limit sell improving the ask (p_fill = P_FILL_PASSIVE)
+    const askPrice = bestAsk !== null ? bestAsk - 0.5 : fv * 1.05;
+    if (askPrice > 0 && this.shares > 0) {
+      const w1 = (this.cash + askPrice) + (this.shares - 1) * v;
+      const eu = P_FILL_PASSIVE * this.crraUtility(w1) + (1 - P_FILL_PASSIVE) * U0;
+      actions.push({
+        name: 'ask', eu,
+        submit: () => book.submitAsk(askPrice, this.id),
+      });
+    }
+
+    // Argmax with tie-breaking noise
+    let best = actions[0];
+    for (let i = 1; i < actions.length; i++) {
+      if (actions[i].eu > best.eu + rng.normal(0, 0.001)) best = actions[i];
+    }
+    best.submit();
   }
 
   learn() {
@@ -270,7 +284,7 @@ export class Agent {
   }
 
   experienceAlpha(exp: ExperienceCurveConfig): number {
-    return Math.min(1, this.alpha + exp.alpha0 + exp.gammaAlpha * this.roundsCompleted);
+    return Math.min(1, exp.alpha0 + exp.gammaAlpha * this.roundsCompleted);
   }
 
   experienceNoise(exp: ExperienceCurveConfig): number {
@@ -288,28 +302,14 @@ export class Agent {
   ): number {
     const anchor = lastPrice > 0 ? lastPrice : this.belief;
     const trend = this.belief + (lastPrice - prevPrice);
-    // Naive signal: anchors on initial FV, doesn't track decline — bubble fuel
-    const divSignal = this.fv1;
-    const narrative = this.fv1 * (1 + this.beliefBias);
+    const divSignal = discountRate > 0 ? lastDividend / discountRate : lastDividend * 20;
+    const narrative = fv * (1 + this.beliefBias);
     return weights.anchor * anchor + weights.trend * trend
          + weights.dividend * divSignal + weights.narrative * narrative;
   }
 }
 
 // --- Factory ---
-
-function getAgentType(idx: number): AgentType {
-  if (idx < 2) return 'speculator';
-  if (idx < 4) return 'moderate';
-  return 'aware';
-}
-
-function assignAgentType(i: number, nAgents: number, riskSplit: [number, number, number]): { type: AgentType; typeIdx: number } {
-  const fraction = i / nAgents;
-  if (fraction < riskSplit[0]) return { type: 'speculator', typeIdx: 0 };
-  if (fraction < riskSplit[0] + riskSplit[1]) return { type: 'moderate', typeIdx: 2 };
-  return { type: 'aware', typeIdx: 4 };
-}
 
 function generateEndowment(rng: PRNG, config: SimConfig): { cash: number; shares: number } {
   const [minCash, maxCash] = config.endowmentCash;
@@ -318,22 +318,19 @@ function generateEndowment(rng: PRNG, config: SimConfig): { cash: number; shares
   return { cash, shares };
 }
 
-function makeAgentInexperienced(
+function makeAgent(
   id: number,
   endow: { cash: number; shares: number },
-  typeIdx: number,
   rng: PRNG,
   fv1: number,
+  riskPref: RiskPreference,
 ): Agent {
-  const [baseAlpha, baseAdapt, baseNoise, bias] = AGENT_TYPES_INEXP[typeIdx];
-  const jitter = rng.uniform(0.8, 1.2);
+  const biasDir = rng.next() < 0.33 ? 1 : rng.next() < 0.5 ? -1 : 0;
+  const bias = biasDir * 0.15;
   return new Agent(
     id, endow.cash, endow.shares,
-    baseAlpha * jitter, baseAdapt * jitter,
-    baseNoise * rng.uniform(0.85, 1.15),
-    bias * rng.uniform(0.7, 1.3),
-    getAgentType(typeIdx),
-    fv1,
+    bias, 'utility',
+    fv1, riskPref, sampleRho(riskPref, rng),
   );
 }
 
@@ -345,7 +342,7 @@ export interface PeriodRecord {
   fv: number;
   meanPrice: number;
   trades: Trade[];
-  agentStates: { id: number; belief: number; cash: number; shares: number; type: AgentType }[];
+  agentStates: { id: number; belief: number; cash: number; shares: number; type: AgentType; rho: number; riskPref: RiskPreference }[];
 }
 
 export interface SessionResult {
@@ -399,7 +396,6 @@ export function runRound(
 
   for (let period = 1; period <= nPeriods; period++) {
     const fv = computeFV(period, nPeriods, config, fvPath);
-    for (const agent of agents) agent.updateBelief(lastPrice, fv);
 
     const book = new OrderBook();
     const allTrades: Trade[] = [];
@@ -433,6 +429,7 @@ export function runRound(
       trades: allTrades,
       agentStates: agents.map(a => ({
         id: a.id, belief: a.belief, cash: a.cash, shares: a.shares, type: a.type,
+        rho: a.rho, riskPref: a.riskPref,
       })),
     });
   }
@@ -480,22 +477,17 @@ export function runSession(
   // Generate endowments per agent from config ranges (not hardcoded table)
   const agentEndowments = Array.from({ length: nAgents }, () => generateEndowment(rng, config));
 
-  // Assign types proportionally using riskSplit, then shuffle
-  const typeOrder = rng.permutation(nAgents);
   const agents = Array.from({ length: nAgents }, (_, i) => {
-    const { typeIdx } = assignAgentType(typeOrder[i], nAgents, config.riskSplit);
-    return makeAgentInexperienced(i, agentEndowments[i], typeIdx, rng, fv1);
+    const riskPref = assignRiskPreference(i, nAgents, config.riskSplit);
+    return makeAgent(i, agentEndowments[i], rng, fv1, riskPref);
   });
 
-  // Override types for fundamentalist and trend-follower agents
   for (let i = 0; i < Math.min(config.nFundamentalists, agents.length); i++) {
-    agents[i].alpha = 1.0;
-    agents[i].type = 'fundamentalist' as AgentType;
+    agents[i].type = 'fundamentalist';
   }
   for (let i = config.nFundamentalists;
        i < Math.min(config.nFundamentalists + config.nTrendFollowers, agents.length); i++) {
-    agents[i].alpha = 0.0;
-    agents[i].type = 'trend-follower' as AgentType;
+    agents[i].type = 'trend-follower';
   }
 
   const allPeriods: PeriodRecord[] = [];
@@ -508,34 +500,21 @@ export function runSession(
     }
 
     if (roundNum === nRounds) {
-      // Round-4 novice replacement: scale replacement count proportionally
-      const replaceFraction = config.treatment === 'R4-2/3' ? 2 / 3 : 1 / 3;
+      const replaceFraction = config.treatment === 'R4-2/3' ? 1 / 3 : 2 / 3;
       const nReplace = Math.max(1, Math.round(nAgents * replaceFraction));
       const replaceIds = rng.choiceN(nAgents, nReplace);
-      for (let j = 0; j < replaceIds.length; j++) {
-        const idx = replaceIds[j];
-        const { typeIdx: baseIdx } = assignAgentType(rng.next() * nAgents | 0, nAgents, config.riskSplit);
-        const [bAlpha, bAdapt, bNoise] = AGENT_TYPES_INEXP[baseIdx];
-        agents[idx] = new Agent(
-          idx, agentEndowments[idx].cash, agentEndowments[idx].shares,
-          bAlpha * 1.5 * rng.uniform(0.8, 1.2),
-          bAdapt * 1.3 * rng.uniform(0.8, 1.2),
-          bNoise * rng.uniform(0.85, 1.15),
-          0.0,
-          assignAgentType(baseIdx, nAgents, config.riskSplit).type,
-          fv1,
-        );
+      for (const idx of replaceIds) {
+        const riskPref = assignRiskPreference(idx, nAgents, config.riskSplit);
+        const freshEndow = generateEndowment(rng, config);
+        agents[idx] = makeAgent(idx, freshEndow, rng, fv1, riskPref);
       }
 
-      // Re-apply F/T overrides — replacement may have clobbered them
       for (let i = 0; i < Math.min(config.nFundamentalists, agents.length); i++) {
-        agents[i].alpha = 1.0;
-        agents[i].type = 'fundamentalist' as AgentType;
+        agents[i].type = 'fundamentalist';
       }
       for (let i = config.nFundamentalists;
            i < Math.min(config.nFundamentalists + config.nTrendFollowers, agents.length); i++) {
-        agents[i].alpha = 0.0;
-        agents[i].type = 'trend-follower' as AgentType;
+        agents[i].type = 'trend-follower';
       }
     }
 
