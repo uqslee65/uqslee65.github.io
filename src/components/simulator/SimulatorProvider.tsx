@@ -161,7 +161,7 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
     try {
       const result = runSession({ ...config }, config.seed);
       setSession(result);
-      setCurrentIdx(0);
+      setCurrentIdx(result.periods.length - 1);
       setPlaying(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Plan I simulation failed');

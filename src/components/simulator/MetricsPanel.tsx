@@ -56,7 +56,7 @@ export function MetricsPanel() {
   ];
 
   return (
-    <Figure figNum="1" title="Bubble Metrics" titleTooltip={FIGURE_TOOLTIPS['fig1']}>
+    <Figure figNum="1" title={`Bubble Metrics — Round ${currentRound}`} titleTooltip={FIGURE_TOOLTIPS['fig1']}>
       <table style={{ width: '100%', fontSize: '0.8rem', borderCollapse: 'collapse' }}>
         <thead>
           <tr>

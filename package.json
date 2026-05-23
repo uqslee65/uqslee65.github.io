@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.0",
@@ -20,6 +22,8 @@
     "tailwindcss": "^4.1.0"
   },
   "devDependencies": {
-    "@playwright/test": "^1.60.0"
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.9.1",
+    "vitest": "^4.1.7"
   }
 }

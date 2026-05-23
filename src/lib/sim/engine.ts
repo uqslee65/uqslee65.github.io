@@ -4,7 +4,7 @@
  */
 
 import { fundamentalValue as computeFV, generateDividend, generateFVPath } from './assets';
-import { DLM_DEFAULTS, type SimConfig, type ExperienceCurveConfig, type HeuristicWeights, type RiskPreference } from './types';
+import { DLM_DEFAULTS, type SimConfig, type ExperienceCurveConfig, type HeuristicWeights, type RiskPreference, type BoundedRationalityConfig } from './types';
 
 // --- Legacy constant exports (kept for back-compat; values come from DLM_DEFAULTS) ---
 
@@ -192,18 +192,24 @@ export class Agent {
     exp: ExperienceCurveConfig, heuristics: HeuristicWeights,
     lastPrice: number, prevPrice: number, lastDividend: number,
     discountRate: number, priorBias: boolean, priorNoise: boolean, vwap: number,
+    br?: BoundedRationalityConfig,
   ): number {
+    const effectiveRC = br?.enabled ? Math.min(this.roundsCompleted, br.T) : this.roundsCompleted;
+
+    const perceivedFV = br?.enabled ? Math.max(0, fv + rng.normal(0, br.sigma)) : fv;
+
     const alpha_i = this.type === 'fundamentalist' ? 1.0
       : this.type === 'trend-follower' ? 0.0
-      : this.experienceAlpha(exp);
-    const sigma_i = this.experienceNoise(exp);
-    const omega_i = this.experienceOmega(exp);
-    const H = this.heuristic(heuristics, lastPrice, prevPrice, lastDividend, fv, discountRate);
-    const blend = alpha_i * fv + (1 - alpha_i) * H;
+      : Math.min(1, exp.alpha0 + exp.gammaAlpha * effectiveRC);
+    const sigma_i = exp.sigma0 * Math.exp(-exp.gammaSigma * effectiveRC);
+    const omega_i = Math.min(1.0, exp.omega0 + exp.deltaOmega * Math.min(exp.kMax, effectiveRC));
+    const H = this.heuristic(heuristics, lastPrice, prevPrice, lastDividend, perceivedFV, discountRate);
+    const blend = alpha_i * perceivedFV + (1 - alpha_i) * H;
     const bias = priorBias ? this.beliefBias : 0;
     const noise = priorNoise ? rng.normal(0, sigma_i) : 0;
     const V_prior = Math.max(0, blend * (1 + bias) + noise);
-    const peerSignal = vwap > 0 ? vwap : fv;
+    const peerSignal = vwap > 0 ? vwap : perceivedFV;
+
     return Math.max(1.0, omega_i * V_prior + (1 - omega_i) * peerSignal);
   }
 
@@ -211,19 +217,21 @@ export class Agent {
     fv: number, lastPrice: number, period: number, book: OrderBook, rng: PRNG,
     config: SimConfig, prevPrice: number, lastDividend: number, vwap: number,
   ) {
+    const br = config.boundedRationality;
     const v = this.valuation(fv, period, rng, config.experience, config.heuristics,
       lastPrice, prevPrice, lastDividend, config.discountRate,
-      config.priorBias, config.priorNoise, vwap);
+      config.priorBias, config.priorNoise, vwap, br);
 
-    const bestBid = book.bestBidPrice;
-    const bestAsk = book.bestAskPrice;
+    // N limits order book visibility
+    const bestBid = br?.enabled && br.N === 0 ? null : book.bestBidPrice;
+    const bestAsk = br?.enabled && br.N === 0 ? null : book.bestAskPrice;
     const w0 = this.cash + this.shares * v;
     const U0 = this.crraUtility(w0);
 
     type Action = { name: string; eu: number; submit: () => void };
     const actions: Action[] = [];
 
-    // HOLD — baseline
+    // HOLD — baseline (always included)
     actions.push({ name: 'hold', eu: U0, submit: () => {} });
 
     // BUY_NOW — market buy at best ask (p_fill = 1.0)
@@ -266,11 +274,29 @@ export class Agent {
       });
     }
 
-    // Argmax with tie-breaking noise
-    let best = actions[0];
-    for (let i = 1; i < actions.length; i++) {
-      if (actions[i].eu > best.eu + rng.normal(0, 0.001)) best = actions[i];
+    // K limits action evaluation: keep HOLD + randomly sample min(K-1, rest)
+    let candidates = actions;
+    if (br?.enabled && br.K < actions.length) {
+      const nonHold = actions.slice(1);
+      const k = Math.min(br.K - 1, nonHold.length);
+      const indices = rng.choiceN(nonHold.length, k);
+      candidates = [actions[0], ...indices.map(i => nonHold[i])];
     }
+
+    // Argmax with tie-breaking noise
+    let best = candidates[0];
+    for (let i = 1; i < candidates.length; i++) {
+      if (candidates[i].eu > best.eu + rng.normal(0, 0.001)) best = candidates[i];
+    }
+
+    // p — execution error: with probability p, pick random action instead
+    if (br?.enabled && br.p > 0 && rng.next() < br.p) {
+      const validActions = candidates.filter(a => a.name !== 'hold');
+      if (validActions.length > 0) {
+        best = rng.choice(validActions);
+      }
+    }
+
     best.submit();
   }
 
@@ -399,14 +425,25 @@ export function runRound(
 
     const book = new OrderBook();
     const allTrades: Trade[] = [];
+    let halted = false;
 
     for (let tick = 0; tick < ticksPerPeriod; tick++) {
+      if (halted) break;
+
       const order = rng.permutation(nAgents);
       for (const idx of order) {
         agents[idx].maybeSubmit(fv, lastPrice, period, book, rng, config, prevPrice, lastDividend, vwap);
       }
       const trades = book.match(agents, tick);
       allTrades.push(...trades);
+
+      // Regulator circuit breaker: halt if mispricing exceeds threshold
+      if (config.regulator?.enabled && trades.length > 0) {
+        const lastTradePrice = trades[trades.length - 1].price;
+        if (fv > 0 && Math.abs(lastTradePrice - fv) / fv > config.regulator.threshold) {
+          halted = true;
+        }
+      }
     }
 
     const prices = allTrades.map(t => t.price);
