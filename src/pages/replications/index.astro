@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const replications = (await getCollection('replications')).sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+
+const statusColor: Record<string, string> = {
+  complete: 'text-green-400 bg-green-900/30',
+  partial: 'text-yellow-400 bg-yellow-900/30',
+  planned: 'text-neutral-400 bg-neutral-800',
+};
+---
+
+<BaseLayout title="Replications">
+  <div class="max-w-4xl mx-auto px-6 py-12">
+    <h1 class="text-2xl font-bold mb-2">Replications</h1>
+    <p class="text-sm text-neutral-400 mb-8">
+      Academic paper replications. Rendered as static notebook pages — code cells, outputs, and figures.
+    </p>
+
+    {replications.length === 0 ? (
+      <p class="text-neutral-500 text-sm">No replications yet.</p>
+    ) : (
+      <ul class="space-y-3">
+        {replications.map(rep => (
+          <li>
+            <a
+              href={`/replications/${rep.id}`}
+              class="flex items-start gap-4 p-4 rounded-lg border border-neutral-800 hover:border-neutral-600 transition-colors group"
+            >
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 mb-1">
+                  <span class={`text-xs font-semibold px-2 py-0.5 rounded ${statusColor[rep.data.status]}`}>
+                    {rep.data.status}
+                  </span>
+                  <span class="text-xs text-neutral-500">{rep.data.date}</span>
+                </div>
+                <h2 class="font-semibold text-sm group-hover:text-accent transition-colors">{rep.data.title}</h2>
+                <p class="text-xs text-neutral-500 mt-0.5 truncate">{rep.data.paper}</p>
+                {rep.data.tags.length > 0 && (
+                  <div class="flex gap-1 mt-2 flex-wrap">
+                    {rep.data.tags.map(tag => (
+                      <span class="text-xs px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-400">{tag}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <span class="text-neutral-600 group-hover:text-neutral-400 transition-colors text-lg leading-none mt-1">→</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</BaseLayout>

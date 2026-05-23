@@ -27,6 +27,7 @@ export interface LLMAgentState {
   belief: number;
   roundsCompleted: number;
   lastAction: LLMAction | null;
+  lastReasoning?: string;
 }
 
 export interface LLMDecision {
@@ -208,6 +209,7 @@ export interface LLMPeriodRecord {
   trades: { buyer: number; seller: number; price: number; tick: number }[];
   agentStates: LLMAgentState[];
   trustMatrix: number[][];
+  broadcastMessages?: { agentId: number; message: string; tick: number }[];
 }
 
 export interface LLMSessionResult {

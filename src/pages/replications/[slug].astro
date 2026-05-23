@@ -1,0 +1,60 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const replications = await getCollection('replications');
+  return replications.map(rep => ({ params: { slug: rep.id }, props: { rep } }));
+}
+
+const { rep } = Astro.props;
+const { Content } = await render(rep);
+
+const statusColor: Record<string, string> = {
+  complete: 'text-green-400',
+  partial: 'text-yellow-400',
+  planned: 'text-neutral-400',
+};
+---
+
+<BaseLayout title={rep.data.title}>
+  <div class="max-w-3xl mx-auto px-6 py-12">
+    <a href="/replications" class="text-xs text-neutral-500 hover:text-neutral-300 mb-6 inline-block">
+      ← Replications
+    </a>
+
+    <div class="mb-8">
+      <div class="flex items-center gap-3 mb-2">
+        <span class={`text-sm font-semibold ${statusColor[rep.data.status]}`}>{rep.data.status}</span>
+        <span class="text-xs text-neutral-500">{rep.data.date}</span>
+      </div>
+      <h1 class="text-2xl font-bold mb-1">{rep.data.title}</h1>
+      <p class="text-sm text-neutral-400 italic">{rep.data.paper}</p>
+      {rep.data.tags.length > 0 && (
+        <div class="flex gap-1 mt-3 flex-wrap">
+          {rep.data.tags.map(tag => (
+            <span class="text-xs px-2 py-0.5 rounded bg-neutral-800 text-neutral-400">{tag}</span>
+          ))}
+        </div>
+      )}
+    </div>
+
+    <div class="notebook-body prose prose-invert prose-sm max-w-none">
+      <Content />
+    </div>
+  </div>
+</BaseLayout>
+
+<style>
+  .notebook-body :global(pre) {
+    background: #0a0a0a;
+    border: 1px solid #262626;
+    border-radius: 4px;
+    padding: 1rem;
+    overflow-x: auto;
+    font-size: 0.8rem;
+  }
+  .notebook-body :global(code) {
+    font-size: 0.8rem;
+  }
+</style>

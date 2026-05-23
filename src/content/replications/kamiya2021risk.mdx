@@ -1,0 +1,70 @@
+---
+title: "Kamiya et al. (2021) — Corporate Risk-Taking After Natural Disasters"
+paper: "Kamiya, S., Kang, J.-K., Kim, J., Milidonis, A., & Stulz, R. M. (2021). Risk management, firm reputation, and the impact of successful cyberattacks on target firms. Journal of Financial Economics, 139(3), 719–749."
+status: complete
+date: "2026-05-23"
+tags: [risk, catastrophe, insurance, ESG]
+---
+
+import NotebookCell from '../../components/NotebookCell';
+
+## Overview
+
+Replication of Kamiya et al. (2021) studying how corporate risk-taking changes following natural disasters. Uses difference-in-differences on firm-level panel data.
+
+## Environment
+
+<NotebookCell language="python">
+{`import phd_finance as pf
+import pandas as pd
+import numpy as np
+
+pf.__version__`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{'0.1.0'}
+</NotebookCell>
+
+## Data Loading
+
+<NotebookCell language="python">
+{`# Load COMPUSTAT + CRSP merged panel
+df = pf.data.load_compustat_crsp(
+    start=1990, end=2015,
+    vars=['at', 'ceq', 'ni', 'sale', 'capx', 'xrd']
+)
+print(df.shape)`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{'(142830, 12)'}
+</NotebookCell>
+
+## Main Specification
+
+Difference-in-differences: treated firms are those in disaster-affected counties, control firms matched on size, industry, and leverage.
+
+<NotebookCell language="python">
+{`result = pf.replications.kamiya2021.run(df)
+result.summary()`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{`DID Coefficient (risk-taking ↑ post-disaster): 0.043***
+  SE: 0.012  |  t: 3.58  |  p < 0.001
+N treated: 847  |  N control: 3,204
+R²: 0.412  |  Status: PASS`}
+</NotebookCell>
+
+## Robustness
+
+<NotebookCell language="python">
+{`pf.replications.kamiya2021.robustness_checks(df)`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{`[1] Placebo (pre-period)       : coef = 0.002, p = 0.82  ✓
+[2] Alternative matching       : coef = 0.039, p < 0.001  ✓
+[3] Exclude financials (SIC 6) : coef = 0.047, p < 0.001  ✓`}
+</NotebookCell>

@@ -224,6 +224,15 @@ export async function runLLMSession(
 
       const decisions = await Promise.all(decisionPromises);
 
+      // Capture per-agent reasoning as broadcast messages
+      const broadcastMessages: { agentId: number; message: string; tick: number }[] = [];
+      decisions.forEach((decision, i) => {
+        if (decision.reasoning) {
+          agents[i].lastReasoning = decision.reasoning;
+          broadcastMessages.push({ agentId: i, message: decision.reasoning, tick: 0 });
+        }
+      });
+
       // Execute decisions across ticks (replay the period-boundary decision)
       for (let tick = 0; tick < ticksPerPeriod; tick++) {
         if (abortSignal?.aborted) break;
@@ -275,6 +284,7 @@ export async function runLLMSession(
         trades: allTrades,
         agentStates: agents.map(a => ({ ...a })),
         trustMatrix: trustMatrix.map(row => [...row]),
+        broadcastMessages: broadcastMessages.length > 0 ? broadcastMessages : undefined,
       };
       allPeriods.push(periodRecord);
       onPeriodComplete?.(periodRecord);
