@@ -1,6 +1,11 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import TabBar from '../components/TabBar.astro';
+
+const replications = (await getCollection('replications')).sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
 ---
 
 <BaseLayout title="Research — Josh">
@@ -36,7 +41,29 @@ import TabBar from '../components/TabBar.astro';
   </div>
 
   <div data-tab-content="Replications" class="tab-panel" style="display:none">
-    <p class="empty-state">No replications yet.</p>
+    {replications.length === 0 ? (
+      <p class="empty-state">No replications yet.</p>
+    ) : (
+      <div class="replication-list">
+        {replications.map(rep => (
+          <a href={`/replications/${rep.id}`} class="replication-card card">
+            <div class="rep-header">
+              <span class={`rep-status rep-status--${rep.data.status}`}>{rep.data.status}</span>
+              <span class="rep-date">{rep.data.date}</span>
+            </div>
+            <div class="rep-title">{rep.data.title}</div>
+            <div class="rep-paper">{rep.data.paper}</div>
+            {rep.data.tags.length > 0 && (
+              <div class="tag-row">
+                {rep.data.tags.map(tag => (
+                  <span class="tag">{tag}</span>
+                ))}
+              </div>
+            )}
+          </a>
+        ))}
+      </div>
+    )}
   </div>
 </BaseLayout>
 
@@ -131,6 +158,49 @@ import TabBar from '../components/TabBar.astro';
     font-size: 0.875rem;
     color: var(--fg-3);
     margin: 0;
+  }
+
+  /* Replication cards */
+  .replication-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .replication-card {
+    display: block;
+    text-decoration: none;
+    padding: 1.25rem;
+  }
+  .rep-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+  }
+  .rep-status {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    text-transform: uppercase;
+  }
+  .rep-status--complete { background: rgba(34,197,94,0.15); color: #4ade80; }
+  .rep-status--partial { background: rgba(234,179,8,0.15); color: #facc15; }
+  .rep-status--planned { background: var(--stat-bg); color: var(--fg-3); }
+  .rep-date {
+    font-size: 0.75rem;
+    color: var(--fg-3);
+  }
+  .rep-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.2rem;
+  }
+  .rep-paper {
+    font-size: 0.8rem;
+    color: var(--fg-3);
+    margin-bottom: 0.5rem;
   }
 
   /* Mobile: collapse date into stacked layout */

@@ -1,5 +1,6 @@
 ---
 import Nav from '../components/Nav.astro';
+import { ContactFloat } from '../components/ContactFloat.tsx';
 import '../styles/global.css';
 
 interface Props {
@@ -29,6 +30,7 @@ const { title, description = 'PhD Finance Researcher — Experimental Economics,
     <main class="main-content">
       <slot />
     </main>
+    <ContactFloat client:load />
     <footer class="site-footer">
       <div class="footer-inner">
         <span class="footer-text">&copy; {new Date().getFullYear()} Josh</span>

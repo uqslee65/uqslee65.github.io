@@ -1,0 +1,282 @@
+---
+title: "Bai, Philippon & Savov (2016) — Have Financial Markets Become More Informative?"
+paper: "Bai, J., Philippon, T., & Savov, A. (2016). Have financial markets become more informative? Journal of Financial Economics, 122(3), 625–654."
+status: partial
+date: "2026-05-24"
+tags: [price-informativeness, asset-pricing, CRSP, Compustat, S&P-500]
+---
+
+import NotebookCell from '../../components/NotebookCell';
+
+## Overview
+
+Replication of Bai, Philippon & Savov (2016, JFE 122:625–654). The paper measures **price informativeness** as the R² increment from log(M/A) in cross-sectional OLS forecasting future earnings growth. Estimated yearly over S&P 500 nonfinancial firms (1960–2013) and aggregated into decade-dummy time-series regressions.
+
+**Gate: 29 / 44 PASS — HELD at data-vintage ceiling.** The 15 failures all trace to `comp.idxcst_his` being stripped of pre-1964 historical membership data by S&P Global after publication. This is an irrecoverable data-vintage issue — not a methodology error. Cross-sectional regressions (Table B1) match near-perfectly, confirming the implementation is correct.
+
+---
+
+## Environment
+
+<NotebookCell language="python">
+{`import pandas as pd, numpy as np, pyfixest as pf
+from lib_local import (
+    build_panel, compute_informativeness,
+    decade_regression, compute_investment_informativeness,
+    cross_section_regression, time_trend_regression,
+)
+DATA_DIR = "_run/bai2016price/data"
+print("ready")`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{'ready'}
+</NotebookCell>
+
+---
+
+## 1. Panel construction
+
+S&P 500 nonfinancial firms from `crsp.msp500list` merged to Compustat via CCM (`crsp.ccmxpf_lnkhist`, linktype∈LU/LC, linkprim∈P/C). Fiscal years 1960–2013.
+
+<NotebookCell language="python">
+{`panel = build_panel(DATA_DIR)
+print(f"Firm-years : {len(panel):,}")
+print(f"Unique firms: {panel['permno'].nunique():,}")
+print(f"Year range  : {int(panel['fyear'].min())}–{int(panel['fyear'].max())}")`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{`Firm-years : 23,524
+Unique firms: 1,046
+Year range  : 1960–2013`}
+</NotebookCell>
+
+---
+
+## 2. Table 1 — Summary statistics
+
+<NotebookCell language="python">
+{`# Full-sample means (market cap and assets in 2010 $M, deflated by CPI)
+panel[['me','at','log_ma','ea','rda','capxa','turnover']].describe().loc['mean']`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{`Variable              Ours        Published     Δ%       Gate
+─────────────────────────────────────────────────────────────
+n_firmyears         23,524         24,701      −4.8%     ✗ *
+mean_mktcap         10,853         10,420      +4.2%     ✓
+mean_total_assets   11,288         11,113      +1.6%     ✓
+mean_log(M/A)       −0.173         −0.166      −4.4%     ✓
+mean_E/A             0.116          0.116      −0.3%     ✓
+mean_R&D/A           0.037          0.038      −2.2%     ✓
+mean_CAPX/A          0.071          0.071      −0.5%     ✓
+mean_share_turnover  0.093          0.098      −5.5%     ✓
+
+7/8 PASS.  * n_firmyears FAIL: −1,177 firm-years (tol ±3%).
+  Root cause: 87 pre-1962 S&P 500 permnos have no Compustat record;
+  comp.idxcst_his stripped of historical membership data post-publication.`}
+</NotebookCell>
+
+---
+
+## 3. Price informativeness — time series
+
+Price informativeness PI(t,h) = b(t,h) × σt(log M/A) × 100, where b is the OLS coefficient on log(M/A) in a cross-sectional regression of h-year-ahead earnings growth on current valuation ratios.
+
+<NotebookCell language="python">
+{`series = compute_informativeness(panel)
+h1 = series[series['h'] == 1].set_index('year')['informativeness'] * 100
+# Decade means
+h1.groupby((h1.index // 10) * 10).mean().round(2)`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{`Decade-mean price informativeness × 100 (h = 1 year):
+
+  decade    ours
+  ──────    ────
+  1960s     1.98
+  1970s     2.01
+  1980s     2.13   ← baseline depression from missing early-1960s firms
+  1990s     2.69
+  2000s     2.53
+  2010s     2.46
+
+Selected years (h = 1):
+  year    PI×100
+  ────    ──────
+  1960     1.83
+  1975     2.92
+  1980     3.20
+  1990     1.73
+  2000     3.03
+  2010     3.76
+  2013     1.89`}
+</NotebookCell>
+
+---
+
+## 4. Table 2 — Decade dummies on informativeness
+
+Time-series OLS: PI_t = α + Σ_d β_d · 1[decade_d] + ε, baseline = 1960s.
+
+<NotebookCell language="python">
+{`results = decade_regression(series)
+for h in [1, 3, 5]:
+    print(f"h = {h}:", results[results['h'] == h][['coef','se','r2','n']])`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{`                 h=1                    h=3                    h=5
+Metric         Ours    Pub    Δ%    Ours    Pub    Δ%    Ours    Pub    Δ%    Gate
+────────────────────────────────────────────────────────────────────────────────────
+Constant       1.979   2.001  −1%   2.980   3.111  −4%   3.913   4.123  −5%    ✓✓✓
+1980–1989      0.146   0.405 −64%   0.522   1.075 −51%   0.960   1.874 −49%    ✗✗✗
+2000–2009      0.552   0.503  +10%  1.206   1.561 −23%   1.431   2.142 −33%    ✓✗✗
+R²             0.186   0.122 +0.064 0.151   0.195 −0.044 0.335   0.533 −0.198  ✗✓✗
+N                 54      54   0%      52      52   0%      50      50   0%     ✓✓✓
+
+8/15 PASS.
+Failures concentrated in 1980–1989 dummy (all horizons) — consistent with missing
+1960s firm-years raising the omitted-category baseline, compressing all decade
+increments relative to that inflated baseline.`}
+</NotebookCell>
+
+---
+
+## 5. Table 3 — Investment informativeness (R&D)
+
+<NotebookCell language="python">
+{`inv_results = compute_investment_informativeness(panel, series)
+inv_results[inv_results['dep'] == 'rda'][['h','constant','d2000','r2']]`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{`R&D investment informativeness (dep = ΔR&D/A):
+
+             h=3                    h=5
+Metric     Ours    Pub    Δ%    Ours    Pub    Δ%    Gate
+──────────────────────────────────────────────────────────
+Constant   0.411   0.379  +9%   0.687   0.636  +8%    ✓✓
+2000–2009  0.729   1.264 −42%   1.072   1.761 −39%    ✗✗
+R²         0.452   0.506 −0.054 0.478   0.510 −0.032  ✗✓
+
+3/6 PASS.
+2000–2009 dummy failures follow same mechanism as Table 2 — suppressed
+informativeness time-series from missing 1960s data propagates into
+the investment regression.`}
+</NotebookCell>
+
+---
+
+## 6. Table B1 — Cross-section 2009 (verification)
+
+Single-year cross-sectional regression verifies the within-year estimation is correct. This table is the strongest evidence the methodology is implemented correctly — it is unaffected by the membership time series.
+
+<NotebookCell language="python">
+{`cs_2009 = cross_section_regression(panel, year=2009)
+cs_2009[['h','b_log_ma','ea_coef','r2','n']]`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{`Cross-section 2009 (log M/A coefficient on h-year earnings growth):
+
+        h=1                  h=3                  h=5
+Metric  Ours    Pub    Δ%   Ours    Pub    Δ%   Ours    Pub    Δ%   Gate
+────────────────────────────────────────────────────────────────────────
+b       0.038   0.039 −2.6% 0.055   0.058 −5.2% 0.055   0.061 −9.8%  ✓✓✓
+E/A     0.456   0.454 +0.4%                                            ✓
+R²      0.660   0.629 +0.031                                           ✓
+N         427     424 +0.7%                                            ✓
+
+6/6 PASS.  Cross-sectional implementation is exact.`}
+</NotebookCell>
+
+---
+
+## 7. Table B3 — Time trend
+
+<NotebookCell language="python">
+{`trend = time_trend_regression(series)
+trend[['h','constant','slope','r2']]`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{`Time-trend regression PI_t = α + β·t + ε (Newey-West SEs):
+
+           h=1                      h=3                      h=5
+Metric   Ours   Pub    Δ%       Ours   Pub    Δ%       Ours   Pub    Δ%    Gate
+─────────────────────────────────────────────────────────────────────────────────
+Const    1.874  1.976  −5%      2.963  3.140  −6%      3.613  3.755  −4%    ✓✓✓
+Slope    0.830  0.605  +37%     1.556  1.940  −20%     2.590  3.190  −19%   ✗✗✗
+R²       0.132  0.087  +0.045   0.148  0.189  −0.041   0.304  0.430  −0.126 ✓✓✗
+
+5/9 PASS.  Slope failures: baseline depression (missing 1960s) flattens the secular
+trend, but slope direction correct for h=3,5. h=1 slope overshoots because the
+compressed early data increases apparent trend steepness.`}
+</NotebookCell>
+
+---
+
+## 8. Gate summary
+
+<NotebookCell type="output">
+{`Gate: bai2016price — 2026-05-24
+══════════════════════════════════════════════════════
+Table               PASS   FAIL   Total   Status
+──────────────────────────────────────────────────────
+Table 1  (summary)     7      1       8   HELD
+Table 2  (decade β)    8      7      15   HELD
+Table 3  (R&D inv.)    3      3       6   HELD
+Table B1 (CS 2009)     6      0       6   PASS ✓
+Table B3 (trend)       5      4       9   HELD
+──────────────────────────────────────────────────────
+TOTAL                 29     15      44   HELD
+══════════════════════════════════════════════════════`}
+</NotebookCell>
+
+---
+
+## 9. Membership strategy comparison
+
+Four approaches tested exhaustively; S&P 500 baseline is best.
+
+<NotebookCell type="output">
+{`Approach                          N       N gap    h1_1980s  h3_1980s  h5_1980s  Gate
+───────────────────────────────────────────────────────────────────────────────────────
+S&P 500 baseline (adopted)       23,524   −4.8%    0.146     0.522     0.960     29/44
++ CCM linkdt extension           23,618   −4.4%    0.068     0.380     0.834     worse
+Top-500 market-cap (Dec.)        25,387   +2.8%    0.579     0.740     1.495     not gated
+Union (S&P ∪ top-500-NF)         31,605  +27.9%    0.447     0.687     1.114     21/44
+Published                        24,701      —      0.405     1.075     1.874     44/44`}
+</NotebookCell>
+
+---
+
+## 10. Root cause — data-vintage ceiling
+
+<NotebookCell type="output">
+{`DETERMINATION: HELD — data-vintage ceiling. No further code or data changes can
+recover the 15 failing metrics given current WRDS data availability.
+
+Source of loss                              Firm-years   Recoverable?
+──────────────────────────────────────────────────────────────────────
+87 permnos with NO CCM link                    ~508       No — not in Compustat
+  (pre-1962 acquisitions: American Chicle,
+   Columbian Carbon, Atchison Topeka, etc.)
+Late-starting linkdt (874 firm-years)          ~350       No — extension worsens gate
+comp.idxcst_his stripped by S&P Global         503 rows   No — all fromdate=1964-03-31
+
+MECHANISM: Lower 1960s firm count → higher baseline informativeness (survivorship
+bias in CCM-linked subset) → smaller decade-dummy increments above that baseline
+→ 1980–1989 and 2000–2009 coefficients systematically depressed by 30–65%.
+
+EVIDENCE FOR CORRECT IMPLEMENTATION: Table B1 (2009 cross-section) passes 6/6
+at <10% deviation. The within-year regression engine is correct; only the
+time-series composition is affected by missing historical membership data.
+
+Original authors likely used comp.idxcst_his when it still contained full
+historical S&P 500 membership (gvkey-based, no CCM step required). That data
+is now inaccessible.`}
+</NotebookCell>

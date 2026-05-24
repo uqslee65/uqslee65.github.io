@@ -1,3 +1,260 @@
 ---
-return Astro.redirect('/', 301);
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { RESUME } from '../data/resume.ts';
 ---
+
+<BaseLayout title="About — Joshua Lee">
+  <header class="about-header">
+    <h1>Joshua Lee</h1>
+    <p class="subtitle">{RESUME.contact.title}</p>
+  </header>
+
+  <!-- Research Interests -->
+  <details class="cv-section" open>
+    <summary>Research Interests</summary>
+    <div class="cv-section-body">
+      <div class="tag-row">
+        {RESUME.researchInterests.map(interest => (
+          <span class="tag">{interest}</span>
+        ))}
+      </div>
+    </div>
+  </details>
+
+  <!-- Education -->
+  <details class="cv-section" open>
+    <summary>Education</summary>
+    <div class="cv-section-body">
+      {RESUME.education.map(entry => (
+        <div class="timeline-entry">
+          <span class="timeline-date">{entry.period}</span>
+          <div class="timeline-content">
+            <span class="entry-title">{entry.degree}</span>
+            {' — '}
+            <span class="entry-org">{entry.institution}</span>
+            {entry.grade && <span class="entry-meta"> · {entry.grade}</span>}
+            {entry.thesis && (
+              <div class="entry-sub">Thesis: <em>{entry.thesis}</em></div>
+            )}
+            {entry.advisors && entry.advisors.length > 0 && (
+              <div class="entry-sub">Advisors: {entry.advisors.join(', ')}</div>
+            )}
+            {entry.topics && entry.topics.length > 0 && (
+              <div class="entry-sub">Topics: {entry.topics.join(', ')}</div>
+            )}
+            {entry.awards && entry.awards.length > 0 && (
+              <ul class="entry-list">
+                {entry.awards.map(a => <li>{a}</li>)}
+              </ul>
+            )}
+            {entry.achievements && entry.achievements.length > 0 && (
+              <ul class="entry-list">
+                {entry.achievements.map(a => <li>{a}</li>)}
+              </ul>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  </details>
+
+  <!-- Honours & Awards -->
+  <details class="cv-section">
+    <summary>Honours &amp; Awards</summary>
+    <div class="cv-section-body">
+      {RESUME.honours.map(group => (
+        <div class="honours-group">
+          <h4 class="group-heading">{group.group}</h4>
+          <ul class="entry-list">
+            {group.items.map(item => <li>{item}</li>)}
+          </ul>
+        </div>
+      ))}
+    </div>
+  </details>
+
+  <!-- Finance Experience -->
+  <details class="cv-section" open>
+    <summary>Finance Experience</summary>
+    <div class="cv-section-body">
+      {RESUME.financeExperience.map(entry => (
+        <div class="timeline-entry">
+          <span class="timeline-date">{entry.period}</span>
+          <div class="timeline-content">
+            <span class="entry-title">{entry.role}</span>
+            {' · '}
+            <span class="entry-org">{entry.organisation}</span>
+            <div class="entry-sub">{entry.details}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </details>
+
+  <!-- Research Projects -->
+  <details class="cv-section">
+    <summary>Research Projects</summary>
+    <div class="cv-section-body">
+      {RESUME.researchProjects.map(entry => (
+        <div class="timeline-entry">
+          <span class="timeline-date">{entry.period}</span>
+          <div class="timeline-content">
+            <span class="entry-title">{entry.title}</span>
+            {' · '}
+            <span class="entry-org">{entry.organisation}</span>
+            <div class="entry-sub">{entry.details}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </details>
+
+  <!-- Service / Extracurriculars -->
+  <details class="cv-section">
+    <summary>Service / Extracurriculars</summary>
+    <div class="cv-section-body">
+      {RESUME.serviceExtracurriculars.map(entry => (
+        <div class="timeline-entry">
+          <span class="timeline-date">{entry.period}</span>
+          <div class="timeline-content">
+            <span class="entry-title">{entry.role}</span>
+            {' · '}
+            <span class="entry-org">{entry.organisation}</span>
+            <div class="entry-sub">{entry.details}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </details>
+
+  <!-- Volunteering -->
+  <details class="cv-section">
+    <summary>Volunteering</summary>
+    <div class="cv-section-body">
+      {RESUME.volunteering.map(entry => (
+        <div class="timeline-entry">
+          <span class="timeline-date">{entry.period}</span>
+          <div class="timeline-content">
+            <span class="entry-title">{entry.role}</span>
+            {' · '}
+            <span class="entry-org">{entry.organisation}</span>
+            <div class="entry-sub">{entry.details}</div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </details>
+
+  <!-- Skills -->
+  <details class="cv-section">
+    <summary>Skills</summary>
+    <div class="cv-section-body">
+      <div class="tag-row">
+        {RESUME.skills.map(skill => (
+          <span class="tag">{skill}</span>
+        ))}
+      </div>
+    </div>
+  </details>
+</BaseLayout>
+
+<style>
+  .about-header {
+    margin-bottom: 2rem;
+  }
+  .about-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--fg);
+    margin-bottom: 0.25rem;
+  }
+  .subtitle {
+    font-size: 1rem;
+    color: var(--fg-2);
+  }
+
+  /* ── CV Section (details/summary) ─────────────────────── */
+  .cv-section {
+    margin-bottom: 1.25rem;
+  }
+  .cv-section summary {
+    padding: 0.6rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--fg);
+    cursor: pointer;
+    list-style: none;
+    border-bottom: 1px solid var(--border);
+    user-select: none;
+  }
+  .cv-section summary::-webkit-details-marker { display: none; }
+  .cv-section summary::marker { content: ''; }
+  .cv-section summary::before {
+    content: '\25B8';
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s;
+    font-size: 0.8rem;
+  }
+  .cv-section[open] summary::before {
+    transform: rotate(90deg);
+  }
+  .cv-section-body {
+    padding: 0.75rem 0 0.5rem;
+  }
+
+  /* ── Timeline ──────────────────────────────────────────── */
+  .timeline-entry {
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    gap: 0.75rem;
+    padding: 0.35rem 0;
+  }
+  .timeline-date {
+    font-size: 0.8rem;
+    color: var(--fg-3);
+    font-family: monospace;
+    text-align: right;
+    white-space: nowrap;
+    padding-top: 0.1rem;
+  }
+  .timeline-content {
+    font-size: 0.875rem;
+    color: var(--fg-2);
+    line-height: 1.5;
+  }
+
+  /* ── Entry typography ──────────────────────────────────── */
+  .entry-title { font-weight: 600; color: var(--fg); }
+  .entry-org { color: var(--accent); }
+  .entry-meta { font-size: 0.8rem; color: var(--fg-3); }
+  .entry-sub { margin-top: 0.2rem; font-size: 0.8rem; color: var(--fg-3); }
+  .entry-list {
+    margin: 0.25rem 0 0 1rem;
+    padding: 0;
+    font-size: 0.8rem;
+    color: var(--fg-3);
+    list-style: disc;
+  }
+  .entry-list li { padding: 0.05rem 0; }
+
+  /* ── Honours groups ────────────────────────────────────── */
+  .honours-group { margin-bottom: 0.75rem; }
+  .group-heading {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--fg-2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.25rem;
+  }
+
+  /* ── Tags ──────────────────────────────────────────────── */
+  .tag-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+  /* ── Mobile ────────────────────────────────────────────── */
+  @media (max-width: 540px) {
+    .timeline-entry { grid-template-columns: 5.5rem 1fr; gap: 0.5rem; }
+    .timeline-date { font-size: 0.72rem; }
+  }
+</style>
