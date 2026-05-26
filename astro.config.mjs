@@ -6,7 +6,7 @@ import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 
 export default defineConfig({
-  site: 'https://lszeray.github.io',
+  site: 'https://uqslee65.github.io',
   integrations: [react(), mdx()],
   markdown: {
     remarkPlugins: [remarkMath],

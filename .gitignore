@@ -1,21 +1,11 @@
-# OS
 .DS_Store
-
-# Large data files
-*.csv
-
-# Dependencies
 node_modules/
-
-# Build output
 dist/
 .astro/
-
-# Environment
 .env
-backend/.env
-
-# Subprojects (have their own git repos)
-phd-finance-library/
-phd-finance-replications/
-phd-finance-slides/
+.claude/
+.superpowers/
+.playwright-mcp/
+playwright-report/
+test-results/
+*.csv
