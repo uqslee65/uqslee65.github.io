@@ -1,0 +1,249 @@
+---
+interface Row {
+  label: string;
+  values: (string | null)[];
+  isTstat?: boolean;
+  isSeparator?: boolean;
+}
+
+interface Props {
+  title?: string;
+  dep_var?: string;
+  columns: string[];
+  rows: Row[];
+  notes?: string;
+}
+
+const { title, dep_var, columns, rows, notes } = Astro.props;
+
+// Split coefficient from trailing significance stars.
+// Input:  "0.123***"  →  { coef: "0.123", stars: "***" }
+// Input:  "0.123"     →  { coef: "0.123", stars: "" }
+function parseValue(raw: string): { coef: string; stars: string } {
+  const m = raw.match(/^(.*?)(\*{1,3})$/);
+  if (m) return { coef: m[1], stars: m[2] };
+  return { coef: raw, stars: "" };
+}
+---
+
+<div class="reg-table-wrapper">
+  {title && <p class="reg-title">{title}</p>}
+  <div class="reg-scroll-outer">
+    <div class="reg-scroll-inner">
+      <table class="reg-table">
+        <thead>
+          {dep_var && (
+            <tr class="dep-var-row">
+              <th class="row-label-head"></th>
+              <th colspan={columns.length} class="dep-var-cell">
+                Dependent variable: <em>{dep_var}</em>
+              </th>
+            </tr>
+          )}
+          <tr class="col-header-row">
+            <th class="row-label-head"></th>
+            {columns.map(col => (
+              <th class="col-head">{col}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map(row => {
+            if (row.isSeparator) {
+              return (
+                <tr class="sep-row">
+                  <td colspan={columns.length + 1}></td>
+                </tr>
+              );
+            }
+            if (row.isTstat) {
+              return (
+                <tr class="tstat-row">
+                  <td class="row-label tstat-label">{row.label}</td>
+                  {row.values.map(v => (
+                    <td class="cell tstat-cell">
+                      {v != null ? `(${v})` : ""}
+                    </td>
+                  ))}
+                </tr>
+              );
+            }
+            return (
+              <tr class="coef-row">
+                <td class="row-label">{row.label}</td>
+                {row.values.map(v => {
+                  if (v == null) return <td class="cell"></td>;
+                  const { coef, stars } = parseValue(v);
+                  return (
+                    <td class="cell coef-cell">
+                      {coef}{stars && <sup class="stars">{stars}</sup>}
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+    <div class="fade-right" aria-hidden="true"></div>
+  </div>
+  {notes && (
+    <p class="reg-notes">
+      <em>Notes:</em> {notes}
+    </p>
+  )}
+</div>
+
+<style>
+  /* ── Wrapper ─────────────────────────────────────────────── */
+  .reg-table-wrapper {
+    margin: 1.5rem 0;
+    width: 100%;
+  }
+
+  .reg-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--fg);
+    margin-bottom: 0.75rem;
+    text-align: center;
+  }
+
+  /* ── Scroll container with right-fade on mobile ────────── */
+  .reg-scroll-outer {
+    position: relative;
+  }
+
+  .reg-scroll-inner {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Right-fade gradient — always visible at ≤ 640px. */
+  .fade-right {
+    display: none;
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 3rem;
+    height: 100%;
+    background: linear-gradient(to right, transparent, var(--bg-card));
+  }
+
+  @media (max-width: 640px) {
+    .fade-right {
+      display: block;
+    }
+  }
+
+  /* ── Table base ──────────────────────────────────────────── */
+  .reg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+    color: var(--fg);
+    /* booktabs: top rule is thick double, bottom is single */
+    border-top: 3px double var(--fg-2);
+    border-bottom: 1.5px solid var(--fg-2);
+  }
+
+  /* No vertical lines — ever. */
+  .reg-table th,
+  .reg-table td {
+    border-left: none;
+    border-right: none;
+    padding: 0.3rem 0.75rem;
+    white-space: nowrap;
+    vertical-align: baseline;
+  }
+
+  /* ── Header rows ─────────────────────────────────────────── */
+  .dep-var-row th {
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--fg-2);
+    text-align: center;
+    padding-bottom: 0.1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .row-label-head {
+    text-align: left;
+  }
+
+  .dep-var-cell {
+    text-align: center;
+  }
+
+  .col-header-row {
+    border-bottom: 1px solid var(--fg-3);
+  }
+
+  .col-head {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--fg-2);
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  /* ── Row label ───────────────────────────────────────────── */
+  .row-label {
+    text-align: left;
+    font-weight: 400;
+    color: var(--fg);
+    padding-right: 1.5rem;
+    min-width: 10rem;
+  }
+
+  /* ── Coefficient cells ───────────────────────────────────── */
+  .cell {
+    text-align: center;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.85rem;
+  }
+
+  .coef-cell {
+    font-weight: 500;
+    color: var(--fg);
+  }
+
+  .stars {
+    color: var(--accent);
+    font-size: 0.7em;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  /* ── T-stat rows ─────────────────────────────────────────── */
+  .tstat-row .tstat-label {
+    color: var(--fg-3);
+    font-size: 0.8rem;
+  }
+
+  .tstat-cell {
+    color: var(--fg-3);
+    font-size: 0.8rem;
+    padding-top: 0;
+    padding-bottom: 0.4rem;
+  }
+
+  /* ── Separator rows ──────────────────────────────────────── */
+  .sep-row td {
+    padding: 0;
+    height: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Notes ───────────────────────────────────────────────── */
+  .reg-notes {
+    margin-top: 0.625rem;
+    font-size: 0.78rem;
+    color: var(--fg-2);
+    line-height: 1.55;
+    max-width: 100%;
+  }
+</style>

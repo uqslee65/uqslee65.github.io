@@ -1,0 +1,179 @@
+---
+interface Props {
+  table: string;
+  description?: string;
+  pass: number;
+  fail: number;
+  total: number;
+  status: 'PASS' | 'HELD' | 'FAIL';
+}
+
+const { table, description, pass, fail, total, status } = Astro.props;
+
+const pct = total > 0 ? Math.round((pass / total) * 100) : 0;
+
+const badgeClass =
+  status === 'PASS' ? 'badge-pass' :
+  status === 'HELD' ? 'badge-held' :
+  'badge-fail';
+---
+
+<div class="table-summary">
+  <div class="ts-header">
+    <span class="ts-table-name">{table}</span>
+    <span class={`ts-badge ${badgeClass}`}>{status}</span>
+  </div>
+
+  {description && (
+    <p class="ts-description">{description}</p>
+  )}
+
+  <div class="ts-counts">
+    <span class="ts-fraction">
+      <span class="ts-pass">{pass}</span>
+      <span class="ts-sep">/</span>
+      <span class="ts-total">{total}</span>
+    </span>
+    <span class="ts-label-text">checks passing</span>
+  </div>
+
+  <div class="ts-bar-track" role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
+    <div class="ts-bar-fill" style={`width: ${pct}%;`}></div>
+  </div>
+</div>
+
+<style>
+  /* ── Local fail color (no --danger in global.css) ────────── */
+  .table-summary {
+    --fail: #DC2626;
+  }
+
+  /* Dark-mode override follows the established light→dark pattern. */
+  :global([data-theme='dark']) .table-summary {
+    --fail: #F87171;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .table-summary {
+      --fail: #F87171;
+    }
+  }
+
+  /* ── Card shell ──────────────────────────────────────────── */
+  .table-summary {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.125rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 11rem;
+  }
+
+  /* ── Header row ──────────────────────────────────────────── */
+  .ts-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .ts-table-name {
+    font-size: 0.875rem;
+    font-weight: 700;
+    color: var(--fg);
+  }
+
+  /* ── Status badge ────────────────────────────────────────── */
+  .ts-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.15rem 0.55rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+  }
+
+  .badge-pass {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid var(--success);
+  }
+
+  .badge-held {
+    background: var(--warning-bg);
+    color: var(--warning);
+    border: 1px solid var(--warning);
+  }
+
+  .badge-fail {
+    background: color-mix(in srgb, var(--fail) 12%, transparent);
+    color: var(--fail);
+    border: 1px solid var(--fail);
+  }
+
+  /* ── Description ─────────────────────────────────────────── */
+  .ts-description {
+    font-size: 0.775rem;
+    color: var(--fg-2);
+    line-height: 1.35;
+    margin: 0;
+  }
+
+  /* ── Pass/total fraction ─────────────────────────────────── */
+  .ts-counts {
+    display: flex;
+    align-items: baseline;
+    gap: 0.375rem;
+    margin-top: 0.25rem;
+  }
+
+  .ts-fraction {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .ts-pass {
+    color: var(--success);
+  }
+
+  .ts-sep {
+    color: var(--fg-3);
+    margin: 0 0.05rem;
+  }
+
+  .ts-total {
+    color: var(--fg-2);
+  }
+
+  .ts-label-text {
+    font-size: 0.725rem;
+    color: var(--fg-3);
+  }
+
+  /* ── Progress bar ────────────────────────────────────────── */
+  .ts-bar-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 9999px;
+    overflow: hidden;
+    margin-top: 0.15rem;
+  }
+
+  .ts-bar-fill {
+    height: 100%;
+    background: var(--success);
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+    min-width: 0;
+  }
+
+  /* When 0 of total pass, show red fill instead of green. */
+  .ts-bar-fill:empty {
+    background: var(--fail);
+  }
+</style>

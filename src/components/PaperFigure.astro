@@ -1,0 +1,124 @@
+---
+interface Props {
+  src?: string;
+  caption?: string;
+  alt?: string;
+  width?: string;
+  source?: string;
+}
+
+const {
+  src,
+  caption,
+  alt = "Paper figure",
+  width = "100%",
+  source,
+} = Astro.props;
+
+const hasImage = Boolean(src);
+---
+
+<figure class="paper-figure" style={`max-width: ${width};`}>
+  {hasImage ? (
+    <a href={src} target="_blank" rel="noopener noreferrer" class="fig-link" title="Open full size">
+      <img
+        src={src}
+        alt={alt}
+        class="fig-img"
+        loading="lazy"
+        decoding="async"
+      />
+    </a>
+  ) : (
+    <div class="fig-placeholder" aria-label="Figure pending">
+      <span class="placeholder-icon" aria-hidden="true">&#9634;</span>
+      <span class="placeholder-text">Figure pending</span>
+    </div>
+  )}
+
+  {(caption || source) && (
+    <figcaption class="fig-caption">
+      {caption && <span class="caption-text">{caption}</span>}
+      {source && <span class="caption-source">{source}</span>}
+    </figcaption>
+  )}
+</figure>
+
+<style>
+  .paper-figure {
+    display: block;
+    margin: 1.5rem auto;
+    width: 100%;
+  }
+
+  /* ── Image ───────────────────────────────────────────────── */
+  .fig-link {
+    display: block;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg-card);
+    transition: box-shadow 0.2s;
+  }
+
+  .fig-link:hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  .fig-img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+  }
+
+  /* ── Placeholder ─────────────────────────────────────────── */
+  .fig-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    background: var(--bg-card);
+    min-height: 10rem;
+    padding: 2rem;
+  }
+
+  .placeholder-icon {
+    font-size: 2rem;
+    color: var(--fg-3);
+    line-height: 1;
+  }
+
+  .placeholder-text {
+    font-size: 0.875rem;
+    color: var(--fg-3);
+    font-style: italic;
+  }
+
+  /* ── Caption ─────────────────────────────────────────────── */
+  .fig-caption {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    margin-top: 0.5rem;
+    padding: 0 0.25rem;
+  }
+
+  .caption-text {
+    display: block;
+    font-size: 0.825rem;
+    font-style: italic;
+    color: var(--fg-2);
+    line-height: 1.45;
+  }
+
+  .caption-source {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--fg-3);
+    line-height: 1.4;
+  }
+</style>

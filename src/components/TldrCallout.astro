@@ -1,0 +1,53 @@
+---
+interface Props {
+  label?: string;
+}
+
+const { label = "TL;DR" } = Astro.props;
+---
+
+<aside class="tldr-callout">
+  <span class="tldr-label">{label}</span>
+  <div class="tldr-body">
+    <slot />
+  </div>
+</aside>
+
+<style>
+  .tldr-callout {
+    display: block;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-light);
+    border-radius: 0 var(--radius) var(--radius) 0;
+    padding: 0.875rem 1.25rem;
+    margin: 1.5rem 0;
+  }
+
+  .tldr-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .tldr-body {
+    font-size: 0.9rem;
+    color: var(--fg);
+    line-height: 1.6;
+  }
+
+  /* Ensure prose children (p, ul, ol) don't add excess margin. */
+  .tldr-body :global(p:first-child) {
+    margin-top: 0;
+  }
+  .tldr-body :global(p:last-child) {
+    margin-bottom: 0;
+  }
+  .tldr-body :global(ul),
+  .tldr-body :global(ol) {
+    padding-left: 1.25rem;
+  }
+</style>

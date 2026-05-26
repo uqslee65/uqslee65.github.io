@@ -27,6 +27,8 @@ jobs:
       - run: npm run build
         env:
           PUBLIC_API_URL: ${{ vars.PUBLIC_API_URL }}
+          PUBLIC_UMAMI_URL: ${{ vars.PUBLIC_UMAMI_URL }}
+          PUBLIC_UMAMI_ID: ${{ vars.PUBLIC_UMAMI_ID }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist/

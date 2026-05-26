@@ -1,90 +1,282 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/Hero.astro';
+import Carousel from '../components/Carousel';
+import DashboardStats from '../components/DashboardStats';
+import GitHubActivity from '../components/GitHubActivity';
+import { fetchRecentCommits } from '../lib/github';
+
+const replications = await getCollection('replications');
+
+// Build carousel items: featured replications first, then hardcoded projects
+const featuredReps = replications
+  .filter(rep => rep.data.featured === true)
+  .map(rep => ({
+    title: rep.data.title,
+    description: rep.data.tldr || 'Replication study',
+    href: `/replications/${rep.id}`,
+    tags: rep.data.tags.slice(0, 3),
+    status: rep.data.status as 'complete' | 'partial' | 'planned',
+  }));
+
+const hardcodedItems = [
+  {
+    title: 'DLM (2005) Bubble Simulator',
+    description: 'Interactive asset market experiment with LLM agents replicating Dufwenberg, Lindqvist & Moore (AER 2005).',
+    href: '/simulator',
+    tags: ['experimental-economics', 'LLM'],
+  },
+  {
+    title: 'Collective Trades',
+    description: 'Real-time insider trades and institutional holdings dashboard with network-graph explorer and Discord bot.',
+    href: '#',
+    tags: ['fintech', 'market-data'],
+  },
+];
+
+const carouselItems = [...featuredReps, ...hardcodedItems];
+
+// Dashboard stats
+const siteStats = [
+  { value: 4, label: 'Projects', icon: '📦' },
+  { value: replications.length, label: 'Replications', icon: '📊' },
+  { value: replications.filter(r => r.data.status === 'complete').length, label: 'Complete', icon: '✓' },
+  { value: 44 + 11, label: 'Tables Checked', icon: '🔬' },
+];
+
+// Recent commits — graceful null fallback
+const recentCommits = await fetchRecentCommits('uqslee65', 'phd-finance-replications', 5);
+
+function formatDate(iso: string): string {
+  if (!iso) return '';
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function truncate(s: string, n: number): string {
+  return s.length > n ? s.slice(0, n) + '…' : s;
+}
 ---
 
-<BaseLayout title="Josh — PhD Finance Researcher">
+<BaseLayout title="Joshua Lee — PhD Finance">
   <Hero
     name="Joshua Lee"
     title="PhD Finance Student"
     tagline="Digital Finance · Data Assets & Markets · Empirical Asset Pricing"
   />
 
-  <section class="landing-grid">
-    <a href="/about" class="landing-card">
-      <span class="card-icon">CV</span>
-      <h3>About</h3>
-      <p>Education, experience, awards, and skills.</p>
-    </a>
-    <a href="/research" class="landing-card">
-      <span class="card-icon">R</span>
-      <h3>Research</h3>
-      <p>Working papers and ongoing projects.</p>
-    </a>
-    <a href="/replications" class="landing-card">
-      <span class="card-icon">Re</span>
-      <h3>Replications</h3>
-      <p>Reproducible replication packages for published papers.</p>
-    </a>
-    <a href="/simulator" class="landing-card">
-      <span class="card-icon">Sim</span>
-      <h3>Simulator</h3>
-      <p>Interactive DLM (2005) bubble experiment with LLM agents.</p>
-    </a>
-    <a href="/blog" class="landing-card">
-      <span class="card-icon">B</span>
-      <h3>Blog</h3>
-      <p>Notes on finance, experiments, and building research tools.</p>
-    </a>
+  <div class="hero-ctas">
+    <a href="/research" class="cta-pill cta-primary">View Research →</a>
+    <a href="/replications" class="cta-pill cta-secondary">Explore Replications →</a>
+  </div>
+
+  <!-- Featured Carousel -->
+  <section class="page-section">
+    <h2 class="section-heading">Featured Work</h2>
+    <Carousel client:load items={carouselItems} />
+  </section>
+
+  <!-- Dashboard Stats -->
+  <section class="page-section">
+    <h2 class="section-heading">By the Numbers</h2>
+    <DashboardStats client:load stats={siteStats} />
+  </section>
+
+  <!-- Recent Activity -->
+  <section class="page-section">
+    <h2 class="section-heading">Recent Activity</h2>
+    <div class="activity-block">
+      {recentCommits ? (
+        <ul class="commit-list">
+          {recentCommits.slice(0, 5).map(c => (
+            <li class="commit-item">
+              <code class="commit-sha">{c.sha}</code>
+              <span class="commit-msg">{truncate(c.message, 72)}</span>
+              <span class="commit-date">{formatDate(c.date)}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="activity-unavailable">Activity data unavailable</p>
+      )}
+    </div>
+    <div class="activity-graph">
+      <GitHubActivity client:load />
+    </div>
+  </section>
+
+  <!-- Quick Links -->
+  <section class="page-section">
+    <h2 class="section-heading">Explore</h2>
+    <div class="quick-links">
+      <a href="/about" class="quick-card">
+        <div class="quick-title">About</div>
+        <div class="quick-desc">Education, experience, and awards.</div>
+      </a>
+      <a href="/simulator" class="quick-card">
+        <div class="quick-title">Simulator</div>
+        <div class="quick-desc">Interactive DLM (2005) bubble experiment with LLM agents.</div>
+      </a>
+      <a href="/blog" class="quick-card">
+        <div class="quick-title">Blog</div>
+        <div class="quick-desc">Notes on finance, experiments, and research tooling.</div>
+      </a>
+    </div>
   </section>
 </BaseLayout>
 
 <style>
-  .landing-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
-    gap: 0;
-    margin-top: 2rem;
+  /* CTA pills */
+  .hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.75rem;
+    margin-bottom: 0.5rem;
   }
-  .landing-card {
+  .cta-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1.25rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+  .cta-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .cta-primary:hover {
+    background: var(--accent-hover);
+    box-shadow: 0 2px 8px rgba(37,99,235,0.25);
+  }
+  .cta-secondary {
+    background: var(--accent-light);
+    color: var(--accent);
+    border: 1px solid var(--border);
+  }
+  .cta-secondary:hover {
+    background: var(--border);
+  }
+
+  /* Sections */
+  .page-section {
+    margin-top: 3rem;
+  }
+  .section-heading {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--fg-2);
+    letter-spacing: 0.04em;
+    margin-bottom: 1.25rem;
+    text-transform: none;
+  }
+
+  /* Commit list */
+  .activity-block {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 0;
-    padding: 1.5rem;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .commit-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+  .commit-item {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr auto;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem;
+  }
+  .commit-item:last-child {
+    border-bottom: none;
+  }
+  .commit-sha {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+    background: var(--accent-light);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .commit-msg {
+    color: var(--fg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .commit-date {
+    font-size: 0.75rem;
+    color: var(--fg-3);
+    white-space: nowrap;
+    text-align: right;
+  }
+  .activity-unavailable {
+    font-size: 0.85rem;
+    color: var(--fg-3);
+    padding: 1rem;
+  }
+
+  /* Activity graph container */
+  .activity-graph {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1rem 1.25rem;
+  }
+
+  /* Quick links */
+  .quick-links {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+    gap: 0.75rem;
+  }
+  .quick-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 1.25rem 1rem;
     text-decoration: none;
-    transition: border-color 0.15s;
+    transition: box-shadow 0.15s, transform 0.15s;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
-  .landing-card:hover {
-    border-color: var(--fg);
+  .quick-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-2px);
   }
-  .card-icon {
-    width: 2rem;
-    height: 2rem;
-    border-radius: 0;
-    background: var(--fg);
-    color: var(--bg);
-    font-size: 0.7rem;
+  .quick-title {
+    font-size: 0.9rem;
     font-weight: 700;
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .landing-card h3 {
-    font-size: 0.85rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
     color: var(--fg);
-    margin: 0;
   }
-  .landing-card p {
+  .quick-desc {
     font-size: 0.8rem;
     color: var(--fg-2);
-    margin: 0;
     line-height: 1.45;
+  }
+
+  /* Mobile */
+  @media (max-width: 540px) {
+    .commit-item {
+      grid-template-columns: 1fr;
+      gap: 0.25rem;
+    }
+    .commit-date {
+      text-align: left;
+    }
   }
 </style>

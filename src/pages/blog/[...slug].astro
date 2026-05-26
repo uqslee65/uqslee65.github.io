@@ -15,7 +15,7 @@ const { Content } = await render(post);
 const readingTime = Math.max(1, Math.round(post.body!.split(/\s+/).length / 200));
 ---
 
-<BaseLayout title={`${post.data.title} — Monius`} description={post.data.excerpt}>
+<BaseLayout title={`${post.data.title} — Josh`} description={post.data.excerpt}>
   <article class="blog-post">
     <header class="post-header">
       <time class="post-date">
@@ -51,8 +51,6 @@ const readingTime = Math.max(1, Math.round(post.body!.split(/\s+/).length / 200)
   .post-date {
     font-size: 0.8rem;
     color: var(--fg-3);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
   }
   .post-reading {
     font-size: 0.8rem;

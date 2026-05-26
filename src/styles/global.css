@@ -4,45 +4,61 @@
 :root {
   --bg: #FFFFFF;
   --bg-card: #F9FAFB;
-  --fg: #000000;
+  --fg: #111827;
   --fg-2: #4B5563;
   --fg-3: #9CA3AF;
   --accent: #2563EB;
   --accent-hover: #1D4ED8;
-  --accent-warm: #DC7633;
+  --accent-light: #EFF6FF;
   --border: #E5E7EB;
   --stat-bg: #F3F4F6;
-  --shadow: none;
-  --shadow-hover: none;
-  --radius: 0;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.08);
+  --radius: 8px;
   --nav-height: 56px;
+  --success: #059669;
+  --warning: #D97706;
+  --success-bg: #ECFDF5;
+  --warning-bg: #FFFBEB;
 }
 
 [data-theme='dark'] {
-  --bg: #000000;
-  --bg-card: #111827;
-  --fg: #FFFFFF;
-  --fg-2: #D1D5DB;
-  --fg-3: #6B7280;
+  --bg: #0F172A;
+  --bg-card: #1E293B;
+  --fg: #F1F5F9;
+  --fg-2: #CBD5E1;
+  --fg-3: #64748B;
   --accent: #3B82F6;
   --accent-hover: #60A5FA;
-  --accent-warm: #F59E0B;
-  --border: #374151;
-  --stat-bg: #1F2937;
+  --accent-light: #1E3A5F;
+  --border: #334155;
+  --stat-bg: #1E293B;
+  --shadow: 0 1px 3px rgba(0,0,0,0.2);
+  --shadow-hover: 0 4px 12px rgba(0,0,0,0.3);
+  --success: #34D399;
+  --warning: #FBBF24;
+  --success-bg: #064E3B;
+  --warning-bg: #78350F;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #000000;
-    --bg-card: #111827;
-    --fg: #FFFFFF;
-    --fg-2: #D1D5DB;
-    --fg-3: #6B7280;
+    --bg: #0F172A;
+    --bg-card: #1E293B;
+    --fg: #F1F5F9;
+    --fg-2: #CBD5E1;
+    --fg-3: #64748B;
     --accent: #3B82F6;
     --accent-hover: #60A5FA;
-    --accent-warm: #F59E0B;
-    --border: #374151;
-    --stat-bg: #1F2937;
+    --accent-light: #1E3A5F;
+    --border: #334155;
+    --stat-bg: #1E293B;
+    --shadow: 0 1px 3px rgba(0,0,0,0.2);
+    --shadow-hover: 0 4px 12px rgba(0,0,0,0.3);
+    --success: #34D399;
+    --warning: #FBBF24;
+    --success-bg: #064E3B;
+    --warning-bg: #78350F;
   }
 }
 
@@ -53,7 +69,7 @@
 }
 
 html {
-  font-family: 'Space Grotesk', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background: var(--bg);
   color: var(--fg);
   scroll-behavior: smooth;
@@ -61,49 +77,48 @@ html {
 
 body {
   min-height: 100vh;
-  line-height: 1.5;
+  line-height: 1.6;
 }
 
 a {
   color: var(--accent);
   text-decoration: none;
-  transition: text-decoration 0.15s;
+  transition: color 0.15s;
 }
 a:hover {
-  text-decoration: underline;
+  color: var(--accent-hover);
 }
 
 .fade-in {
-  animation: fadeIn 0.6s ease-out;
+  animation: fadeIn 0.5s ease-out;
 }
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .card {
   background: var(--bg-card);
-  border: 2px solid var(--border);
-  border-radius: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
   padding: 1.5rem;
-  box-shadow: none;
-  transition: border-color 0.15s;
+  box-shadow: var(--shadow);
+  transition: box-shadow 0.2s, transform 0.2s;
 }
 .card:hover {
-  border-color: var(--fg);
-  box-shadow: none;
-  transform: none;
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
 }
 
 .stat-chip {
-  background: transparent;
-  border-left: 3px solid var(--accent);
-  border-radius: 0;
-  padding: 0.75rem 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
   text-align: left;
 }
 .stat-chip .value {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 700;
   color: var(--accent);
   line-height: 1.2;
@@ -111,19 +126,18 @@ a:hover {
 .stat-chip .label {
   font-size: 0.75rem;
   color: var(--fg-2);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
 }
 
 .nav-tabs {
   display: flex;
-  gap: 0;
-  border-bottom: 2px solid var(--border);
+  gap: 0.25rem;
+  border-bottom: 1px solid var(--border);
 }
 .nav-tab {
-  padding: 0.75rem 1.25rem;
+  padding: 0.625rem 1rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--fg-2);
   border-bottom: 2px solid transparent;
   cursor: pointer;
@@ -143,12 +157,10 @@ a:hover {
 
 .tag {
   display: inline-block;
-  padding: 0.15rem 0.5rem;
-  font-size: 0.65rem;
-  border-radius: 0;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.7rem;
+  border-radius: 9999px;
   border: 1px solid var(--border);
-  background: transparent;
+  background: var(--stat-bg);
   color: var(--fg-2);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
 }
