@@ -3,6 +3,7 @@ export interface ContactInfo {
   title: string;
   email: string;
   personalEmail: string;
+  phone: string;
   linkedin: string;
   github: string;
 }
@@ -66,6 +67,7 @@ export const RESUME: ResumeData = {
     title: "Finance PhD Student",
     email: "uqslee65@uq.edu.au",
     personalEmail: "lszeray@gmail.com",
+    phone: "+61 0493713215",
     linkedin: "https://www.linkedin.com/in/leeszeray/",
     github: "https://github.com/lszeray",
   },

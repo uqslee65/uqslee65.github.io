@@ -7,10 +7,10 @@ export interface DashboardStat {
 }
 
 const defaultStats: DashboardStat[] = [
-  { value: 4,  label: 'Projects',     icon: '◈' },
-  { value: 3,  label: 'Replications', icon: '⊙' },
-  { value: 12, label: 'Papers Read',  icon: '▤' },
-  { value: 1,  label: 'In Progress',  icon: '◎' },
+  { value: 4,  label: 'Projects' },
+  { value: 3,  label: 'Replications' },
+  { value: 12, label: 'Papers Read' },
+  { value: 1,  label: 'In Progress' },
 ];
 
 function AnimatedNumber({
@@ -77,9 +77,8 @@ export default function DashboardStats({
         <div
           key={s.label}
           style={{
-            background: 'var(--bg-card)',
+            background: 'var(--bg-raised)',
             border: '1px solid var(--border)',
-            borderRadius: 'var(--radius)',
             boxShadow: 'var(--shadow)',
             padding: '1.25rem 1rem',
             display: 'flex',
@@ -101,23 +100,12 @@ export default function DashboardStats({
               'translateY(0)';
           }}
         >
-          {s.icon && (
-            <span
-              style={{
-                fontSize: '1.1rem',
-                color: 'var(--accent)',
-                lineHeight: 1,
-              }}
-              aria-hidden="true"
-            >
-              {s.icon}
-            </span>
-          )}
           <span
             style={{
-              fontSize: '2rem',
-              fontWeight: 700,
-              color: 'var(--accent)',
+              fontSize: '20px',
+              fontWeight: 300,
+              letterSpacing: '-0.02em',
+              color: 'var(--text)',
               lineHeight: 1.1,
               fontVariantNumeric: 'tabular-nums',
             }}
@@ -126,10 +114,9 @@ export default function DashboardStats({
           </span>
           <span
             style={{
-              fontSize: '0.75rem',
-              color: 'var(--fg-2)',
-              fontWeight: 500,
-              letterSpacing: '0.02em',
+              fontSize: '9px',
+              color: 'var(--text-faint)',
+              letterSpacing: '0.16em',
               textTransform: 'uppercase',
             }}
           >

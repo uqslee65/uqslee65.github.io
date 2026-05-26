@@ -55,14 +55,8 @@ const hasImage = Boolean(src);
   .fig-link {
     display: block;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
     overflow: hidden;
-    background: var(--bg-card);
-    transition: box-shadow 0.2s;
-  }
-
-  .fig-link:hover {
-    box-shadow: var(--shadow-hover);
+    background: var(--bg-raised);
   }
 
   .fig-img {
@@ -80,21 +74,20 @@ const hasImage = Boolean(src);
     justify-content: center;
     gap: 0.5rem;
     border: 2px dashed var(--border);
-    border-radius: var(--radius);
-    background: var(--bg-card);
+    background: var(--bg-raised);
     min-height: 10rem;
     padding: 2rem;
   }
 
   .placeholder-icon {
     font-size: 2rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
     line-height: 1;
   }
 
   .placeholder-text {
     font-size: 0.875rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
     font-style: italic;
   }
 
@@ -111,14 +104,14 @@ const hasImage = Boolean(src);
     display: block;
     font-size: 0.825rem;
     font-style: italic;
-    color: var(--fg-2);
+    color: var(--text-dim);
     line-height: 1.45;
   }
 
   .caption-source {
     display: block;
     font-size: 0.75rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
     line-height: 1.4;
   }
 </style>

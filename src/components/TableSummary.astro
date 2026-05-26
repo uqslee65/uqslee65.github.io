@@ -61,11 +61,9 @@ const badgeClass =
 
   /* ── Card shell ──────────────────────────────────────────── */
   .table-summary {
-    background: var(--bg-card);
+    background: var(--bg-raised);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
     padding: 1rem 1.125rem;
-    box-shadow: var(--shadow);
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
@@ -83,7 +81,7 @@ const badgeClass =
   .ts-table-name {
     font-size: 0.875rem;
     font-weight: 700;
-    color: var(--fg);
+    color: var(--text);
   }
 
   /* ── Status badge ────────────────────────────────────────── */
@@ -98,15 +96,15 @@ const badgeClass =
   }
 
   .badge-pass {
-    background: var(--success-bg);
-    color: var(--success);
-    border: 1px solid var(--success);
+    background: var(--bg-raised);
+    color: var(--status-complete);
+    border: 1px solid var(--status-complete);
   }
 
   .badge-held {
-    background: var(--warning-bg);
-    color: var(--warning);
-    border: 1px solid var(--warning);
+    background: var(--bg-raised);
+    color: var(--status-partial);
+    border: 1px solid var(--status-partial);
   }
 
   .badge-fail {
@@ -118,7 +116,7 @@ const badgeClass =
   /* ── Description ─────────────────────────────────────────── */
   .ts-description {
     font-size: 0.775rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     line-height: 1.35;
     margin: 0;
   }
@@ -138,21 +136,21 @@ const badgeClass =
   }
 
   .ts-pass {
-    color: var(--success);
+    color: var(--status-complete);
   }
 
   .ts-sep {
-    color: var(--fg-3);
+    color: var(--text-faint);
     margin: 0 0.05rem;
   }
 
   .ts-total {
-    color: var(--fg-2);
+    color: var(--text-dim);
   }
 
   .ts-label-text {
     font-size: 0.725rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
   }
 
   /* ── Progress bar ────────────────────────────────────────── */
@@ -166,7 +164,7 @@ const badgeClass =
 
   .ts-bar-fill {
     height: 100%;
-    background: var(--success);
+    background: var(--status-complete);
     border-radius: 9999px;
     transition: width 0.3s ease;
     min-width: 0;

@@ -1,31 +1,6 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import RepoStats from '../components/RepoStats.astro';
-
-const replications = (await getCollection('replications')).sort(
-  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
-);
-
-function authorsLine(rep: (typeof replications)[number]): string {
-  if (rep.data.authors && rep.data.authors.length > 0) {
-    return rep.data.authors.join(', ');
-  }
-  // Fallback: parse first segment of paper string up to the year or a period
-  if (rep.data.paper) {
-    const match = rep.data.paper.match(/^([^(]+)\(/);
-    if (match) return match[1].trim().replace(/\.$/, '');
-    return rep.data.paper.split('.')[0].trim();
-  }
-  return '';
-}
-
-function venueYear(rep: (typeof replications)[number]): string {
-  const parts: string[] = [];
-  if (rep.data.venue) parts.push(rep.data.venue);
-  if (rep.data.year) parts.push(`(${rep.data.year})`);
-  return parts.join(' ');
-}
 
 const projects = [
   {
@@ -88,7 +63,7 @@ const projects = [
               {p.links.map(link => (
                 <a
                   href={link.href}
-                  class="action-btn action-btn--primary"
+                  class="action-btn"
                   {...(link.external ? { target: '_blank', rel: 'noopener' } : {})}
                 >
                   {link.label}
@@ -100,55 +75,6 @@ const projects = [
       ))}
     </div>
   </section>
-
-  <!-- Replications -->
-  <section class="page-section">
-    <h2 class="section-heading">Replications</h2>
-    {replications.length === 0 ? (
-      <p class="empty-state">No replications yet.</p>
-    ) : (
-      <div class="rep-list">
-        {replications.map(rep => {
-          const authors = authorsLine(rep);
-          const vy = venueYear(rep);
-          return (
-            <div class="card rep-card">
-              <div class="rep-top">
-                <div class="rep-title-row">
-                  <a href={`/replications/${rep.id}`} class="rep-title-link">
-                    {rep.data.title}
-                  </a>
-                  <span class={`status-badge status-badge--${rep.data.status}`}>
-                    {rep.data.status}
-                  </span>
-                </div>
-                {authors && <div class="rep-authors">{authors}</div>}
-                {vy && <div class="rep-venue">{vy}</div>}
-              </div>
-              {rep.data.tags.length > 0 && (
-                <div class="tag-row">
-                  {rep.data.tags.map(tag => <span class="tag">{tag}</span>)}
-                </div>
-              )}
-              <div class="rep-actions">
-                {rep.data.slides_url ? (
-                  <a href={rep.data.slides_url} class="action-btn action-btn--ghost" target="_blank" rel="noopener">Slides</a>
-                ) : (
-                  <span class="action-btn action-btn--disabled">Slides</span>
-                )}
-                {rep.data.notebook_url ? (
-                  <a href={rep.data.notebook_url} class="action-btn action-btn--ghost" target="_blank" rel="noopener">Notebook</a>
-                ) : (
-                  <span class="action-btn action-btn--disabled">Notebook</span>
-                )}
-                <a href={`/replications/${rep.id}`} class="action-btn action-btn--primary">View →</a>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    )}
-  </section>
 </BaseLayout>
 
 <style>
@@ -156,20 +82,20 @@ const projects = [
   .page-header {
     padding-top: 2rem;
     padding-bottom: 0.5rem;
-    border-left: 3px solid var(--accent);
+    border-left: 3px solid var(--border);
     padding-left: 1rem;
     margin-bottom: 1.5rem;
   }
   .page-title {
-    font-size: 2rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--fg);
-    line-height: 1.15;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    color: var(--text-faint);
+    text-transform: uppercase;
   }
   .page-subtitle {
     font-size: 0.9rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     margin-top: 0.5rem;
     max-width: 44rem;
     line-height: 1.55;
@@ -185,25 +111,22 @@ const projects = [
     margin-bottom: 3rem;
   }
   .section-heading {
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--fg-2);
-    letter-spacing: 0.04em;
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    color: var(--text-faint);
+    text-transform: uppercase;
     margin-bottom: 1.25rem;
-    text-transform: none;
   }
 
   /* Card base */
   .card {
-    background: var(--bg-card);
+    background: var(--bg-raised);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    transition: box-shadow 0.15s, transform 0.15s;
+    transition: opacity 0.15s;
   }
   .card:hover {
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-1px);
+    opacity: 0.9;
   }
 
   /* Project cards */
@@ -224,7 +147,7 @@ const projects = [
   .project-dates {
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     font-size: 0.78rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
     white-space: nowrap;
   }
   .project-body {
@@ -236,11 +159,11 @@ const projects = [
   .project-title {
     font-size: 1rem;
     font-weight: 700;
-    color: var(--fg);
+    color: var(--text);
   }
   .project-desc {
     font-size: 0.875rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     line-height: 1.55;
     margin: 0;
   }
@@ -253,7 +176,7 @@ const projects = [
   }
   .project-meta-note {
     font-size: 0.78rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
   }
 
   /* Tag pills */
@@ -265,10 +188,9 @@ const projects = [
   .tag {
     font-size: 0.68rem;
     padding: 0.2rem 0.55rem;
-    border-radius: 9999px;
     border: 1px solid var(--border);
-    background: var(--stat-bg);
-    color: var(--fg-2);
+    background: var(--bg-surface);
+    color: var(--text-dim);
     font-weight: 500;
   }
 
@@ -277,115 +199,19 @@ const projects = [
     display: inline-flex;
     align-items: center;
     padding: 0.3rem 0.75rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 400;
     text-decoration: none;
-    transition: background 0.15s, color 0.15s;
-  }
-  .action-btn--primary {
-    background: var(--accent);
-    color: #fff;
-  }
-  .action-btn--primary:hover {
-    background: var(--accent-hover);
-  }
-  .action-btn--ghost {
-    background: var(--stat-bg);
-    color: var(--fg-2);
     border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: color 0.15s, border-color 0.15s;
   }
-  .action-btn--ghost:hover {
-    background: var(--border);
-    color: var(--fg);
-  }
-  .action-btn--disabled {
-    background: var(--stat-bg);
-    color: var(--fg-3);
-    border: 1px solid var(--border);
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-
-  /* Replication list */
-  .rep-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.875rem;
-  }
-  .rep-card {
-    padding: 1.25rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-  .rep-top {
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-  .rep-title-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 0.6rem;
-    flex-wrap: wrap;
-  }
-  .rep-title-link {
-    font-size: 0.975rem;
-    font-weight: 600;
-    color: var(--fg);
-    text-decoration: none;
-    flex: 1;
-    min-width: 0;
-    line-height: 1.35;
-  }
-  .rep-title-link:hover {
-    color: var(--accent);
-  }
-  .rep-authors {
-    font-size: 0.82rem;
-    color: var(--fg-2);
-  }
-  .rep-venue {
-    font-size: 0.78rem;
-    color: var(--fg-3);
-    font-style: italic;
-  }
-  .rep-actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    margin-top: 0.1rem;
-  }
-
-  /* Status badges */
-  .status-badge {
-    font-size: 0.65rem;
-    font-weight: 600;
-    padding: 0.2rem 0.55rem;
-    border-radius: 9999px;
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .status-badge--complete {
-    background: var(--success-bg);
-    color: var(--success);
-  }
-  .status-badge--partial {
-    background: var(--warning-bg);
-    color: var(--warning);
-  }
-  .status-badge--planned {
-    background: var(--stat-bg);
-    color: var(--fg-3);
-    border: 1px solid var(--border);
-  }
-
-  /* Empty state */
-  .empty-state {
-    font-size: 0.875rem;
-    color: var(--fg-3);
+  .action-btn:hover {
+    color: var(--text);
+    border-color: var(--text-dim);
   }
 
   /* Mobile */

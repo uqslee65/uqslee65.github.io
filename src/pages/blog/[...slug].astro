@@ -50,17 +50,17 @@ const readingTime = Math.max(1, Math.round(post.body!.split(/\s+/).length / 200)
   }
   .post-date {
     font-size: 0.8rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
   }
   .post-reading {
     font-size: 0.8rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
     margin-left: 1rem;
   }
   .post-title {
     font-size: 2rem;
     font-weight: 800;
-    color: var(--fg);
+    color: var(--text);
     line-height: 1.2;
     margin-top: 0.75rem;
   }
@@ -73,7 +73,7 @@ const readingTime = Math.max(1, Math.round(post.body!.split(/\s+/).length / 200)
   .post-content {
     font-size: 1rem;
     line-height: 1.8;
-    color: var(--fg);
+    color: var(--text);
   }
   .post-content :global(h2) {
     font-size: 1.4rem;
@@ -98,15 +98,14 @@ const readingTime = Math.max(1, Math.round(post.body!.split(/\s+/).length / 200)
     margin-bottom: 0.35rem;
   }
   .post-content :global(code) {
-    background: var(--stat-bg);
+    background: var(--bg-surface);
     padding: 0.15rem 0.4rem;
     border-radius: 4px;
     font-size: 0.875em;
   }
   .post-content :global(pre) {
-    background: var(--stat-bg);
+    background: var(--bg-surface);
     padding: 1.25rem;
-    border-radius: var(--radius);
     overflow-x: auto;
     margin-bottom: 1.25rem;
   }
@@ -115,9 +114,9 @@ const readingTime = Math.max(1, Math.round(post.body!.split(/\s+/).length / 200)
     padding: 0;
   }
   .post-content :global(blockquote) {
-    border-left: 3px solid var(--accent);
+    border-left: 2px solid var(--text-faint);
     padding-left: 1rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     margin-bottom: 1.25rem;
   }
   .post-content :global(.katex-display) {

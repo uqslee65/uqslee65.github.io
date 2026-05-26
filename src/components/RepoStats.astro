@@ -65,11 +65,9 @@ const stats = await fetchRepoStats(owner, repo);
     display: inline-flex;
     flex-direction: column;
     gap: 0.35rem;
-    background: var(--bg-card);
+    background: var(--bg-raised);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
     padding: 0.75rem 1rem;
-    box-shadow: var(--shadow);
     max-width: 100%;
   }
 
@@ -77,20 +75,20 @@ const stats = await fetchRepoStats(owner, repo);
     text-decoration: none;
   }
   .repo-link:hover .repo-name {
-    color: var(--accent-hover);
+    color: var(--text-dim);
   }
 
   .repo-name {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--text);
     font-family: 'JetBrains Mono', ui-monospace, monospace;
     transition: color 0.15s;
   }
 
   .repo-desc {
     font-size: 0.78rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     line-height: 1.4;
     margin: 0;
   }
@@ -107,18 +105,18 @@ const stats = await fetchRepoStats(owner, repo);
     align-items: center;
     gap: 0.25rem;
     font-size: 0.75rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     font-weight: 500;
   }
 
   .lang-dot {
-    color: var(--accent);
+    color: var(--text);
     font-size: 0.65rem;
   }
 
   .meta-unavailable {
     font-size: 0.72rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
     font-style: italic;
   }
 </style>

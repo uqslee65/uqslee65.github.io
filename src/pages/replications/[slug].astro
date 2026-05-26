@@ -126,13 +126,13 @@ const authorsLine =
   .back-link {
     display: inline-block;
     font-size: 0.8rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
     text-decoration: none;
     margin-bottom: 1.75rem;
     transition: color 0.15s;
   }
   .back-link:hover {
-    color: var(--accent);
+    color: var(--text);
   }
 
   /* ---- Header ---- */
@@ -161,30 +161,30 @@ const authorsLine =
   }
 
   .status-complete {
-    background: var(--success-bg);
-    color: var(--success);
+    background: var(--bg-raised);
+    color: var(--status-complete);
   }
 
   .status-partial {
-    background: var(--warning-bg);
-    color: var(--warning);
+    background: var(--bg-raised);
+    color: var(--status-partial);
   }
 
   .status-planned {
-    background: var(--stat-bg);
-    color: var(--fg-3);
+    background: var(--bg-surface);
+    color: var(--text-faint);
   }
 
   .meta-date {
     font-size: 0.78rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
   }
 
   /* Title */
   .detail-title {
     font-size: 1.6rem;
     font-weight: 700;
-    color: var(--fg);
+    color: var(--text);
     line-height: 1.3;
     margin-bottom: 0.5rem;
   }
@@ -192,14 +192,14 @@ const authorsLine =
   /* Authors */
   .detail-authors {
     font-size: 0.9rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     margin-bottom: 0.25rem;
   }
 
   /* Venue */
   .detail-venue {
     font-size: 0.82rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
     font-style: italic;
     margin-bottom: 0.75rem;
   }
@@ -231,25 +231,24 @@ const authorsLine =
     border: 1px solid var(--border);
     text-decoration: none;
     cursor: pointer;
-    transition: background 0.15s, color 0.15s, border-color 0.15s, box-shadow 0.15s;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
     user-select: none;
   }
 
   .action-btn--active {
-    background: var(--accent-light);
-    color: var(--accent);
-    border-color: var(--accent);
+    background: var(--bg-raised);
+    color: var(--text);
+    border-color: var(--text);
   }
 
   .action-btn--active:hover {
-    background: var(--accent);
+    background: var(--text);
     color: #fff;
-    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
   }
 
   .action-btn--disabled {
-    background: var(--stat-bg);
-    color: var(--fg-3);
+    background: var(--bg-surface);
+    color: var(--text-faint);
     cursor: default;
     opacity: 0.55;
   }
@@ -258,13 +257,13 @@ const authorsLine =
   .prose-body {
     font-size: 0.95rem;
     line-height: 1.7;
-    color: var(--fg);
+    color: var(--text);
   }
 
   .prose-body :global(h2) {
     font-size: 1.2rem;
     font-weight: 600;
-    color: var(--fg);
+    color: var(--text);
     margin-top: 2rem;
     margin-bottom: 0.6rem;
     padding-bottom: 0.3rem;
@@ -274,7 +273,7 @@ const authorsLine =
   .prose-body :global(h3) {
     font-size: 1.05rem;
     font-weight: 600;
-    color: var(--fg);
+    color: var(--text);
     margin-top: 1.5rem;
     margin-bottom: 0.4rem;
   }
@@ -282,14 +281,14 @@ const authorsLine =
   .prose-body :global(h4) {
     font-size: 0.95rem;
     font-weight: 600;
-    color: var(--fg-2);
+    color: var(--text-dim);
     margin-top: 1.25rem;
     margin-bottom: 0.3rem;
   }
 
   .prose-body :global(p) {
     margin-bottom: 1rem;
-    color: var(--fg);
+    color: var(--text);
   }
 
   .prose-body :global(ul),
@@ -300,39 +299,43 @@ const authorsLine =
 
   .prose-body :global(li) {
     margin-bottom: 0.3rem;
-    color: var(--fg);
+    color: var(--text);
   }
 
   .prose-body :global(a) {
-    color: var(--accent);
+    color: var(--text);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
   .prose-body :global(a:hover) {
-    color: var(--accent-hover);
+    color: var(--text-dim);
+  }
+
+  .prose-body :global(.katex) {
+    color: var(--text);
   }
 
   .prose-body :global(strong) {
     font-weight: 600;
-    color: var(--fg);
+    color: var(--text);
   }
 
   .prose-body :global(em) {
-    color: var(--fg-2);
+    color: var(--text-dim);
   }
 
   .prose-body :global(blockquote) {
-    border-left: 3px solid var(--accent);
+    border-left: 2px solid var(--text-faint);
     padding-left: 1rem;
     margin: 1.25rem 0;
-    color: var(--fg-2);
+    color: var(--text-dim);
     font-style: italic;
   }
 
   .prose-body :global(pre) {
-    background: var(--bg-card);
+    background: var(--bg-raised);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 0;
     padding: 1rem 1.25rem;
     overflow-x: auto;
     font-size: 0.82rem;
@@ -344,9 +347,9 @@ const authorsLine =
   .prose-body :global(code) {
     font-size: 0.82rem;
     font-family: 'JetBrains Mono', ui-monospace, monospace;
-    background: var(--bg-card);
+    background: var(--bg-raised);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 0;
     padding: 0.1em 0.35em;
   }
 
@@ -368,7 +371,7 @@ const authorsLine =
   .prose-body :global(th) {
     text-align: left;
     font-weight: 600;
-    color: var(--fg);
+    color: var(--text);
     padding: 0.5rem 0.75rem;
     border-bottom: 2px solid var(--border);
   }
@@ -376,7 +379,7 @@ const authorsLine =
   .prose-body :global(td) {
     padding: 0.45rem 0.75rem;
     border-bottom: 1px solid var(--border);
-    color: var(--fg);
+    color: var(--text);
   }
 
   .prose-body :global(tr:last-child td) {
@@ -391,7 +394,7 @@ const authorsLine =
 
   .prose-body :global(img) {
     max-width: 100%;
-    border-radius: var(--radius);
+    border-radius: 0;
     margin: 1rem 0;
   }
 

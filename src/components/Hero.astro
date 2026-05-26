@@ -3,42 +3,77 @@ interface Props {
   name: string;
   title: string;
   tagline: string;
+  intro: string;
 }
-const { name, title, tagline } = Astro.props;
+const { name, title, tagline, intro } = Astro.props;
 ---
 
-<section class="hero fade-in">
-  <h1 class="hero-name">{name}</h1>
-  <p class="hero-title">{title}</p>
-  <p class="hero-tagline">{tagline}</p>
+<section class="hero">
+  <div class="hero-inner">
+    <h1 class="hero-name">{name}</h1>
+    <p class="hero-title">{title}</p>
+    <p class="hero-intro">{intro}</p>
+    <a href="/dashboard" class="hero-cta">OPEN DASHBOARD →</a>
+  </div>
 </section>
 
 <style>
   .hero {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: var(--nav-height, 4rem) 1.5rem 0;
+  }
+  .hero-inner {
     text-align: left;
-    padding: 3rem 0 2.5rem;
   }
   .hero-name {
-    font-size: 2.75rem;
-    font-weight: 700;
-    color: var(--fg);
-    letter-spacing: -0.03em;
+    font-size: 36px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: rgba(255, 255, 255, 0.92);
     line-height: 1.1;
+    margin: 0;
   }
   .hero-title {
-    font-size: 1rem;
-    color: var(--accent);
-    font-weight: 500;
-    margin-top: 0.75rem;
-  }
-  .hero-tagline {
-    font-size: 0.9rem;
-    color: var(--fg-2);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.52);
     margin-top: 0.5rem;
-    max-width: 32rem;
-    line-height: 1.5;
+    margin-bottom: 0;
+  }
+  .hero-intro {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.52);
+    max-width: 36rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0;
+    line-height: 1.7;
+  }
+  .hero-cta {
+    display: inline-block;
+    margin-top: 2rem;
+    padding: 10px 28px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+  .hero-cta:hover {
+    background: #0a0a0a;
+    border-color: rgba(255, 255, 255, 0.14);
   }
   @media (max-width: 640px) {
-    .hero-name { font-size: 2rem; }
+    .hero {
+      padding-left: 1rem;
+      padding-right: 1rem;
+    }
+    .hero-name {
+      font-size: 28px;
+    }
   }
 </style>

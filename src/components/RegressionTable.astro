@@ -105,7 +105,7 @@ function parseValue(raw: string): { coef: string; stars: string } {
   .reg-title {
     font-size: 0.875rem;
     font-weight: 600;
-    color: var(--fg);
+    color: var(--text);
     margin-bottom: 0.75rem;
     text-align: center;
   }
@@ -129,7 +129,7 @@ function parseValue(raw: string): { coef: string; stars: string } {
     right: 0;
     width: 3rem;
     height: 100%;
-    background: linear-gradient(to right, transparent, var(--bg-card));
+    background: linear-gradient(to right, transparent, var(--bg-raised));
   }
 
   @media (max-width: 640px) {
@@ -143,10 +143,10 @@ function parseValue(raw: string): { coef: string; stars: string } {
     width: 100%;
     border-collapse: collapse;
     font-size: 0.875rem;
-    color: var(--fg);
+    color: var(--text);
     /* booktabs: top rule is thick double, bottom is single */
-    border-top: 3px double var(--fg-2);
-    border-bottom: 1.5px solid var(--fg-2);
+    border-top: 3px double var(--text-dim);
+    border-bottom: 1.5px solid var(--text-dim);
   }
 
   /* No vertical lines — ever. */
@@ -163,7 +163,7 @@ function parseValue(raw: string): { coef: string; stars: string } {
   .dep-var-row th {
     font-size: 0.8rem;
     font-weight: 400;
-    color: var(--fg-2);
+    color: var(--text-dim);
     text-align: center;
     padding-bottom: 0.1rem;
     border-bottom: 1px solid var(--border);
@@ -178,14 +178,14 @@ function parseValue(raw: string): { coef: string; stars: string } {
   }
 
   .col-header-row {
-    border-bottom: 1px solid var(--fg-3);
+    border-bottom: 1px solid var(--text-faint);
   }
 
   .col-head {
     text-align: center;
     font-weight: 600;
     font-size: 0.8rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     padding-top: 0.5rem;
     padding-bottom: 0.5rem;
   }
@@ -194,7 +194,7 @@ function parseValue(raw: string): { coef: string; stars: string } {
   .row-label {
     text-align: left;
     font-weight: 400;
-    color: var(--fg);
+    color: var(--text);
     padding-right: 1.5rem;
     min-width: 10rem;
   }
@@ -208,11 +208,11 @@ function parseValue(raw: string): { coef: string; stars: string } {
 
   .coef-cell {
     font-weight: 500;
-    color: var(--fg);
+    color: var(--text);
   }
 
   .stars {
-    color: var(--accent);
+    color: var(--text);
     font-size: 0.7em;
     font-weight: 700;
     letter-spacing: 0.02em;
@@ -220,12 +220,12 @@ function parseValue(raw: string): { coef: string; stars: string } {
 
   /* ── T-stat rows ─────────────────────────────────────────── */
   .tstat-row .tstat-label {
-    color: var(--fg-3);
+    color: var(--text-faint);
     font-size: 0.8rem;
   }
 
   .tstat-cell {
-    color: var(--fg-3);
+    color: var(--text-faint);
     font-size: 0.8rem;
     padding-top: 0;
     padding-bottom: 0.4rem;
@@ -242,7 +242,7 @@ function parseValue(raw: string): { coef: string; stars: string } {
   .reg-notes {
     margin-top: 0.625rem;
     font-size: 0.78rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     line-height: 1.55;
     max-width: 100%;
   }

@@ -80,10 +80,14 @@ export default function GitHubActivity({ data }: GitHubActivityProps) {
   }, []);
 
   const cellColor = (level: number): string => {
-    if (level === 0) return 'var(--bg-card)';
-    // Levels 1-4: increasing opacity of accent
-    const opacities = ['', '0.3', '0.55', '0.8', '1'];
-    return `color-mix(in srgb, var(--accent) ${parseFloat(opacities[level]) * 100}%, var(--bg-card))`;
+    const levels = [
+      'rgba(255,255,255,0.04)',
+      'rgba(255,255,255,0.12)',
+      'rgba(255,255,255,0.24)',
+      'rgba(255,255,255,0.40)',
+      'rgba(255,255,255,0.60)',
+    ];
+    return levels[level] ?? levels[0];
   };
 
   const showTooltip = (
@@ -123,6 +127,7 @@ export default function GitHubActivity({ data }: GitHubActivityProps) {
         ref={containerRef}
         style={{
           overflowX: 'auto',
+          background: 'var(--bg-raised)',
           scrollbarWidth: 'thin',
           scrollbarColor: 'var(--border) transparent',
           paddingBottom: '0.25rem',
@@ -135,11 +140,10 @@ export default function GitHubActivity({ data }: GitHubActivityProps) {
               position: 'absolute',
               left: tooltip.x,
               top: tooltip.y,
-              background: 'var(--fg)',
-              color: 'var(--bg)',
+              background: 'rgba(255,255,255,0.92)',
+              color: '#000',
               fontSize: '0.72rem',
               padding: '0.3rem 0.6rem',
-              borderRadius: '4px',
               pointerEvents: 'none',
               whiteSpace: 'nowrap',
               zIndex: 10,
@@ -167,8 +171,10 @@ export default function GitHubActivity({ data }: GitHubActivityProps) {
                 key={i}
                 style={{
                   height: `${CELL}px`,
-                  fontSize: '0.6rem',
-                  color: 'var(--fg-3)',
+                  fontSize: '10px',
+                  color: 'var(--text-faint)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'flex-end',
@@ -198,8 +204,10 @@ export default function GitHubActivity({ data }: GitHubActivityProps) {
                   style={{
                     position: 'absolute',
                     left: `${weekIdx * (CELL + GAP)}px`,
-                    fontSize: '0.6rem',
-                    color: 'var(--fg-3)',
+                    fontSize: '10px',
+                    color: 'var(--text-faint)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
                     whiteSpace: 'nowrap',
                   }}
                 >
@@ -226,7 +234,6 @@ export default function GitHubActivity({ data }: GitHubActivityProps) {
                     style={{
                       width: `${CELL}px`,
                       height: `${CELL}px`,
-                      borderRadius: '2px',
                       background: cellColor(count),
                       border: count === 0 ? '1px solid var(--border)' : 'none',
                       cursor: 'default',
@@ -253,20 +260,19 @@ export default function GitHubActivity({ data }: GitHubActivityProps) {
             justifyContent: 'flex-end',
           }}
         >
-          <span style={{ fontSize: '0.65rem', color: 'var(--fg-3)' }}>Less</span>
+          <span style={{ fontSize: '10px', color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Less</span>
           {[0, 1, 2, 3, 4].map((level) => (
             <div
               key={level}
               style={{
                 width: `${CELL}px`,
                 height: `${CELL}px`,
-                borderRadius: '2px',
                 background: cellColor(level),
                 border: level === 0 ? '1px solid var(--border)' : 'none',
               }}
             />
           ))}
-          <span style={{ fontSize: '0.65rem', color: 'var(--fg-3)' }}>More</span>
+          <span style={{ fontSize: '10px', color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>More</span>
         </div>
       </div>
     </div>

@@ -109,7 +109,7 @@ function authorsLine(rep: (typeof replications)[number]): string {
 
 <style>
   .page-wrapper {
-    max-width: 56rem; /* ~4xl */
+    max-width: 64rem;
     margin: 0 auto;
     padding: 3rem 1.5rem;
   }
@@ -122,13 +122,13 @@ function authorsLine(rep: (typeof replications)[number]): string {
   .page-title {
     font-size: 1.75rem;
     font-weight: 700;
-    color: var(--fg);
+    color: var(--text);
     margin-bottom: 0.5rem;
   }
 
   .page-subtitle {
     font-size: 0.9rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     line-height: 1.6;
     max-width: 42rem;
     margin-bottom: 1.25rem;
@@ -148,27 +148,25 @@ function authorsLine(rep: (typeof replications)[number]): string {
 
   .empty-state {
     font-size: 0.875rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
   }
 
   /* Individual card */
   .rep-card {
     display: block;
-    background: var(--bg-card);
+    background: var(--bg-raised);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 0;
     padding: 1.25rem 1.5rem;
-    box-shadow: var(--shadow);
     text-decoration: none;
-    color: var(--fg);
-    transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+    color: var(--text);
+    transition: transform 0.2s, border-color 0.2s;
   }
 
   .rep-card:hover {
-    box-shadow: var(--shadow-hover);
     transform: translateY(-2px);
-    border-color: var(--accent);
-    color: var(--fg);
+    border-color: var(--text);
+    color: var(--text);
   }
 
   /* Meta row */
@@ -181,7 +179,7 @@ function authorsLine(rep: (typeof replications)[number]): string {
 
   .card-date {
     font-size: 0.75rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
   }
 
   /* Status badges */
@@ -196,49 +194,49 @@ function authorsLine(rep: (typeof replications)[number]): string {
   }
 
   .status-complete {
-    background: var(--success-bg);
-    color: var(--success);
+    background: var(--bg-raised);
+    color: var(--status-complete);
   }
 
   .status-partial {
-    background: var(--warning-bg);
-    color: var(--warning);
+    background: var(--bg-raised);
+    color: var(--status-partial);
   }
 
   .status-planned {
-    background: var(--stat-bg);
-    color: var(--fg-3);
+    background: var(--bg-surface);
+    color: var(--text-faint);
   }
 
   /* Card body */
   .card-title {
     font-size: 1rem;
     font-weight: 600;
-    color: var(--fg);
+    color: var(--text);
     margin-bottom: 0.25rem;
     line-height: 1.4;
   }
 
   .rep-card:hover .card-title {
-    color: var(--accent);
+    color: var(--text);
   }
 
   .card-authors {
     font-size: 0.82rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     margin-bottom: 0.2rem;
   }
 
   .card-venue {
     font-size: 0.78rem;
-    color: var(--fg-3);
+    color: var(--text-faint);
     font-style: italic;
     margin-bottom: 0.4rem;
   }
 
   .card-tldr {
     font-size: 0.82rem;
-    color: var(--fg-2);
+    color: var(--text-dim);
     line-height: 1.55;
     margin-top: 0.4rem;
     margin-bottom: 0.5rem;
@@ -278,19 +276,19 @@ function authorsLine(rep: (typeof replications)[number]): string {
   }
 
   .action-btn--active {
-    background: var(--accent-light);
-    color: var(--accent);
-    border-color: var(--accent);
+    background: var(--bg-raised);
+    color: var(--text);
+    border-color: var(--text);
   }
 
   .action-btn--active:hover {
-    background: var(--accent);
+    background: var(--text);
     color: #fff;
   }
 
   .action-btn--disabled {
-    background: var(--stat-bg);
-    color: var(--fg-3);
+    background: var(--bg-surface);
+    color: var(--text-faint);
     cursor: default;
     opacity: 0.6;
   }
