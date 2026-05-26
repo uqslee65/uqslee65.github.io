@@ -5,7 +5,6 @@ export interface ContactInfo {
   personalEmail: string;
   linkedin: string;
   github: string;
-  phones: string[];
 }
 
 export interface EducationEntry {
@@ -69,7 +68,6 @@ export const RESUME: ResumeData = {
     personalEmail: "lszeray@gmail.com",
     linkedin: "https://www.linkedin.com/in/leeszeray/",
     github: "https://github.com/lszeray",
-    phones: ["+61 493 713 215", "+65 8670 7793"],
   },
 
   researchInterests: [

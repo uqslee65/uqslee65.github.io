@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.PUBLIC_API_URL || 'https://api.m0nius.com';
+const API_BASE = import.meta.env.PUBLIC_API_URL || '';
 
 // All methods are fire-and-forget safe — simulation works without persistence
 
