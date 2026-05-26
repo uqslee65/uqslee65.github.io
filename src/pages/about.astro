@@ -1,67 +1,93 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { RESUME } from '../data/resume.ts';
+
+const sections = [
+  { id: 'education', label: 'Education' },
+  { id: 'experience', label: 'Experience' },
+  { id: 'honours', label: 'Honours' },
+  { id: 'service', label: 'Service' },
+  { id: 'skills', label: 'Skills' },
+  { id: 'contact', label: 'Contact' },
+];
 ---
 
 <BaseLayout title="About — Joshua Lee">
   <header class="about-header">
-    <h1>Joshua Lee</h1>
-    <p class="subtitle">{RESUME.contact.title}</p>
+    <h1 class="about-name">Joshua Lee</h1>
+    <p class="about-title">{RESUME.contact.title}</p>
+    <div class="interest-chips">
+      {RESUME.researchInterests.map(interest => (
+        <span class="tag">{interest}</span>
+      ))}
+    </div>
   </header>
 
-  <!-- Research Interests -->
-  <details class="cv-section" open>
-    <summary>Research Interests</summary>
-    <div class="cv-section-body">
-      <div class="tag-row">
-        {RESUME.researchInterests.map(interest => (
-          <span class="tag">{interest}</span>
-        ))}
-      </div>
-    </div>
-  </details>
+  <div id="cv-container" data-view="academic">
+    <!-- Horizontal section nav -->
+    <nav class="section-nav">
+      {sections.map(s => (
+        <a href={`#${s.id}`} class:list={['section-nav-link', { 'academic-only': s.id === 'honours' }]}>{s.label}</a>
+      ))}
+    </nav>
 
-  <!-- Education -->
-  <details class="cv-section" open>
-    <summary>Education</summary>
-    <div class="cv-section-body">
+    <!-- Academic / Industry toggle -->
+    <div class="view-toggle" id="view-toggle">
+      <button class="toggle-btn active" data-view="academic">ACADEMIC</button>
+      <button class="toggle-btn" data-view="industry">INDUSTRY</button>
+    </div>
+    <!-- Education -->
+    <section id="education" class="cv-section">
+      <h2 class="section-heading">EDUCATION</h2>
       {RESUME.education.map(entry => (
-        <div class="timeline-entry">
-          <span class="timeline-date">{entry.period}</span>
-          <div class="timeline-content">
-            <span class="entry-title">{entry.degree}</span>
-            {' — '}
-            <span class="entry-org">{entry.institution}</span>
-            {entry.grade && <span class="entry-meta"> · {entry.grade}</span>}
-            {entry.thesis && (
-              <div class="entry-sub">Thesis: <em>{entry.thesis}</em></div>
-            )}
+        <details class="edu-entry">
+          <summary class="edu-summary">
+            <span class="edu-degree">{entry.degree}</span>
+            <span class="edu-meta"> — {entry.institution} · {entry.period}</span>
+          </summary>
+          <div class="edu-body">
+            {entry.grade && <p class="edu-detail">GPA: {entry.grade}</p>}
+            {entry.thesis && <p class="edu-detail academic-only">Thesis: <em>{entry.thesis}</em></p>}
             {entry.advisors && entry.advisors.length > 0 && (
-              <div class="entry-sub">Advisors: {entry.advisors.join(', ')}</div>
+              <p class="edu-detail academic-only">Advisors: {entry.advisors.join(', ')}</p>
             )}
             {entry.topics && entry.topics.length > 0 && (
-              <div class="entry-sub">Topics: {entry.topics.join(', ')}</div>
+              <p class="edu-detail">Topics: {entry.topics.join(', ')}</p>
             )}
             {entry.awards && entry.awards.length > 0 && (
-              <ul class="entry-list">
+              <ul class="edu-list academic-only">
                 {entry.awards.map(a => <li>{a}</li>)}
               </ul>
             )}
             {entry.achievements && entry.achievements.length > 0 && (
-              <ul class="entry-list">
+              <ul class="edu-list">
                 {entry.achievements.map(a => <li>{a}</li>)}
               </ul>
             )}
           </div>
+        </details>
+      ))}
+    </section>
+
+    <!-- Finance Experience -->
+    <section id="experience" class="cv-section">
+      <h2 class="section-heading">EXPERIENCE</h2>
+      {RESUME.financeExperience.map(entry => (
+        <div class="timeline-entry">
+          <span class="timeline-date">{entry.period}</span>
+          <div class="timeline-content">
+            <span class="entry-title">{entry.role}</span>
+            {' · '}
+            <span class="entry-org">{entry.organisation}</span>
+            <p class="entry-detail">{entry.details}</p>
+          </div>
         </div>
       ))}
-    </div>
-  </details>
+    </section>
 
-  <!-- Honours & Awards -->
-  <details class="cv-section">
-    <summary>Honours &amp; Awards</summary>
-    <div class="cv-section-body">
+    <!-- Honours & Awards (academic only) -->
+    <section id="honours" class="cv-section academic-only">
+      <h2 class="section-heading">HONOURS & AWARDS</h2>
       {RESUME.honours.map(group => (
         <div class="honours-group">
           <h4 class="group-heading">{group.group}</h4>
@@ -70,49 +96,11 @@ import { RESUME } from '../data/resume.ts';
           </ul>
         </div>
       ))}
-    </div>
-  </details>
+    </section>
 
-  <!-- Finance Experience -->
-  <details class="cv-section" open>
-    <summary>Finance Experience</summary>
-    <div class="cv-section-body">
-      {RESUME.financeExperience.map(entry => (
-        <div class="timeline-entry">
-          <span class="timeline-date">{entry.period}</span>
-          <div class="timeline-content">
-            <span class="entry-title">{entry.role}</span>
-            {' · '}
-            <span class="entry-org">{entry.organisation}</span>
-            <div class="entry-sub">{entry.details}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </details>
-
-  <!-- Research Projects -->
-  <details class="cv-section">
-    <summary>Research Projects</summary>
-    <div class="cv-section-body">
-      {RESUME.researchProjects.map(entry => (
-        <div class="timeline-entry">
-          <span class="timeline-date">{entry.period}</span>
-          <div class="timeline-content">
-            <span class="entry-title">{entry.title}</span>
-            {' · '}
-            <span class="entry-org">{entry.organisation}</span>
-            <div class="entry-sub">{entry.details}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </details>
-
-  <!-- Service / Extracurriculars -->
-  <details class="cv-section">
-    <summary>Service / Extracurriculars</summary>
-    <div class="cv-section-body">
+    <!-- Service / Extracurriculars -->
+    <section id="service" class="cv-section">
+      <h2 class="section-heading">SERVICE & EXTRACURRICULARS</h2>
       {RESUME.serviceExtracurriculars.map(entry => (
         <div class="timeline-entry">
           <span class="timeline-date">{entry.period}</span>
@@ -120,97 +108,217 @@ import { RESUME } from '../data/resume.ts';
             <span class="entry-title">{entry.role}</span>
             {' · '}
             <span class="entry-org">{entry.organisation}</span>
-            <div class="entry-sub">{entry.details}</div>
+            <p class="entry-detail">{entry.details}</p>
           </div>
         </div>
       ))}
-    </div>
-  </details>
+    </section>
 
-  <!-- Volunteering -->
-  <details class="cv-section">
-    <summary>Volunteering</summary>
-    <div class="cv-section-body">
-      {RESUME.volunteering.map(entry => (
-        <div class="timeline-entry">
-          <span class="timeline-date">{entry.period}</span>
-          <div class="timeline-content">
-            <span class="entry-title">{entry.role}</span>
-            {' · '}
-            <span class="entry-org">{entry.organisation}</span>
-            <div class="entry-sub">{entry.details}</div>
-          </div>
-        </div>
-      ))}
-    </div>
-  </details>
-
-  <!-- Skills -->
-  <details class="cv-section">
-    <summary>Skills</summary>
-    <div class="cv-section-body">
-      <div class="tag-row">
+    <!-- Skills -->
+    <section id="skills" class="cv-section">
+      <h2 class="section-heading">SKILLS</h2>
+      <div class="skill-chips">
         {RESUME.skills.map(skill => (
           <span class="tag">{skill}</span>
         ))}
       </div>
-    </div>
-  </details>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="cv-section">
+      <h2 class="section-heading">CONTACT</h2>
+      <div class="contact-grid">
+        <a href={RESUME.contact.linkedin} target="_blank" rel="noopener" class="contact-item">
+          <span class="contact-type">LinkedIn</span>
+          <span class="contact-value">leeszeray</span>
+        </a>
+        <a href={`mailto:${RESUME.contact.email}`} class="contact-item">
+          <span class="contact-type">Email</span>
+          <span class="contact-value">{RESUME.contact.email}</span>
+        </a>
+        <a href={`tel:${RESUME.contact.phone.replace(/\s/g, '')}`} class="contact-item">
+          <span class="contact-type">Phone</span>
+          <span class="contact-value">{RESUME.contact.phone}</span>
+        </a>
+        <a href={RESUME.contact.github} target="_blank" rel="noopener" class="contact-item">
+          <span class="contact-type">GitHub</span>
+          <span class="contact-value">lszeray</span>
+        </a>
+      </div>
+    </section>
+  </div>
 </BaseLayout>
+
+<script>
+  const container = document.getElementById('cv-container');
+  const buttons = document.querySelectorAll('.toggle-btn');
+
+  buttons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.getAttribute('data-view');
+      if (!view || !container) return;
+      container.setAttribute('data-view', view);
+      buttons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+
+  const navLinks = document.querySelectorAll('.section-nav-link');
+  const sectionEls = document.querySelectorAll('.cv-section[id]');
+
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === `#${entry.target.id}`);
+          });
+        }
+      });
+    },
+    { rootMargin: '-20% 0px -60% 0px' }
+  );
+
+  sectionEls.forEach(section => observer.observe(section));
+</script>
 
 <style>
   .about-header {
     margin-bottom: 2rem;
   }
-  .about-header h1 {
-    font-size: 2.5rem;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+  .about-name {
+    font-size: 2rem;
+    font-weight: 300;
     color: var(--text);
-    margin-bottom: 0.25rem;
+    letter-spacing: -0.02em;
   }
-  .subtitle {
+  .about-title {
     font-size: 0.8rem;
     color: var(--text-dim);
-    margin-top: 0.5rem;
-    padding-left: 0;
+    margin-top: 0.25rem;
+  }
+  .interest-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 1rem;
   }
 
-  /* ── CV Section (details/summary) ─────────────────────── */
-  .cv-section {
-    margin-bottom: 1.25rem;
+  .section-nav {
+    display: flex;
+    gap: 0.25rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
-  .cv-section summary {
-    padding: 0.6rem 0;
-    font-size: 0.75rem;
-    font-weight: 700;
+  .section-nav::-webkit-scrollbar { display: none; }
+  .section-nav-link {
+    padding: 0.5rem 0.75rem;
+    font-size: 10px;
+    font-weight: 400;
+    color: var(--text-dim);
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    border-bottom: 1px solid transparent;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .section-nav-link:hover { color: var(--text); }
+  .section-nav-link.active {
     color: var(--text);
+    border-bottom-color: var(--text);
+  }
+
+  .view-toggle {
+    display: flex;
+    gap: 0;
+    margin-bottom: 2rem;
+  }
+  .toggle-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-faint);
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+  }
+  .toggle-btn:first-child { border-right: none; }
+  .toggle-btn.active {
+    color: var(--text);
+    background: var(--bg-surface);
+    border-color: var(--border-mid);
+  }
+
+  [data-view="industry"] :global(.academic-only) {
+    display: none !important;
+  }
+
+  .cv-section {
+    margin-bottom: 2.5rem;
+    scroll-margin-top: calc(var(--nav-height) + 2rem);
+  }
+  .section-heading {
+    font-size: 10px;
+    font-weight: 400;
+    letter-spacing: 0.16em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .edu-entry { margin-bottom: 0.5rem; }
+  .edu-summary {
+    padding: 0.6rem 0;
     cursor: pointer;
     list-style: none;
     border-bottom: 1px solid var(--border);
     user-select: none;
+    font-size: 0.875rem;
+    line-height: 1.4;
   }
-  .cv-section summary::-webkit-details-marker { display: none; }
-  .cv-section summary::marker { content: ''; }
-  .cv-section summary::before {
+  .edu-summary::-webkit-details-marker { display: none; }
+  .edu-summary::marker { content: ''; }
+  .edu-summary::before {
     content: '+';
     display: inline-block;
-    margin-right: 0.5rem;
+    margin-right: 0.6rem;
     font-size: 0.8rem;
+    color: var(--text-faint);
+    width: 0.8rem;
   }
-  .cv-section[open] summary::before {
-    content: '−';
+  .edu-entry[open] .edu-summary::before { content: '−'; }
+  .edu-degree { font-weight: 600; color: var(--text); }
+  .edu-meta { color: var(--text-faint); font-size: 0.8rem; }
+  .edu-body { padding: 0.75rem 0 0.5rem 1.4rem; }
+  .edu-detail {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-bottom: 0.2rem;
+    line-height: 1.5;
   }
-  .cv-section-body {
-    padding: 0.75rem 0 0.5rem;
+  .edu-list {
+    margin: 0.3rem 0 0 1rem;
+    padding: 0;
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    list-style: disc;
+    line-height: 1.6;
   }
+  .edu-list li { padding: 0.05rem 0; }
 
-  /* ── Timeline ──────────────────────────────────────────── */
   .timeline-entry {
     display: grid;
     grid-template-columns: 7rem 1fr;
     gap: 0.75rem;
-    padding: 0.35rem 0;
+    padding: 0.5rem 0;
   }
   .timeline-date {
     font-size: 0.75rem;
@@ -227,38 +335,67 @@ import { RESUME } from '../data/resume.ts';
     border-left: 1px solid var(--border);
     padding-left: 0.75rem;
   }
-
-  /* ── Entry typography ──────────────────────────────────── */
-  .entry-title { font-weight: 700; color: var(--text); }
+  .entry-title { font-weight: 600; color: var(--text); }
   .entry-org { color: var(--text-dim); }
-  .entry-meta { font-size: 0.8rem; color: var(--text-faint); }
-  .entry-sub { margin-top: 0.2rem; font-size: 0.8rem; color: var(--text-faint); }
-  .entry-list {
-    margin: 0.25rem 0 0 1rem;
-    padding: 0;
+  .entry-detail {
     font-size: 0.8rem;
     color: var(--text-faint);
-    list-style: disc;
+    margin-top: 0.2rem;
+    line-height: 1.5;
   }
-  .entry-list li { padding: 0.05rem 0; }
 
-  /* ── Honours groups ────────────────────────────────────── */
   .honours-group { margin-bottom: 0.75rem; }
   .group-heading {
     font-size: 0.8rem;
-    font-weight: 700;
+    font-weight: 600;
     color: var(--text-dim);
     margin: 0 0 0.25rem;
     border-left: 2px solid var(--text-faint);
     padding-left: 0.5rem;
   }
+  .entry-list {
+    margin: 0.25rem 0 0 1rem;
+    padding: 0;
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    list-style: disc;
+  }
+  .entry-list li { padding: 0.05rem 0; }
 
-  /* ── Tags ──────────────────────────────────────────────── */
-  .tag-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .skill-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
 
-  /* ── Mobile ────────────────────────────────────────────── */
-  @media (max-width: 540px) {
-    .timeline-entry { grid-template-columns: 5.5rem 1fr; gap: 0.5rem; }
+  .contact-grid { display: flex; flex-direction: column; }
+  .contact-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color 0.15s;
+  }
+  .contact-item:hover { color: var(--text); }
+  .contact-item:last-child { border-bottom: none; }
+  .contact-type {
+    width: 5rem;
+    color: var(--text-faint);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 640px) {
+    .timeline-entry {
+      grid-template-columns: 5.5rem 1fr;
+      gap: 0.5rem;
+    }
     .timeline-date { font-size: 0.72rem; }
   }
 </style>

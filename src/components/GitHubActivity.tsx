@@ -82,10 +82,10 @@ export default function GitHubActivity({ data }: GitHubActivityProps) {
   const cellColor = (level: number): string => {
     const levels = [
       'rgba(255,255,255,0.04)',
-      'rgba(255,255,255,0.12)',
-      'rgba(255,255,255,0.24)',
-      'rgba(255,255,255,0.40)',
-      'rgba(255,255,255,0.60)',
+      '#0e4429',
+      '#006d32',
+      '#26a641',
+      '#39d353',
     ];
     return levels[level] ?? levels[0];
   };
@@ -248,31 +248,6 @@ export default function GitHubActivity({ data }: GitHubActivityProps) {
               )}
             </div>
           </div>
-        </div>
-
-        {/* Legend */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.35rem',
-            marginTop: '0.6rem',
-            justifyContent: 'flex-end',
-          }}
-        >
-          <span style={{ fontSize: '10px', color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Less</span>
-          {[0, 1, 2, 3, 4].map((level) => (
-            <div
-              key={level}
-              style={{
-                width: `${CELL}px`,
-                height: `${CELL}px`,
-                background: cellColor(level),
-                border: level === 0 ? '1px solid var(--border)' : 'none',
-              }}
-            />
-          ))}
-          <span style={{ fontSize: '10px', color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>More</span>
         </div>
       </div>
     </div>

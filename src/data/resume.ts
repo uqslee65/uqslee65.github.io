@@ -76,7 +76,8 @@ export const RESUME: ResumeData = {
     "Digital Finance",
     "Data Assets & Markets",
     "Empirical Asset Pricing",
-    "Experimental Economics",
+    "Economic Agent Simulations",
+    "Fintech",
   ],
 
   education: [

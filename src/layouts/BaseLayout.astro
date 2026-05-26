@@ -45,12 +45,14 @@ const { title, description = 'PhD Finance Researcher — Experimental Economics,
       </main>
     )}
     <EngagementPopup client:idle />
-    <footer class="site-footer">
-      <div class="footer-inner">
-        <span class="footer-text">&copy; {new Date().getFullYear()} Joshua Lee</span>
-        <a href="https://github.com/uqslee65" target="_blank" rel="noopener">GitHub</a>
-      </div>
-    </footer>
+    {!fullBleed && (
+      <footer class="site-footer">
+        <div class="footer-inner">
+          <span class="footer-text">&copy; {new Date().getFullYear()} Joshua Lee</span>
+          <a href="https://github.com/uqslee65" target="_blank" rel="noopener">GitHub</a>
+        </div>
+      </footer>
+    )}
   </body>
 </html>
 

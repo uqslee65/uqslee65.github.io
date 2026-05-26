@@ -1,13 +1,260 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/Hero.astro';
+import LandingTabs from '../components/LandingTabs.tsx';
+import { getCollection } from 'astro:content';
+import { fetchCommitActivity } from '../lib/github';
+import type { TabItem } from '../components/LandingTabs.tsx';
+
+const replications = (await getCollection('replications')).sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+
+const commitData = await fetchCommitActivity('uqslee65', 'phd-finance-replications');
+
+function toActivityLevels(data: typeof commitData): number[][] | null {
+  if (!data) return null;
+  const weeks = data.slice(-52);
+  return weeks.map(w =>
+    w.days.map(count => {
+      if (count === 0) return 0;
+      if (count <= 2) return 1;
+      if (count <= 5) return 2;
+      if (count <= 9) return 3;
+      return 4;
+    })
+  );
+}
+
+const activityLevels = toActivityLevels(commitData);
+
+const projectItems: TabItem[] = [
+  {
+    title: 'DLM (2005) Virtual Trading Platform',
+    subtitle: 'Experimental Economics · Market Microstructure',
+    description: 'Browser-based replication of Dufwenberg, Lindqvist & Moore (AER 2005) asset market bubble experiment. Interactive dashboard with agent cards, order book, trade feed, and replay.',
+    tags: ['experimental-economics', 'LLM', 'replication'],
+    links: { site: '/simulator' },
+  },
+  {
+    title: 'Collective Trades',
+    subtitle: 'Fintech · Market Data',
+    description: 'Real-time dashboard for insider trades, institutional holdings, and congressional disclosures. FastAPI backend with network-graph explorer and candlestick charts.',
+    tags: ['fastapi', 'next.js', 'market-data'],
+    links: { site: 'https://collective-trades-app-5371d48e9bf7.herokuapp.com' },
+  },
+  {
+    title: 'Digital Transactions in Asia VII',
+    subtitle: 'Conference Website',
+    description: 'Conference website for the 7th Digital Transactions in Asia workshop (University of Peradeniya, Sri Lanka). Paper submission, registration, and schedule management.',
+    tags: ['conference', 'next.js', 'digital-finance'],
+    links: { site: 'https://www.icdtaaussl2026.com' },
+  },
+  {
+    title: 'phd-finance-replications',
+    subtitle: 'Open-Source Repository',
+    description: 'Python library and replication archive for empirical finance research. Abstracts WRDS data pulls, regression pipelines, and tolerance-gated quality checks into a reusable toolkit.',
+    tags: ['python', 'open-source', 'empirical-finance'],
+    links: { site: 'https://github.com/uqslee65/phd-finance-replications' },
+  },
+];
+
+const replicationItems: TabItem[] = replications.map(rep => ({
+  title: rep.data.title,
+  subtitle: rep.data.authors?.join(', ') + (rep.data.year ? ` (${rep.data.year})` : ''),
+  description: rep.data.tldr ?? '',
+  tags: rep.data.tags,
+  status: rep.data.status,
+  href: `/replications/${rep.id}`,
+  links: {
+    notebook: rep.data.notebook_url,
+    slides: rep.data.slides_url,
+    paper: rep.data.paper_url,
+  },
+}));
+
+const researchItems: TabItem[] = [
+  {
+    title: 'PhD Thesis — Open-Source Empirical Finance Toolkit',
+    subtitle: 'University of Queensland · 2026–2029',
+    description: 'Developing reproducible methods and open-source tools for empirical finance research. A tidyfinance alternative covering replication studies, asset pricing tests, and market microstructure analysis with tolerance-gated quality checks.',
+    tags: ['digital-finance', 'empirical-asset-pricing', 'open-source'],
+    status: 'planned',
+    links: {},
+  },
+  {
+    title: 'Data Assets & Digital Finance Markets',
+    subtitle: 'A/Prof. Min Zhu (UQ) · A/Prof. Zigan Wang (Tsinghua)',
+    description: 'Investigating the pricing, valuation, and market dynamics of data as a financial asset. Explores how digital finance infrastructure shapes data markets and information flows.',
+    tags: ['data-assets', 'digital-finance', 'market-microstructure'],
+    links: {},
+  },
+  {
+    title: 'Economic Agent Simulations for Market Design',
+    subtitle: 'Experimental Economics · LLM Agents',
+    description: 'Building browser-based experimental platforms with LLM-powered economic agents. Testing market design hypotheses through simulated trading environments with bounded rationality.',
+    tags: ['agent-simulations', 'experimental-economics', 'LLM', 'market-design'],
+    links: {},
+  },
+];
 ---
 
 <BaseLayout title="Joshua Lee — PhD Finance" fullBleed={true}>
-  <Hero
-    name="Joshua Lee"
-    title="PhD Finance Student"
-    tagline=""
-    intro="I'm building an open-source archive of replication studies in empirical finance — reproducible code, documented methodology, and growing coverage of canonical papers. Think of it as a tidyfinance alternative built by a PhD student, for PhD students. This site also features my side projects in experimental economics and market microstructure."
-  />
+  <Hero activityData={activityLevels} />
+  <LandingTabs client:load projects={projectItems} replications={replicationItems} research={researchItems} />
+
+  <footer class="landing-footer">
+    <p class="landing-footer-text">
+      University of Queensland · Business School · Finance
+    </p>
+  </footer>
 </BaseLayout>
+
+<style>
+  .landing-footer {
+    padding: 1.25rem 1.5rem;
+    text-align: center;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+  .landing-footer-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.2);
+    text-transform: uppercase;
+    margin: 0;
+  }
+</style>
+
+<style is:global>
+  .landing-tabs-section {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 4rem;
+  }
+
+  .tab-content {
+    margin-top: 1.25rem;
+  }
+
+  .tab-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .tab-card {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 1.5rem;
+    background: var(--bg-raised);
+    border: 1px solid var(--border);
+    padding: 1.25rem 1.5rem;
+    transition: border-color 0.2s;
+  }
+
+  .tab-card:hover {
+    border-color: var(--border-mid);
+  }
+
+  .tab-card--link {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .tab-card-body {
+    min-width: 0;
+  }
+
+  .tab-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  .tab-card-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .tab-card-subtitle {
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    margin-top: 0.15rem;
+  }
+
+  .tab-card-desc {
+    font-size: 0.82rem;
+    color: var(--text-dim);
+    line-height: 1.55;
+    margin-top: 0.4rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .tab-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.5rem;
+  }
+
+  .tab-status {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 500;
+    padding: 0.15rem 0.5rem;
+    border: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .tab-status--complete { color: var(--status-complete); }
+  .tab-status--partial { color: var(--status-partial); }
+  .tab-status--planned { color: var(--status-planned); }
+
+  .tab-card-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    justify-content: center;
+    align-items: flex-end;
+    flex-shrink: 0;
+  }
+
+  .tab-action-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.75rem;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  .tab-action-btn:hover {
+    color: var(--text);
+    border-color: var(--text-dim);
+  }
+
+  @media (max-width: 640px) {
+    .tab-card {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+    .tab-card-actions {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: flex-start;
+    }
+  }
+</style>
