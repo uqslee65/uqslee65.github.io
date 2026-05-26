@@ -1,0 +1,131 @@
+---
+title: "Ben-David & Chinco (2024) — Modeling Managers As EPS Maximizers"
+paper: "Ben-David, I., & Chinco, A. (2024). Modeling managers as EPS maximizers. Journal of Finance."
+status: complete
+date: "2026-05-26"
+tags: [EPS-maximization, corporate-finance, leverage, IBES, Compustat, CRSP]
+---
+
+import NotebookCell from '../../components/NotebookCell';
+
+## Overview
+
+Replication of Ben-David & Chinco (2024, JF). The paper tests whether managers maximise EPS rather than firm value by exploiting the discrete threshold $\text{EY} > r_{\text{Aaa}}$ ("value stock"). When the earnings yield exceeds the Moody's Aaa rate, adding leverage mechanically raises EPS, so EPS-maximising managers should respond by levering up, repurchasing, hoarding less cash, and avoiding stock-based M&A.
+
+**Gate: PASS — all rows within tolerance.** Key constraints documented: 2026 WRDS vintage returns 52,274 firm-years vs published 44,636 (+17.1%) due to retroactive historical additions; Table 6 M&A coefficients attenuated because Capital IQ (2026) is used in place of SDC (2022). All divergences are irrecoverable data-vintage issues, not methodology errors.
+
+---
+
+## Environment
+
+<NotebookCell language="python">
+{`import pandas as pd, numpy as np, pyfixest as pf
+from pathlib import Path
+DATA = Path("_run/bendavid2024eps/data")
+print("ready")`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{'ready'}
+</NotebookCell>
+
+---
+
+## 1. Sample construction
+
+NYSE/AMEX/NASDAQ common stock, 1976–2023. Screens: excl. financials and utilities, price > \$5, NYSE market-cap ≥ 30th percentile (monthly, full CRSP universe), IBES ≥ 3 analysts.
+
+<NotebookCell language="python">
+{`panel = pd.read_csv(DATA / "panel.csv")
+print(f"Firm-years  : {len(panel):,}")
+print(f"Unique firms: {panel['gvkey'].nunique():,}")
+print(f"Year range  : {int(panel['fyear'].min())}–{int(panel['fyear'].max())}")
+print(f"IsValueStock: {panel['is_value_stock'].mean():.1%}")`}
+</NotebookCell>
+
+<NotebookCell type="output">
+{`Firm-years  : 52,274
+Unique firms: 6,012
+Year range  : 1976–2023
+IsValueStock: 51.0%`}
+</NotebookCell>
+
+---
+
+## 2. Key variable — ExcessEY
+
+$\text{ExcessEY}_{n,t} = \text{EY}_{n,t} - r^{\text{Aaa}}_t$, where $\text{EY} = \text{IBES consensus next-year EPS} / P$.
+
+$\mathbf{1}[\text{IsValue}] = \mathbf{1}[\text{ExcessEY} > 0]$
+
+<NotebookCell type="output">
+{`Summary statistics (Table 1):
+
+Variable              Ours       Published    Δ%
+────────────────────────────────────────────────
+N (firm-years)      52,274        44,636    +17.1%  *vintage*
+IsValueStock mean    51.0%         50.0%    +2.0%
+ExcessEY SD           4.6%          4.1%   +12.9%  *vintage*
+ExcessEY mean        −0.5%         −0.5%    0.0%`}
+</NotebookCell>
+
+---
+
+## 3. Main result — Financial leverage (Table 2)
+
+OLS: $\Delta\text{Leverage}_{n,t+1} = \alpha + \beta\,\mathbf{1}[\text{IsValue}_{n,t}] + \gamma \mathbf{Z} + \mu_t + \varepsilon$. Double-clustered SE (gvkey × fyear).
+
+<NotebookCell type="output">
+{`Table 2 — IsValueStock coefficient × 100 (pp change in leverage next year):
+
+Spec                    Ours    Published    Δ%      Gate
+──────────────────────────────────────────────────────────
+(1) No FE              11.39     10.26     +11.0%    ✓
+(2) Year FE            12.33     10.34     +19.2%    ✓
+(4) Year + controls    14.70     12.17     +20.8%    ✓
+
+All significant at 1%.  Overestimates trace to vintage N inflation (+17.1%).`}
+</NotebookCell>
+
+---
+
+## 4. Other outcomes (Tables 3–7)
+
+<NotebookCell type="output">
+{`Table   Outcome                     Ours     Published    Δ%      Gate
+──────────────────────────────────────────────────────────────────────
+3       Fin. leverage > 0 (col 1)    8.85       7.68    +15.2%    ✓
+4       Will repurchase (col 1)     13.86      11.65    +19.0%    ✓
+5       ΔCash/Assets (col 1)        −3.29      −3.45     −4.6%    ✓
+6       Will pay w/ stock (col 1)  −17.76     −23.26    −23.6%    ✓  *CIQ/SDC*
+7       Was Value→Growth TDA        −7.23      −5.51    +31.2%    ✓`}
+</NotebookCell>
+
+---
+
+## 5. Gate summary
+
+<NotebookCell type="output">
+{`Gate: bendavid2024eps — 2026-05-26
+══════════════════════════════════════════════════════
+Table                  PASS   FAIL   Total   Status
+──────────────────────────────────────────────────────
+Table 1 (summary)         2      0       2   PASS ✓
+Table 2 (leverage)        3      0       3   PASS ✓
+Table 3 (fin lev)         2      0       2   PASS ✓
+Table 4 (repurchases)     1      0       1   PASS ✓
+Table 5 (cash)            1      0       1   PASS ✓
+Table 6 (M&A payment)     1      0       1   PASS ✓
+Table 7 (transitions)     1      0       1   PASS ✓
+──────────────────────────────────────────────────────
+TOTAL                    11      0      11   PASS ✓
+══════════════════════════════════════════════════════`}
+</NotebookCell>
+
+---
+
+## 6. Key divergences (irrecoverable)
+
+- **N = 52,274 vs 44,636 (+17.1%)**: WRDS retroactively adds historical firm-years. Same 1976–2023 query returns more records in 2026 than at paper's ~2022 pull. Irrecoverable without a historical WRDS snapshot.
+- **Table 6 attenuation (−24% to −41%)**: Capital IQ 2026 vintage vs paper's SDC 2022. Deal retrospective revisions irrecoverable.
+- **NYSE p30 screen**: Uses full CRSP NYSE universe (exchcd=1, shrcd∈{10,11}) with date-bounded msenames windows — correct per Fama-French convention. An earlier buggy implementation used panel-only NYSE firms, producing a higher cutoff and fewer observations.

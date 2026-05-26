@@ -2,14 +2,23 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import TabBar from '../components/TabBar.astro';
+import StatsBar from '../components/StatsBar';
 
 const replications = (await getCollection('replications')).sort(
   (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
 );
+
+const siteStats = [
+  { value: 3, label: 'Projects' },
+  { value: replications.length, label: 'Replications' },
+  { value: replications.filter(r => r.data.status === 'complete').length, label: 'Complete' },
+];
 ---
 
 <BaseLayout title="Research — Josh">
   <h1 class="page-heading">Research &amp; Projects</h1>
+
+  <StatsBar stats={siteStats} client:load />
 
   <TabBar tabs={['Projects', 'Replications']} />
 
@@ -34,6 +43,50 @@ const replications = (await getCollection('replications')).sort(
           <div class="project-footer">
             <span class="slides-label">Slides: <span class="muted">N/A</span></span>
             <a href="/simulator" class="launch-link">Launch Simulator →</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-entry card">
+        <div class="timeline-date">2025–present</div>
+        <div class="timeline-body">
+          <div class="project-title">Collective Trades</div>
+          <p class="project-desc">
+            Real-time dashboard for insider trades, institutional holdings, and
+            congressional disclosures. FastAPI backend (Heroku) proxies to a Mac Mini
+            data pipeline; Next.js frontend with network-graph explorer, candlestick
+            charts, and Discord bot integration. Ko-fi donation gateway.
+          </p>
+          <div class="tag-row">
+            <span class="tag">fintech</span>
+            <span class="tag">fastapi</span>
+            <span class="tag">next.js</span>
+            <span class="tag">market-data</span>
+          </div>
+          <div class="project-footer">
+            <span class="slides-label">Stack: FastAPI · PostgreSQL · Redis · Next.js</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="timeline-entry card">
+        <div class="timeline-date">2025</div>
+        <div class="timeline-body">
+          <div class="project-title">Digital Transactions in Asia VII — Call for Papers</div>
+          <p class="project-desc">
+            Conference website for the 7th edition of the Digital Transactions in Asia
+            workshop (University of Peradeniya, Sri Lanka). Next.js site with admin
+            panel, paper submission and registration workflow, showcase management,
+            and public schedule. Live at icdtaaussl2026.com.
+          </p>
+          <div class="tag-row">
+            <span class="tag">conference</span>
+            <span class="tag">next.js</span>
+            <span class="tag">drizzle-orm</span>
+            <span class="tag">digital-finance</span>
+          </div>
+          <div class="project-footer">
+            <a href="https://www.icdtaaussl2026.com" class="launch-link" target="_blank" rel="noopener">Visit site →</a>
           </div>
         </div>
       </div>
