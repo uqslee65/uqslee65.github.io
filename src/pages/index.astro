@@ -42,40 +42,42 @@ import Hero from '../components/Hero.astro';
 <style>
   .landing-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+    gap: 0;
     margin-top: 2rem;
   }
   .landing-card {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 0;
     padding: 1.5rem;
     text-decoration: none;
-    transition: box-shadow 0.2s, transform 0.2s;
+    transition: border-color 0.15s;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
   .landing-card:hover {
-    box-shadow: var(--shadow-hover);
-    transform: translateY(-2px);
+    border-color: var(--fg);
   }
   .card-icon {
-    width: 2.25rem;
-    height: 2.25rem;
-    border-radius: 6px;
-    background: var(--accent);
-    color: white;
-    font-size: 0.75rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0;
+    background: var(--fg);
+    color: var(--bg);
+    font-size: 0.7rem;
     font-weight: 700;
+    text-transform: uppercase;
     display: flex;
     align-items: center;
     justify-content: center;
   }
   .landing-card h3 {
-    font-size: 1rem;
-    font-weight: 600;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     color: var(--fg);
     margin: 0;
   }
@@ -83,6 +85,6 @@ import Hero from '../components/Hero.astro';
     font-size: 0.8rem;
     color: var(--fg-2);
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.45;
   }
 </style>

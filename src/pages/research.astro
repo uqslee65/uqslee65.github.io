@@ -122,11 +122,14 @@ const siteStats = [
 
 <style>
   .page-heading {
-    font-size: 1.75rem;
-    font-weight: 800;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
     color: var(--fg);
     margin-bottom: 1.5rem;
     padding-top: 1rem;
+    border-left: 4px solid var(--accent);
+    padding-left: 1rem;
   }
   .tab-panel {
     padding-top: 1.5rem;
@@ -138,14 +141,22 @@ const siteStats = [
     flex-direction: column;
     gap: 1.25rem;
   }
-  .timeline-entry {
+  .timeline-entry.card {
     display: grid;
     grid-template-columns: 7rem 1fr;
     gap: 1rem;
     padding: 1.25rem;
+    border-radius: 0;
+    box-shadow: none;
+    border: 2px solid var(--border);
+    transition: border-color 0.15s;
+  }
+  .timeline-entry.card:hover {
+    border-color: var(--fg);
+    transform: none;
   }
   .timeline-date {
-    font-family: monospace;
+    font-family: 'JetBrains Mono', monospace;
     font-size: 0.8rem;
     color: var(--fg-3);
     padding-top: 0.15rem;
@@ -160,6 +171,7 @@ const siteStats = [
     font-size: 1rem;
     font-weight: 700;
     color: var(--fg);
+    text-transform: none;
   }
   .project-desc {
     font-size: 0.875rem;
@@ -187,23 +199,25 @@ const siteStats = [
     color: var(--fg-3);
   }
 
-  /* Launch Simulator button */
+  /* Launch link — Swiss Grid: dark pill, no radius */
   .launch-link {
     display: inline-flex;
     align-items: center;
     gap: 0.3rem;
     padding: 0.35rem 0.75rem;
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     font-weight: 600;
-    background: var(--accent);
-    color: white;
-    border-radius: 6px;
+    background: var(--fg);
+    color: var(--bg);
+    border-radius: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     transition: background 0.15s;
     text-decoration: none;
   }
   .launch-link:hover {
-    background: var(--accent-hover);
-    color: white;
+    background: var(--accent);
+    color: var(--bg);
   }
 
   /* Empty state */
@@ -219,10 +233,17 @@ const siteStats = [
     flex-direction: column;
     gap: 1rem;
   }
-  .replication-card {
+  .replication-card.card {
     display: block;
     text-decoration: none;
     padding: 1.25rem;
+    border-radius: 0;
+    box-shadow: none;
+    border: 1px solid var(--border);
+    transition: border-color 0.15s;
+  }
+  .replication-card.card:hover {
+    border-color: var(--fg);
   }
   .rep-header {
     display: flex;
@@ -231,11 +252,12 @@ const siteStats = [
     margin-bottom: 0.4rem;
   }
   .rep-status {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     font-weight: 600;
     padding: 0.15rem 0.5rem;
-    border-radius: 4px;
+    border-radius: 0;
     text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
   .rep-status--complete { background: rgba(34,197,94,0.15); color: #4ade80; }
   .rep-status--partial { background: rgba(234,179,8,0.15); color: #facc15; }
@@ -258,7 +280,7 @@ const siteStats = [
 
   /* Mobile: collapse date into stacked layout */
   @media (max-width: 640px) {
-    .timeline-entry {
+    .timeline-entry.card {
       grid-template-columns: 1fr;
     }
   }
