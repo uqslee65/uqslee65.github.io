@@ -10,3 +10,6 @@ playwright-report/
 test-results/
 *.csv
 screenshot-*.png
+server/results/
+server/*.db
+e2e/.env

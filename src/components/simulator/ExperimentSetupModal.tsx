@@ -243,6 +243,7 @@ export function ExperimentSetupModal({
 
   return (
     <div
+      data-testid="setup-modal"
       onClick={onClose}
       style={{
         position: 'fixed', inset: 0,
@@ -630,6 +631,7 @@ export function ExperimentSetupModal({
               <>
                 <button onClick={onClose} style={btnBase}>Cancel</button>
                 <button
+                  data-testid="run-experiment"
                   onClick={handleRun}
                   disabled={planIsLLM && !llmLocal.apiKey}
                   style={{

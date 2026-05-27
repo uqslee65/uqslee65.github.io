@@ -356,6 +356,13 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
     setConfigState(prev => ({ ...prev, seed: Math.floor(Math.random() * 9999) + 1 }));
   }, []);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__SIM_SET_CONFIG__ = setConfig;
+      return () => { delete (window as any).__SIM_SET_CONFIG__; };
+    }
+  }, [setConfig]);
+
   // --- Playback interval ---
   useEffect(() => {
     if (playing && !isLLM && session) {

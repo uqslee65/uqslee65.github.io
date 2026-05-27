@@ -162,6 +162,7 @@ export function ControlBar() {
           <button onClick={reset} style={btnBase}>Reset</button>
 
           <button
+            data-testid="download-json"
             onClick={hasData ? exportSession : undefined}
             disabled={!hasData}
             style={{ ...( hasData ? btnSuccess : btnBase), ...(!hasData ? btnDisabled : {}) }}

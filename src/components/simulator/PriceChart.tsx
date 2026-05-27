@@ -88,6 +88,7 @@ export function PriceChart() {
   return (
     <Figure figNum="1a" title="Price Path">
       <svg
+        data-testid="price-chart"
         viewBox={`0 0 ${width} ${height}`}
         style={{ width: '100%', height: 'auto' }}
       >
@@ -99,7 +100,7 @@ export function PriceChart() {
             stroke="var(--border)" strokeDasharray="3,3"
           />
         ))}
-        <path d={fvPath} fill="none" stroke="var(--fg-3)" strokeWidth="1.5" strokeDasharray="5,3" />
+        <path data-testid="fv-path" d={fvPath} fill="none" stroke="var(--fg-3)" strokeWidth="1.5" strokeDasharray="5,3" />
         <path d={pricePath} fill="none" stroke="var(--accent)" strokeWidth="2" />
         {visible.length > 0 && (
           <circle

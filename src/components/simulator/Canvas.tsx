@@ -21,7 +21,7 @@ function AssetTabSelector() {
   if (assets.length <= 1) return null;
 
   return (
-    <div style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.5rem', padding: '0.25rem', background: 'var(--bg-surface)', borderRadius: '6px' }}>
+    <div data-testid="asset-tabs" style={{ display: 'flex', gap: '0.25rem', marginBottom: '0.5rem', padding: '0.25rem', background: 'var(--bg-surface)', borderRadius: '6px' }}>
       {assets.map((a, i) => (
         <button
           key={a.id}

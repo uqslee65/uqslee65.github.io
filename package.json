@@ -7,7 +7,10 @@
     "build": "astro build",
     "preview": "astro preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "server": "tsx server/index.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@astrojs/mdx": "^4.3.0",
@@ -23,7 +26,10 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^25.9.1",
+    "better-sqlite3": "^12.10.0",
+    "dotenv": "^17.4.2",
     "vitest": "^4.1.7"
   }
 }
