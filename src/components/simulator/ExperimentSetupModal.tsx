@@ -163,7 +163,7 @@ export function ExperimentSetupModal({
   // Derived
   const planIsLLM = config.plan !== 'plan-i';
   const totalSteps = planIsLLM ? 5 : 4;
-  const displayStep = currentStep;
+  const displayStep = (!planIsLLM && currentStep === 5) ? 4 : currentStep;
 
   // Helpers to push LLM edits into both local and context
   const updateLlm = (patch: Partial<LLMConfig>) => {
