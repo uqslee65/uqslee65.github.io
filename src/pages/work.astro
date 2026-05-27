@@ -118,19 +118,18 @@ const researchItems: TabItem[] = [
     <p class="work-subtitle">Projects, replications, and research</p>
   </header>
 
-  <section class="stats-strip">
-    {stats.map(s => (
-      <div class="stat-cell">
-        <span class="stat-value">{s.value}</span>
-        <span class="stat-label">{s.label}</span>
-      </div>
-    ))}
-  </section>
-
-  <section class="activity-section">
-    <span class="activity-label">COMMIT ACTIVITY</span>
-    <div class="activity-wrap">
+  <section class="dashboard-panel">
+    <div class="dashboard-activity">
+      <span class="activity-label">COMMIT ACTIVITY</span>
       <GitHubActivity client:load data={activityLevels} />
+    </div>
+    <div class="dashboard-stats">
+      {stats.map(s => (
+        <div class="stat-cell">
+          <span class="stat-value">{s.value}</span>
+          <span class="stat-label">{s.label}</span>
+        </div>
+      ))}
     </div>
   </section>
 
@@ -161,24 +160,43 @@ const researchItems: TabItem[] = [
     margin-top: 0.25rem;
   }
 
-  .stats-strip {
+  .dashboard-panel {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+    background: var(--border);
+    gap: 1px;
+    margin-bottom: 2.5rem;
+  }
+  .dashboard-activity {
+    background: var(--bg-raised);
+    padding: 1rem 1.25rem;
+    overflow-x: auto;
+  }
+  .activity-label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 0.6rem;
+  }
+  .dashboard-stats {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     gap: 1px;
     background: var(--border);
-    border: 1px solid var(--border);
-    margin-bottom: 2.5rem;
   }
   .stat-cell {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1.25rem 0.5rem;
+    padding: 0.75rem 0.5rem;
     background: var(--bg-raised);
   }
   .stat-value {
-    font-size: 20px;
+    font-size: 16px;
     font-weight: 300;
     color: var(--text);
     font-family: 'JetBrains Mono', monospace;
@@ -188,25 +206,7 @@ const researchItems: TabItem[] = [
     letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--text-faint);
-    margin-top: 0.35rem;
-  }
-
-  .activity-section {
-    margin-bottom: 2.5rem;
-  }
-  .activity-label {
-    display: block;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-faint);
-    margin-bottom: 0.75rem;
-  }
-  .activity-wrap {
-    border: 1px solid var(--border);
-    background: var(--bg-raised);
-    padding: 1rem;
-    overflow-x: auto;
+    margin-top: 0.25rem;
   }
 
   .work-footer {
@@ -225,14 +225,8 @@ const researchItems: TabItem[] = [
   }
 
   @media (max-width: 640px) {
-    .stats-strip {
+    .dashboard-stats {
       grid-template-columns: repeat(3, 1fr);
-    }
-    .stat-cell {
-      padding: 1rem 0.5rem;
-    }
-    .stat-value {
-      font-size: 16px;
     }
   }
 </style>

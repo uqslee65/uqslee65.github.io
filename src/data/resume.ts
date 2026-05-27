@@ -47,6 +47,14 @@ export interface VolunteeringEntry {
   period: string;
   details: string;
   category?: string;
+  bullets?: string[];
+}
+
+export interface ThesisEntry {
+  title: string;
+  degree: string;
+  institution: string;
+  year: string;
 }
 
 export interface ResumeData {
@@ -58,6 +66,10 @@ export interface ResumeData {
   researchProjects: ResearchProject[];
   serviceExtracurriculars: ExperienceEntry[];
   volunteering: VolunteeringEntry[];
+  thesis: ThesisEntry;
+  research: ExperienceEntry[];
+  teaching: ExperienceEntry[];
+  academicService: ExperienceEntry[];
   skills: string[];
 }
 
@@ -69,7 +81,7 @@ export const RESUME: ResumeData = {
     personalEmail: "lszeray@gmail.com",
     phone: "+61 0493713215",
     linkedin: "https://www.linkedin.com/in/leeszeray/",
-    github: "https://github.com/lszeray",
+    github: "https://github.com/uqslee65",
   },
 
   researchInterests: [
@@ -125,7 +137,7 @@ export const RESUME: ResumeData = {
       degree: "Officer Cadet School",
       institution: "SAFTI Military Institute",
       country: "Singapore",
-      period: "Mar–Dec 2021",
+      period: "2021",
       grade: "A (Top 20%)",
       achievements: [
         "Cisco CCNA Intro to Networks",
@@ -152,7 +164,7 @@ export const RESUME: ResumeData = {
       degree: "Chinese Language & Culture",
       institution: "Shanghai University",
       country: "China",
-      period: "Sep 2018",
+      period: "2018",
     },
   ],
 
@@ -193,13 +205,6 @@ export const RESUME: ResumeData = {
 
   financeExperience: [
     {
-      role: "Research Assistant",
-      organisation: "UQ Business School",
-      period: "2024–present",
-      details:
-        "Econometric research in asset pricing and digital finance. Contributes to faculty-led empirical projects across data collection, modelling, and manuscript preparation.",
-    },
-    {
       role: "Corporate Banking Analyst",
       organisation: "China Construction Bank",
       period: "2025",
@@ -207,31 +212,11 @@ export const RESUME: ResumeData = {
         "Credit due diligence on 4× corporate lending transactions. Sector research, macroeconomic assessment, and risk evaluation in support of lending decisions.",
     },
     {
-      role: "Teaching Assistant",
-      organisation: "UQ Business School",
-      period: "2025–present",
+      role: "Project Manager (Lieutenant)",
+      organisation: "Singapore Armed Forces",
+      period: "2020–2023",
       details:
-        "Portfolio Management (postgraduate); Corporate Finance & Basic Finance (undergraduate). 200+ students; student ratings 4.5+/5.0.",
-    },
-  ],
-
-  researchProjects: [
-    {
-      title: "DLM (2005) Virtual Trading Platform",
-      organisation: "University of Queensland",
-      period: "2025–present",
-      details:
-        "Browser-based replication of Dufwenberg, Lindqvist & Moore (AER 2005) asset market bubble experiment. Three-plan factorial: algorithmic belief update, LLM + utility forms, LLM + risk label. Interactive dashboard with 12 chart figures, agent cards, order book, trade feed, and replay.",
-      funded: false,
-    },
-  ],
-
-  serviceExtracurriculars: [
-    {
-      role: "Team Lead — Student-Staff Partnerships",
-      organisation: "University of Queensland",
-      period: "2025",
-      details: "Led cross-functional student-staff collaboration projects.",
+        "Commissioned officer; led operational and administrative projects across 3 years of national service.",
     },
     {
       role: "Project Manager — Content Media OS",
@@ -239,13 +224,6 @@ export const RESUME: ResumeData = {
       period: "2022",
       details:
         "Managed content and media operating systems for Singapore's National Day Parade broadcast.",
-    },
-    {
-      role: "Project Manager (Lieutenant)",
-      organisation: "Singapore Armed Forces",
-      period: "2020–2023",
-      details:
-        "Commissioned officer; led operational and administrative projects across 3 years of national service.",
     },
     {
       role: "Business Analyst",
@@ -267,47 +245,50 @@ export const RESUME: ResumeData = {
       period: "2019",
       details: "Developed and deployed customer-facing chatbot solutions.",
     },
+  ],
+
+  researchProjects: [
     {
-      role: "Panel Member — BCom (Hons) Academic Program Review",
+      title: "DLM (2005) Virtual Trading Platform",
       organisation: "University of Queensland",
-      period: "2026",
-      details: "Student representative on academic program review panel.",
-    },
-    {
-      role: "Organising Secretariat",
-      organisation: "FIRN Asset Management Conference",
-      period: "2025",
+      period: "2025–present",
       details:
-        "Informal organising secretariat for the Financial Integrity Research Network conference.",
-    },
-    {
-      role: "President (2025); Events, Panelist & Presenter (2024)",
-      organisation: "UQ BCom Student Committee",
-      period: "2024–2025",
-      details:
-        "Led student committee, organised events, presented at orientation and majors night.",
+        "Browser-based replication of Dufwenberg, Lindqvist & Moore (AER 2005) asset market bubble experiment. Three-plan factorial: algorithmic belief update, LLM + utility forms, LLM + risk label. Interactive dashboard with 12 chart figures, agent cards, order book, trade feed, and replay.",
+      funded: false,
     },
   ],
 
+  serviceExtracurriculars: [],
+
   volunteering: [
     {
-      role: "President",
+      role: "President (2025) / Events, Panelist & Presenter (2024)",
       organisation: "UQ Commerce Student Committee",
-      period: "Nov 2024–Nov 2025",
-      details:
-        "Committee President for 2025. Organised KPMG BIS Major Networking Event, BCom Orientation, Majors Night Panelist, BEL EQUIS Re-accreditation Review.",
+      period: "2024–2025",
+      details: "Committee President for 2025.",
+      bullets: [
+        "Committee President for 2025",
+        "SSP: 100th Anniversary (2025, S2)",
+        "SSP: Feedback Mechanisms (2025, S1)",
+        "KPMG BIS Major Networking Event",
+        "UQBS Commerce T&L Meeting (2025, S1)",
+        "UQBS T&L Strategic Directions (2025, S1)",
+        "B/MCom Majors Night Panelist (2025, S1)",
+        "2025 BCom Orientation Student Presenter",
+        "BEL EQUIS Re-accreditation Review 2024",
+      ],
     },
     {
       role: "Barista / Coffee Master",
       organisation: "Starbucks Australia",
-      period: "Nov 2023–May 2024",
+      period: "2023–2024",
       details:
         "Coffee Master, Barista Trainer & Shift Supervisor (Trainee). Hosted coffee seminars for senior leadership.",
     },
     {
       role: "Barista / Coffee Master",
       organisation: "Starbucks Singapore",
-      period: "Feb–Oct 2020",
+      period: "2020",
       details:
         "Starbucks Coffee Master (Black Apron); completed program in 3 months. Delivered coffee education; increased positive reviews.",
     },
@@ -350,6 +331,52 @@ export const RESUME: ResumeData = {
       organisation: "Immigration & Checkpoints Authority (ICA)",
       period: "Dec 2016–Mar 2017",
       details: "Customer service and administrative support.",
+    },
+  ],
+
+  thesis: {
+    title: "Cyber Risk Premium: A Positive-Unlabelled (PU) Machine Learning Approach",
+    degree: "BCom (Honours) — 1st Class",
+    institution: "University of Queensland",
+    year: "2025",
+  },
+
+  research: [
+    {
+      role: "Research Assistant",
+      organisation: "UQ Business School",
+      period: "2024–present",
+      details: "Econometric research in asset pricing and digital finance. Contributes to faculty-led empirical projects across data collection, modelling, and manuscript preparation.",
+    },
+  ],
+
+  teaching: [
+    {
+      role: "Teaching Assistant",
+      organisation: "UQ Business School",
+      period: "2025–present",
+      details: "Portfolio Management (postgraduate); Corporate Finance & Basic Finance (undergraduate). 200+ students.",
+    },
+  ],
+
+  academicService: [
+    {
+      role: "Panel Member — BCom (Hons) Academic Program Review",
+      organisation: "University of Queensland",
+      period: "2026",
+      details: "Student representative on academic program review panel.",
+    },
+    {
+      role: "Organising Secretariat",
+      organisation: "FIRN Asset Management Conference",
+      period: "2025",
+      details: "Informal organising secretariat for the Financial Integrity Research Network conference.",
+    },
+    {
+      role: "Team Lead — Student-Staff Partnerships",
+      organisation: "University of Queensland",
+      period: "2025",
+      details: "Led cross-functional student-staff collaboration projects.",
     },
   ],
 

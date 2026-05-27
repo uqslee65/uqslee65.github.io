@@ -1,37 +1,26 @@
 ---
-import GitHubActivity from './GitHubActivity.tsx';
-
 interface Props {
   activityData?: number[][] | null;
 }
-const { activityData } = Astro.props;
 ---
 
 <section class="hero">
-  <div class="hero-bg">
-    <GitHubActivity client:load data={activityData} />
-  </div>
-
   <div class="hero-split">
     <div class="hero-left">
       <h1 class="hero-name">
         JOSHUA<br />
         <span class="hero-name-dim">LEE</span>
       </h1>
+      <p class="hero-role">Finance PhD Student <span class="hero-role-at">@</span><br />University of Queensland</p>
     </div>
 
     <div class="hero-right">
-      <div class="hero-chips">
-        <span class="chip">Finance PhD Student</span>
-        <span class="chip-at">@</span>
-        <span class="chip">University of Queensland</span>
-      </div>
-      <p class="hero-desc">
-        Building an open-source archive of replication studies in empirical finance —
-        reproducible code, documented methodology, and growing coverage of canonical papers.
-        A <em>tidyfinance</em> alternative for empirical methods in finance and economics,
-        built by a PhD student, for PhD students.
-      </p>
+    
+    <p class="hero-desc">
+      Documenting my PhD journey through research, replications, and code. This portfolio
+      brings together my work in empirical finance and economics, paper reading notes,
+      open-source projects, and the tools I’m building along the way.
+    </p>
       <div class="hero-cta-row">
         <a href="/work" class="hero-cta hero-cta-primary">VIEW WORK</a>
         <a href="/about" class="hero-cta hero-cta-secondary">ABOUT ME</a>
@@ -43,48 +32,56 @@ const { activityData } = Astro.props;
 <style>
   .hero {
     position: relative;
-    min-height: 70vh;
+    min-height: calc(100vh - var(--nav-height));
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    padding: 4rem 1.5rem;
+    padding: 2rem 1.5rem;
   }
 
-  .hero-bg {
-    position: absolute;
-    inset: 0;
-    opacity: 0.12;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    overflow: hidden;
-  }
-
-  .hero-split {
+.hero-split {
     position: relative;
     z-index: 10;
     max-width: 64rem;
     width: 100%;
     display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 4rem;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(2rem, 4vw, 4rem);
     align-items: center;
+    margin: 0 auto;
+  }
+
+  .hero-left {
+    text-align: right;
   }
 
   .hero-name {
     font-size: clamp(42px, 7vw, 72px);
     font-weight: 300;
     letter-spacing: -0.02em;
-    color: rgba(255, 255, 255, 0.92);
+    color: var(--text);
     line-height: 1.0;
     margin: 0;
     white-space: nowrap;
   }
 
   .hero-name-dim {
-    color: rgba(255, 255, 255, 0.28);
+    color: var(--text-faint);
+  }
+
+  .hero-role {
+    font-size: 10px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 0.75rem;
+    white-space: nowrap;
+  }
+
+  .hero-role-at {
+    color: var(--text-faint);
+    margin: 0 0.2em;
   }
 
   .hero-right {
@@ -93,29 +90,7 @@ const { activityData } = Astro.props;
     gap: 1.25rem;
   }
 
-  .hero-chips {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-  }
-
-  .chip {
-    font-size: 10px;
-    padding: 0.3rem 0.7rem;
-    border: 1px solid var(--border);
-    background: var(--bg-surface);
-    color: var(--text-dim);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
-
-  .chip-at {
-    font-size: 11px;
-    color: var(--text-faint);
-  }
-
-  .hero-desc {
+.hero-desc {
     font-size: 13px;
     color: var(--text-dim);
     line-height: 1.7;
@@ -144,21 +119,21 @@ const { activityData } = Astro.props;
   }
 
   .hero-cta-primary {
-    border: 1px solid rgba(255, 255, 255, 0.45);
-    color: rgba(255, 255, 255, 0.9);
+    border: 1px solid var(--border-mid);
+    color: var(--text);
   }
   .hero-cta-primary:hover {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(255, 255, 255, 0.75);
+    background: var(--bg-surface);
+    border-color: var(--text-dim);
   }
 
   .hero-cta-secondary {
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    color: rgba(255, 255, 255, 0.4);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
   }
   .hero-cta-secondary:hover {
-    border-color: rgba(255, 255, 255, 0.3);
-    color: rgba(255, 255, 255, 0.7);
+    border-color: var(--border-mid);
+    color: var(--text);
   }
 
   @media (max-width: 768px) {
@@ -172,6 +147,13 @@ const { activityData } = Astro.props;
     }
     .hero-name {
       font-size: 42px;
+    }
+    .hero-role {
+      white-space: normal;
+      text-align: left;
+    }
+    .hero-left {
+      text-align: left;
     }
   }
 

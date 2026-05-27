@@ -1,0 +1,117 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { RESUME } from '../data/resume.ts';
+
+const items = [
+  { type: 'LinkedIn', value: 'leeszeray', href: RESUME.contact.linkedin },
+  { type: 'Email', value: RESUME.contact.email, href: `mailto:${RESUME.contact.email}` },
+  { type: 'Phone', value: RESUME.contact.phone, href: `tel:${RESUME.contact.phone.replace(/\s/g, '')}` },
+  { type: 'GitHub', value: 'uqslee65', href: RESUME.contact.github },
+];
+---
+
+<BaseLayout title="Contact — Joshua Lee">
+  <header class="contact-header">
+    <h1 class="contact-name">{RESUME.contact.name}</h1>
+    <p class="contact-title">{RESUME.contact.title} · University of Queensland</p>
+  </header>
+
+  <section class="contact-body">
+    <p class="contact-blurb">
+      Open to research collaborations, empirical finance discussions, and replication partnerships.
+      Reach out via any of the channels below.
+    </p>
+
+    <div class="contact-grid">
+      {items.map(item => (
+        <a href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined} rel={item.href.startsWith('http') ? 'noopener' : undefined} class="contact-row">
+          <span class="contact-type">{item.type}</span>
+          <span class="contact-arrow">→</span>
+          <span class="contact-value">{item.value}</span>
+        </a>
+      ))}
+    </div>
+
+    <div class="contact-note">
+      <p>Based in Brisbane, Australia · UTC+10</p>
+      <p>University of Queensland Business School · Finance</p>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .contact-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .contact-name {
+    font-size: 2rem;
+    font-weight: 300;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    margin: 0;
+  }
+  .contact-title {
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    margin-top: 0.35rem;
+  }
+
+  .contact-body {
+    max-width: 36rem;
+  }
+  .contact-blurb {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+  }
+
+  .contact-grid {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border);
+  }
+  .contact-row {
+    display: grid;
+    grid-template-columns: 6rem 1.5rem 1fr;
+    align-items: center;
+    padding: 0.9rem 1.25rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+  }
+  .contact-row:last-child { border-bottom: none; }
+  .contact-row:hover {
+    background: var(--bg-surface);
+    color: var(--text);
+  }
+  .contact-type {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-faint);
+  }
+  .contact-arrow {
+    color: var(--text-faint);
+    font-size: 13px;
+  }
+  .contact-value {
+    font-size: 0.85rem;
+  }
+
+  .contact-note {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+  .contact-note p {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    color: var(--text-faint);
+  }
+</style>

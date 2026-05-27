@@ -2,19 +2,27 @@
 @import 'katex/dist/katex.min.css';
 
 :root {
-  --bg: #000000;
-  --bg-raised: #0a0a0a;
-  --bg-surface: #111111;
-  --text: rgba(255,255,255,0.92);
-  --text-dim: rgba(255,255,255,0.52);
-  --text-faint: rgba(255,255,255,0.24);
-  --border: rgba(255,255,255,0.08);
-  --border-mid: rgba(255,255,255,0.14);
+  --bg: #f8f8f6;
+  --bg-raised: #ffffff;
+  --bg-surface: #f0f0ee;
+  --text: rgba(0,0,0,0.92);
+  --text-dim: rgba(0,0,0,0.72);
+  --text-faint: rgba(0,0,0,0.50);
+  --border: rgba(0,0,0,0.10);
+  --border-mid: rgba(0,0,0,0.18);
   --radius: 0px;
   --nav-height: 48px;
-  --status-complete: rgba(255,255,255,0.92);
-  --status-partial: rgba(255,255,255,0.52);
-  --status-planned: rgba(255,255,255,0.24);
+  --status-complete: rgba(0,0,0,0.88);
+  --status-partial: rgba(0,0,0,0.50);
+  --status-planned: rgba(0,0,0,0.30);
+
+  /* Simulator component aliases — keep these in sync with the theme above */
+  --fg: var(--text);
+  --fg-2: var(--text-dim);
+  --fg-3: var(--text-faint);
+  --bg-card: var(--bg-raised);
+  --stat-bg: var(--bg-surface);
+  --accent: #2563EB;
 }
 
 * {
@@ -25,7 +33,7 @@
 
 html {
   font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
-  font-size: 13px;
+  font-size: 14px;
   background: var(--bg);
   color: var(--text);
   scroll-behavior: smooth;
@@ -136,5 +144,5 @@ a:hover {
 
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.26); }

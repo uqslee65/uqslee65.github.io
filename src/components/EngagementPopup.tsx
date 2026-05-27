@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 
 const DISMISS_KEY = 'engagement_dismissed';
 const DISMISS_DAYS = 7;
-const SHOW_DELAY = 45000;
+const SHOW_DELAY = 300000; // 5 minutes
 
 const contacts = [
   { type: 'LinkedIn', value: 'leeszeray', href: 'https://www.linkedin.com/in/leeszeray/' },
   { type: 'Email', value: 'uqslee65@uq.edu.au', href: 'mailto:uqslee65@uq.edu.au' },
-  { type: 'Phone', value: '+61 0493713215', href: 'tel:+610493713215' },
+  { type: 'Phone', value: '+61 0493 713 215', href: 'tel:+610493713215' },
 ];
 
 export function EngagementPopup() {
@@ -43,16 +43,17 @@ export function EngagementPopup() {
       zIndex: 100,
       maxWidth: '320px',
       width: 'calc(100vw - 3rem)',
-      background: '#0a0a0a',
-      border: '1px solid rgba(255,255,255,0.08)',
+      background: 'var(--bg-raised)',
+      border: '1px solid var(--border-mid)',
       padding: '1.5rem',
       transform: visible ? 'translateY(0)' : 'translateY(20px)',
       opacity: visible ? 1 : 0,
       transition: 'transform 0.3s ease-out, opacity 0.3s ease-out',
       fontFamily: "'JetBrains Mono', monospace",
+      boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'rgba(255,255,255,0.24)' }}>
+        <span style={{ fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: 'var(--text-faint)' }}>
           CONNECT
         </span>
         <button
@@ -60,28 +61,26 @@ export function EngagementPopup() {
           style={{
             background: 'none',
             border: 'none',
-            color: 'rgba(255,255,255,0.24)',
+            color: 'var(--text-faint)',
             cursor: 'pointer',
             fontSize: '14px',
             padding: '0 0 0 8px',
             fontFamily: 'inherit',
           }}
-          onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.52)')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.24)')}
         >
           ✕
         </button>
       </div>
 
-      <div style={{ marginTop: '0.75rem', fontSize: '14px', color: 'rgba(255,255,255,0.92)', lineHeight: 1.5 }}>
-        Thanks for visiting.<br />
-        Have a research idea? Let&apos;s collaborate.
+      <div style={{ marginTop: '0.75rem', fontSize: '14px', color: 'var(--text)', lineHeight: 1.5 }}>
+        Have a research idea?<br />
+        Let&apos;s collaborate.
       </div>
 
       <div style={{
         marginTop: '1rem',
         paddingTop: '0.75rem',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
+        borderTop: '1px solid var(--border)',
         display: 'flex',
         flexDirection: 'column' as const,
         gap: 0,
@@ -97,21 +96,17 @@ export function EngagementPopup() {
               alignItems: 'center',
               gap: '0.75rem',
               padding: '0.5rem 0',
-              borderBottom: '1px solid rgba(255,255,255,0.04)',
-              color: 'rgba(255,255,255,0.52)',
+              borderBottom: '1px solid var(--border)',
+              color: 'var(--text-dim)',
               textDecoration: 'none',
               fontSize: '12px',
-              transition: 'color 0.15s',
               fontFamily: 'inherit',
             }}
-            onMouseEnter={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.92)')}
-            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.52)')}
           >
-            <span style={{ color: 'rgba(255,255,255,0.24)', fontSize: '13px' }}>&rarr;</span>
-            <span style={{ width: '4.5rem', fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.12em', color: 'rgba(255,255,255,0.24)' }}>
+            <span style={{ width: '4.5rem', fontSize: '10px', textTransform: 'uppercase' as const, letterSpacing: '0.12em', color: 'var(--text-faint)' }}>
               {c.type}
             </span>
-            <span style={{ color: 'inherit' }}>{c.value}</span>
+            <span>{c.value}</span>
           </a>
         ))}
       </div>

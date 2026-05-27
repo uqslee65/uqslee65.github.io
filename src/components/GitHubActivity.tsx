@@ -81,11 +81,11 @@ export default function GitHubActivity({ data }: GitHubActivityProps) {
 
   const cellColor = (level: number): string => {
     const levels = [
-      'rgba(255,255,255,0.04)',
-      '#0e4429',
-      '#006d32',
-      '#26a641',
-      '#39d353',
+      'rgba(255,255,255,0.05)',
+      '#1a5c30',
+      '#2ea043',
+      '#4cd964',
+      '#5fff7a',
     ];
     return levels[level] ?? levels[0];
   };

@@ -54,7 +54,7 @@ export function Fig10TrustMatrix() {
         const x = pad.left + c * cell;
         const y = pad.top + r * cell;
         if (r === c) {
-          ctx.fillStyle = '#111827'; // diagonal masked
+          ctx.fillStyle = '#d1d5db'; // diagonal masked (light-theme safe: visible gray on white canvas)
         } else {
           const t = matrix[r][c]; // [0,1]
           const blue = Math.round(t * 220 + (1 - t) * 30);

@@ -1,42 +1,69 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { RESUME } from '../data/resume.ts';
-
-const sections = [
-  { id: 'education', label: 'Education' },
-  { id: 'experience', label: 'Experience' },
-  { id: 'honours', label: 'Honours' },
-  { id: 'service', label: 'Service' },
-  { id: 'skills', label: 'Skills' },
-  { id: 'contact', label: 'Contact' },
-];
 ---
 
 <BaseLayout title="About — Joshua Lee">
   <header class="about-header">
-    <h1 class="about-name">Joshua Lee</h1>
-    <p class="about-title">{RESUME.contact.title}</p>
-    <div class="interest-chips">
-      {RESUME.researchInterests.map(interest => (
-        <span class="tag">{interest}</span>
-      ))}
+    <div class="about-header-main">
+      <div class="about-name-row">
+        <h1 class="about-name">Joshua Lee</h1>
+        <div class="view-toggle" id="view-toggle">
+          <button class="toggle-btn active" data-view="academic">ACADEMIC</button>
+          <button class="toggle-btn" data-view="industry">INDUSTRY</button>
+        </div>
+      </div>
+      <p class="about-title">{RESUME.contact.title}</p>
+      <div class="interest-chips">
+        {RESUME.researchInterests.map(interest => (
+          <span class="tag">{interest}</span>
+        ))}
+      </div>
+    </div>
+    <div class="about-photo-wrap">
+      <img src="/headshot.png" alt="Joshua Lee" class="about-photo" />
+      <div class="about-contact-card">
+        <a href={RESUME.contact.linkedin} target="_blank" rel="noopener" class="about-contact-row">
+          <span class="about-contact-type">LinkedIn</span>
+          <span class="about-contact-val">leeszeray</span>
+        </a>
+        <a href={`mailto:${RESUME.contact.email}`} class="about-contact-row">
+          <span class="about-contact-type">Email</span>
+          <span class="about-contact-val">{RESUME.contact.email}</span>
+        </a>
+        <a href={`tel:${RESUME.contact.phone.replace(/\s/g, '')}`} class="about-contact-row">
+          <span class="about-contact-type">Phone</span>
+          <span class="about-contact-val">{RESUME.contact.phone}</span>
+        </a>
+        <a href={RESUME.contact.github} target="_blank" rel="noopener" class="about-contact-row">
+          <span class="about-contact-type">GitHub</span>
+          <span class="about-contact-val">uqslee65</span>
+        </a>
+      </div>
     </div>
   </header>
 
   <div id="cv-container" data-view="academic">
-    <!-- Horizontal section nav -->
-    <nav class="section-nav">
-      {sections.map(s => (
-        <a href={`#${s.id}`} class:list={['section-nav-link', { 'academic-only': s.id === 'honours' }]}>{s.label}</a>
-      ))}
+    <!-- Academic nav: 8 links -->
+    <nav class="section-nav section-nav--academic">
+      <a href="#education" class="section-nav-link">Education</a>
+      <a href="#research" class="section-nav-link">Research</a>
+      <a href="#teaching" class="section-nav-link">Teaching</a>
+      <a href="#experience" class="section-nav-link">Experience</a>
+      <a href="#thesis" class="section-nav-link">Thesis</a>
+      <a href="#honours" class="section-nav-link">Honours</a>
+      <a href="#service" class="section-nav-link">Service</a>
+      <a href="#skills" class="section-nav-link">Skills</a>
+    </nav>
+    <!-- Industry nav: 4 links -->
+    <nav class="section-nav section-nav--industry">
+      <a href="#education" class="section-nav-link">Education</a>
+      <a href="#experience" class="section-nav-link">Experience</a>
+      <a href="#extracurriculars" class="section-nav-link">Extracurriculars</a>
+      <a href="#skills" class="section-nav-link">Skills</a>
     </nav>
 
-    <!-- Academic / Industry toggle -->
-    <div class="view-toggle" id="view-toggle">
-      <button class="toggle-btn active" data-view="academic">ACADEMIC</button>
-      <button class="toggle-btn" data-view="industry">INDUSTRY</button>
-    </div>
-    <!-- Education -->
+    <!-- Education (both views) -->
     <section id="education" class="cv-section">
       <h2 class="section-heading">EDUCATION</h2>
       {RESUME.education.map(entry => (
@@ -47,15 +74,15 @@ const sections = [
           </summary>
           <div class="edu-body">
             {entry.grade && <p class="edu-detail">GPA: {entry.grade}</p>}
-            {entry.thesis && <p class="edu-detail academic-only">Thesis: <em>{entry.thesis}</em></p>}
+            {entry.thesis && <p class="edu-detail">Thesis: <em>{entry.thesis}</em></p>}
             {entry.advisors && entry.advisors.length > 0 && (
-              <p class="edu-detail academic-only">Advisors: {entry.advisors.join(', ')}</p>
+              <p class="edu-detail">Advisors: {entry.advisors.join(', ')}</p>
             )}
             {entry.topics && entry.topics.length > 0 && (
               <p class="edu-detail">Topics: {entry.topics.join(', ')}</p>
             )}
             {entry.awards && entry.awards.length > 0 && (
-              <ul class="edu-list academic-only">
+              <ul class="edu-list">
                 {entry.awards.map(a => <li>{a}</li>)}
               </ul>
             )}
@@ -69,7 +96,50 @@ const sections = [
       ))}
     </section>
 
-    <!-- Finance Experience -->
+    <!-- Research (academic only) -->
+    <section id="research" class="cv-section academic-only">
+      <h2 class="section-heading">RESEARCH</h2>
+      {RESUME.research.map(entry => (
+        <div class="timeline-entry">
+          <span class="timeline-date">{entry.period}</span>
+          <div class="timeline-content">
+            <span class="entry-title">{entry.role}</span>
+            {' · '}
+            <span class="entry-org">{entry.organisation}</span>
+            <p class="entry-detail">{entry.details}</p>
+          </div>
+        </div>
+      ))}
+      {RESUME.researchProjects.map(project => (
+        <div class="timeline-entry">
+          <span class="timeline-date">{project.period}</span>
+          <div class="timeline-content">
+            <span class="entry-title">{project.title}</span>
+            {' · '}
+            <span class="entry-org">{project.organisation}</span>
+            <p class="entry-detail">{project.details}</p>
+          </div>
+        </div>
+      ))}
+    </section>
+
+    <!-- Teaching (academic only) -->
+    <section id="teaching" class="cv-section academic-only">
+      <h2 class="section-heading">TEACHING</h2>
+      {RESUME.teaching.map(entry => (
+        <div class="timeline-entry">
+          <span class="timeline-date">{entry.period}</span>
+          <div class="timeline-content">
+            <span class="entry-title">{entry.role}</span>
+            {' · '}
+            <span class="entry-org">{entry.organisation}</span>
+            <p class="entry-detail">{entry.details}</p>
+          </div>
+        </div>
+      ))}
+    </section>
+
+    <!-- Experience (both views) -->
     <section id="experience" class="cv-section">
       <h2 class="section-heading">EXPERIENCE</h2>
       {RESUME.financeExperience.map(entry => (
@@ -85,7 +155,16 @@ const sections = [
       ))}
     </section>
 
-    <!-- Honours & Awards (academic only) -->
+    <!-- Thesis (academic only) -->
+    <section id="thesis" class="cv-section academic-only">
+      <h2 class="section-heading">THESIS</h2>
+      <div class="thesis-block">
+        <p class="thesis-title">{RESUME.thesis.title}</p>
+        <p class="thesis-meta">{RESUME.thesis.degree} · {RESUME.thesis.institution} · {RESUME.thesis.year}</p>
+      </div>
+    </section>
+
+    <!-- Honours (academic only) -->
     <section id="honours" class="cv-section academic-only">
       <h2 class="section-heading">HONOURS & AWARDS</h2>
       {RESUME.honours.map(group => (
@@ -98,10 +177,10 @@ const sections = [
       ))}
     </section>
 
-    <!-- Service / Extracurriculars -->
-    <section id="service" class="cv-section">
-      <h2 class="section-heading">SERVICE & EXTRACURRICULARS</h2>
-      {RESUME.serviceExtracurriculars.map(entry => (
+    <!-- Service (academic only) -->
+    <section id="service" class="cv-section academic-only">
+      <h2 class="section-heading">SERVICE</h2>
+      {RESUME.academicService.map(entry => (
         <div class="timeline-entry">
           <span class="timeline-date">{entry.period}</span>
           <div class="timeline-content">
@@ -112,38 +191,54 @@ const sections = [
           </div>
         </div>
       ))}
+      {RESUME.volunteering.filter(v => v.organisation === "UQ Commerce Student Committee").map(entry => (
+        <div class="timeline-entry">
+          <span class="timeline-date">{entry.period}</span>
+          <div class="timeline-content">
+            <span class="entry-title">{entry.role}</span>
+            {' · '}
+            <span class="entry-org">{entry.organisation}</span>
+            {entry.bullets && entry.bullets.length > 0 ? (
+              <ul class="entry-bullets">
+                {entry.bullets.map(b => <li>{b}</li>)}
+              </ul>
+            ) : (
+              <p class="entry-detail">{entry.details}</p>
+            )}
+          </div>
+        </div>
+      ))}
     </section>
 
-    <!-- Skills -->
+    <!-- Extracurriculars (industry only) -->
+    <section id="extracurriculars" class="cv-section industry-only">
+      <h2 class="section-heading">EXTRACURRICULARS</h2>
+      {RESUME.volunteering.map(entry => (
+        <div class="timeline-entry">
+          <span class="timeline-date">{entry.period}</span>
+          <div class="timeline-content">
+            <span class="entry-title">{entry.role}</span>
+            {' · '}
+            <span class="entry-org">{entry.organisation}</span>
+            {entry.bullets && entry.bullets.length > 0 ? (
+              <ul class="entry-bullets">
+                {entry.bullets.map(b => <li>{b}</li>)}
+              </ul>
+            ) : (
+              <p class="entry-detail">{entry.details}</p>
+            )}
+          </div>
+        </div>
+      ))}
+    </section>
+
+    <!-- Skills (both views) -->
     <section id="skills" class="cv-section">
       <h2 class="section-heading">SKILLS</h2>
       <div class="skill-chips">
         {RESUME.skills.map(skill => (
           <span class="tag">{skill}</span>
         ))}
-      </div>
-    </section>
-
-    <!-- Contact -->
-    <section id="contact" class="cv-section">
-      <h2 class="section-heading">CONTACT</h2>
-      <div class="contact-grid">
-        <a href={RESUME.contact.linkedin} target="_blank" rel="noopener" class="contact-item">
-          <span class="contact-type">LinkedIn</span>
-          <span class="contact-value">leeszeray</span>
-        </a>
-        <a href={`mailto:${RESUME.contact.email}`} class="contact-item">
-          <span class="contact-type">Email</span>
-          <span class="contact-value">{RESUME.contact.email}</span>
-        </a>
-        <a href={`tel:${RESUME.contact.phone.replace(/\s/g, '')}`} class="contact-item">
-          <span class="contact-type">Phone</span>
-          <span class="contact-value">{RESUME.contact.phone}</span>
-        </a>
-        <a href={RESUME.contact.github} target="_blank" rel="noopener" class="contact-item">
-          <span class="contact-type">GitHub</span>
-          <span class="contact-value">lszeray</span>
-        </a>
       </div>
     </section>
   </div>
@@ -184,7 +279,20 @@ const sections = [
 
 <style>
   .about-header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 2rem;
+    align-items: start;
     margin-bottom: 2rem;
+  }
+  .about-header-main {
+    min-width: 0;
+  }
+  .about-name-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
   }
   .about-name {
     font-size: 2rem;
@@ -202,6 +310,42 @@ const sections = [
     flex-wrap: wrap;
     gap: 0.35rem;
     margin-top: 1rem;
+  }
+  .about-photo-wrap {
+    flex-shrink: 0;
+  }
+  .about-photo {
+    width: 160px;
+    height: auto;
+    display: block;
+    filter: brightness(0.92);
+  }
+  .about-contact-card {
+    margin-top: 0.75rem;
+    border: 1px solid var(--border);
+    width: 160px;
+  }
+  .about-contact-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+  .about-contact-row:last-child { border-bottom: none; }
+  .about-contact-row:hover { background: var(--bg-surface); }
+  .about-contact-type {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    color: var(--text-faint);
+  }
+  .about-contact-val {
+    font-size: 10px;
+    color: var(--text-dim);
+    word-break: break-all;
   }
 
   .section-nav {
@@ -234,7 +378,6 @@ const sections = [
   .view-toggle {
     display: flex;
     gap: 0;
-    margin-bottom: 2rem;
   }
   .toggle-btn {
     font-family: 'JetBrains Mono', monospace;
@@ -255,9 +398,12 @@ const sections = [
     border-color: var(--border-mid);
   }
 
-  [data-view="industry"] :global(.academic-only) {
-    display: none !important;
-  }
+  /* Dual nav visibility */
+  [data-view="academic"] .section-nav--industry { display: none; }
+  [data-view="industry"] .section-nav--academic { display: none; }
+
+  [data-view="industry"] :global(.academic-only) { display: none !important; }
+  [data-view="academic"] :global(.industry-only) { display: none !important; }
 
   .cv-section {
     margin-bottom: 2.5rem;
@@ -368,30 +514,47 @@ const sections = [
     gap: 0.4rem;
   }
 
-  .contact-grid { display: flex; flex-direction: column; }
-  .contact-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid var(--border);
-    color: var(--text-dim);
-    text-decoration: none;
-    font-size: 13px;
-    transition: color 0.15s;
+  /* Thesis block */
+  .thesis-block {
+    padding: 1rem 0;
+    border-left: 2px solid var(--border-mid);
+    padding-left: 1rem;
   }
-  .contact-item:hover { color: var(--text); }
-  .contact-item:last-child { border-bottom: none; }
-  .contact-type {
-    width: 5rem;
+  .thesis-title {
+    font-size: 0.9rem;
+    color: var(--text);
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 0.35rem;
+  }
+  .thesis-meta {
+    font-size: 0.78rem;
     color: var(--text-faint);
-    font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    flex-shrink: 0;
+    letter-spacing: 0.08em;
+  }
+
+  /* Bullet list in timeline entries */
+  .entry-bullets {
+    margin: 0.3rem 0 0 1rem;
+    padding: 0;
+    list-style: disc;
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    line-height: 1.6;
+  }
+  .entry-bullets li { padding: 0.05rem 0; }
+
+  @media (max-width: 768px) {
+    .about-photo-wrap {
+      display: none;
+    }
   }
 
   @media (max-width: 640px) {
+    .about-header {
+      grid-template-columns: 1fr;
+    }
     .timeline-entry {
       grid-template-columns: 5.5rem 1fr;
       gap: 0.5rem;

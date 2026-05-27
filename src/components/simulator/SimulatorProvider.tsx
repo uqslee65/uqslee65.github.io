@@ -212,7 +212,14 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
     setLlmProgress(null);
   }, []);
 
-  const play = useCallback(() => setPlaying(true), []);
+  const play = useCallback(() => {
+    if (!isLLM && session && currentIdx >= session.periods.length - 1) {
+      setCurrentIdx(0);
+    } else if (isLLM && llmSession && llmIdx >= llmSession.periods.length - 1) {
+      setLlmIdx(0);
+    }
+    setPlaying(true);
+  }, [isLLM, session, llmSession, currentIdx, llmIdx]);
   const pause = useCallback(() => setPlaying(false), []);
 
   const step = useCallback(() => {

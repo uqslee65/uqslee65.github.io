@@ -3,6 +3,7 @@ import { useSimulator } from './SimulatorProvider';
 import { testConnection } from '../../lib/sim/llm-client';
 import type { AssetClass, PlanType, LLMConfig } from '../../lib/sim/types';
 import { LLM_SCALED_DEFAULTS } from '../../lib/sim/types';
+import { RiskPreferences } from './config/RiskPreferences';
 
 interface ExperimentSetupModalProps {
   onClose: () => void;
@@ -345,32 +346,10 @@ export function ExperimentSetupModal({
               </div>
             </div>
 
-            {/* Risk split display (read-only) */}
+            {/* Risk split sliders */}
             <div>
-              <p style={{ ...labelSm, marginBottom: '0.4rem', display: 'block' }}>Risk Split (read-only)</p>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                {[
-                  { label: 'Risk-Loving', pct: lov,  color: '#ef4444' },
-                  { label: 'Neutral',     pct: neu,  color: '#a3a3a3' },
-                  { label: 'Risk-Averse', pct: av,   color: '#3b82f6' },
-                ].map(r => (
-                  <div
-                    key={r.label}
-                    style={{
-                      flex: 1, padding: '0.5rem 0.6rem',
-                      border: '1px solid var(--border)',
-                      borderRadius: '6px',
-                      background: 'var(--stat-bg)',
-                      textAlign: 'center',
-                    }}
-                  >
-                    <div style={{ fontSize: '1rem', fontWeight: 700, color: r.color }}>
-                      {Math.round(r.pct * 100)}%
-                    </div>
-                    <div style={{ fontSize: '0.65rem', color: 'var(--fg-3)', marginTop: '0.15rem' }}>{r.label}</div>
-                  </div>
-                ))}
-              </div>
+              <p style={{ ...labelSm, marginBottom: '0.75rem', display: 'block' }}>Risk Split</p>
+              <RiskPreferences />
             </div>
           </div>
         )}

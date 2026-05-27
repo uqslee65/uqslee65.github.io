@@ -3,6 +3,8 @@ const { pathname } = Astro.url;
 const links = [
   { href: '/', label: 'Home' },
   { href: '/work', label: 'Work' },
+  { href: '/about', label: 'About' },
+  { href: '/contact', label: 'Contact' },
 ];
 ---
 
@@ -20,7 +22,6 @@ const links = [
       ))}
     </div>
     <div class="nav-right">
-      <a href="/about" class:list={['nav-link nav-about-desktop', { active: pathname === '/about' || pathname.startsWith('/about') }]}>About</a>
       <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Toggle menu">
         <span class="hamburger"></span>
       </button>
@@ -35,7 +36,6 @@ const links = [
         {link.label}
       </a>
     ))}
-    <a href="/about" class:list={['mobile-link', { active: pathname === '/about' || pathname.startsWith('/about') }]}>About</a>
   </div>
 </nav>
 
@@ -44,8 +44,8 @@ const links = [
     position: sticky;
     top: 0;
     z-index: 50;
-    background: #000000;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
     height: 48px;
   }
   .nav-inner {
@@ -61,7 +61,7 @@ const links = [
     font-family: var(--font-mono, monospace);
     font-size: 11px;
     font-weight: 400;
-    color: rgba(255,255,255,0.92);
+    color: var(--text);
     text-decoration: none;
     letter-spacing: 0.06em;
   }
@@ -76,17 +76,17 @@ const links = [
     font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    color: rgba(255,255,255,0.52);
+    color: var(--text-dim);
     text-decoration: none;
     transition: color 0.15s;
   }
   .nav-link:hover {
-    color: rgba(255,255,255,0.92);
+    color: var(--text);
     background: none;
   }
   .nav-link.active {
-    color: rgba(255,255,255,0.92);
-    border-bottom: 1px solid rgba(255,255,255,0.92);
+    color: var(--text);
+    border-bottom: 1px solid var(--text);
     background: none;
   }
   .nav-right {
@@ -95,10 +95,10 @@ const links = [
     align-items: center;
   }
   .brand-bright {
-    color: rgba(255,255,255,0.92);
+    color: var(--text);
   }
   .brand-dim {
-    color: rgba(255,255,255,0.28);
+    color: var(--text-faint);
     margin-left: 0.25em;
   }
 
@@ -117,7 +117,7 @@ const links = [
     display: block;
     width: 14px;
     height: 2px;
-    background: rgba(255,255,255,0.52);
+    background: var(--text-dim);
     position: relative;
     transition: background 0.2s;
   }
@@ -127,7 +127,7 @@ const links = [
     left: 0;
     width: 14px;
     height: 2px;
-    background: rgba(255,255,255,0.52);
+    background: var(--text-dim);
     transition: transform 0.2s;
   }
   .hamburger::before { top: -5px; }
@@ -140,8 +140,8 @@ const links = [
   .mobile-menu {
     display: none;
     flex-direction: column;
-    background: #000000;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
     padding: 0.5rem 1.5rem 1rem;
   }
   .mobile-menu.open { display: flex; }
@@ -152,14 +152,14 @@ const links = [
     font-weight: 400;
     text-transform: uppercase;
     letter-spacing: 0.15em;
-    color: rgba(255,255,255,0.52);
+    color: var(--text-dim);
     text-decoration: none;
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid var(--border);
     transition: color 0.15s;
   }
   .mobile-link:last-child { border-bottom: none; }
-  .mobile-link:hover { color: rgba(255,255,255,0.92); }
-  .mobile-link.active { color: rgba(255,255,255,0.92); }
+  .mobile-link:hover { color: var(--text); }
+  .mobile-link.active { color: var(--text); }
 
   @media (max-width: 640px) {
     .nav-links { display: none; }

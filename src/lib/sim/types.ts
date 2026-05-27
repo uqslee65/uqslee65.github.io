@@ -13,6 +13,11 @@ export type AssetClass =
   | 'random-walk'
   | 'jump-crash';
 
+export interface AssetConfig {
+  id: AssetClass;
+  weight: number;
+}
+
 export type LLMProvider = 'deepseek' | 'ollama' | 'openai' | 'anthropic' | 'gemini' | 'custom';
 export type ApiFormat = 'ollama' | 'openai-compat' | 'anthropic' | 'gemini';
 
@@ -22,6 +27,7 @@ export interface LLMAgentState {
   rho: number;
   cash: number;
   shares: number;
+  sharesPerAsset?: number[];
   bias: number;
   omega: number;
   belief: number;
@@ -79,6 +85,7 @@ export interface HeuristicWeights {
 export interface SimConfig {
   plan: PlanType;
   assetClass: AssetClass;
+  assets?: AssetConfig[];
   seed: number;
   nAgents: number;
   nRounds: number;
@@ -146,6 +153,7 @@ export const DEFAULT_REGULATOR: RegulatorConfig = {
 export const DLM_DEFAULTS: SimConfig = {
   plan: 'plan-i',
   assetClass: 'linear-declining',
+  assets: [{ id: 'linear-declining', weight: 1 }],
   seed: 42,
   nAgents: 10,
   nRounds: 4,
@@ -177,6 +185,7 @@ export const DLM_DEFAULTS: SimConfig = {
 export const LLM_SCALED_DEFAULTS: SimConfig = {
   plan: 'plan-ii',
   assetClass: 'linear-declining',
+  assets: [{ id: 'linear-declining', weight: 1 }],
   seed: 42,
   nAgents: 10,
   nRounds: 4,
