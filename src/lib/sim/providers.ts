@@ -8,40 +8,20 @@ export interface ProviderPreset {
 }
 
 export const PROVIDER_PRESETS: Record<LLMProvider, ProviderPreset> = {
+  gemini: {
+    label: 'Google Gemini',
+    baseUrl: 'https://generativelanguage.googleapis.com',
+    apiFormat: 'gemini',
+    models: ['gemini-2.0-flash', 'gemini-2.5-flash'],
+  },
   deepseek: {
     label: 'DeepSeek',
     baseUrl: 'https://api.deepseek.com',
     apiFormat: 'openai-compat',
     models: ['deepseek-v4-flash'],
   },
-  ollama: {
-    label: 'Ollama',
-    baseUrl: '/ollama',
-    apiFormat: 'ollama',
-    models: ['gemini-3-flash-preview', 'deepseek-v4-flash:cloud'],
-  },
-  openai: {
-    label: 'OpenAI',
-    baseUrl: 'https://api.openai.com',
-    apiFormat: 'openai-compat',
-    models: ['gpt-4o', 'gpt-4o-mini'],
-  },
-  anthropic: {
-    label: 'Anthropic',
-    baseUrl: '/anthropic',
-    apiFormat: 'anthropic',
-    models: ['claude-sonnet-4-5-20250514'],
-  },
-  gemini: {
-    label: 'Google Gemini',
-    baseUrl: 'https://generativelanguage.googleapis.com',
-    apiFormat: 'gemini',
-    models: ['gemini-2.5-flash'],
-  },
-  custom: {
-    label: 'Custom',
-    baseUrl: '',
-    apiFormat: 'ollama',
-    models: [],
-  },
+  ollama: { label: 'Ollama (disabled)', baseUrl: '', apiFormat: 'ollama', models: [] },
+  openai: { label: 'OpenAI (disabled)', baseUrl: '', apiFormat: 'openai-compat', models: [] },
+  anthropic: { label: 'Anthropic (disabled)', baseUrl: '', apiFormat: 'anthropic', models: [] },
+  custom: { label: 'Custom (disabled)', baseUrl: '', apiFormat: 'ollama', models: [] },
 };

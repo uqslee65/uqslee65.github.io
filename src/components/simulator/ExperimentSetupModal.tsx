@@ -129,18 +129,22 @@ export function ExperimentSetupModal({
   const [currentStep, setCurrentStep] = useState(initialStep);
 
   // LLM config local state (mirrors config.llm, written to context on change)
-  const [llmLocal, setLlmLocal] = useState<LLMConfig>(() => ({
-    baseUrl: config.llm?.baseUrl ?? '/ollama',
-    apiKey:  config.llm?.apiKey  ?? '',
-    model:   config.llm?.model   ?? (LLM_SCALED_DEFAULTS.llm?.model ?? 'llama3'),
-    maxConcurrent: config.llm?.maxConcurrent ?? 3,
-    provider: config.llm?.provider ?? 'ollama',
-    apiFormat: config.llm?.apiFormat ?? 'ollama',
-  }));
+  const [llmLocal, setLlmLocal] = useState<LLMConfig>(() => {
+    const defaultProvider = config.llm?.provider ?? 'gemini';
+    const preset = PROVIDER_PRESETS[defaultProvider];
+    return {
+      baseUrl: config.llm?.baseUrl ?? preset.baseUrl,
+      apiKey:  config.llm?.apiKey  ?? '',
+      model:   config.llm?.model   ?? (preset.models[0] ?? ''),
+      maxConcurrent: config.llm?.maxConcurrent ?? 3,
+      provider: defaultProvider,
+      apiFormat: config.llm?.apiFormat ?? preset.apiFormat,
+    };
+  });
 
   // Provider selection state
   const [selectedProvider, setSelectedProvider] = useState<LLMProvider>(
-    config.llm?.provider ?? 'ollama'
+    config.llm?.provider ?? 'gemini'
   );
 
   // Multi-asset selection state
@@ -457,7 +461,9 @@ export function ExperimentSetupModal({
                 }}
                 style={{ ...inputStyle, width: 'auto' }}
               >
-                {Object.entries(PROVIDER_PRESETS).map(([key, preset]) => (
+                {Object.entries(PROVIDER_PRESETS)
+                  .filter(([, p]) => !p.label.includes('disabled'))
+                  .map(([key, preset]) => (
                   <option key={key} value={key}>{preset.label}</option>
                 ))}
               </select>

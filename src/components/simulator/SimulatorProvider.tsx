@@ -32,7 +32,6 @@ async function uploadResults(
 ): Promise<boolean> {
   const url = getBackendUrl();
   if (!url) {
-    onError?.('Results backend URL not configured. Set it in simulator settings (localStorage key: sim-backend-url).');
     return false;
   }
 

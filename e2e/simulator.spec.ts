@@ -51,9 +51,9 @@ async function openSetupAndRun(page: import('@playwright/test').Page, opts?: {
 
   // Step 4: LLM config (only for Plan II/III)
   if (opts?.configureGemini) {
-    await page.locator('select').filter({ hasText: 'Ollama' }).selectOption('gemini');
+    // Gemini is now default — just fill API key
     await page.locator('input[type="password"]').fill(process.env.GEMINI_API_KEY!);
-    await expect(page.locator('select').filter({ hasText: 'gemini-2.5-flash' })).toBeVisible();
+    await expect(page.locator('select').filter({ hasText: 'gemini-2.0-flash' })).toBeVisible();
 
     // Test connection
     await page.getByRole('button', { name: 'Test Connection' }).click();
