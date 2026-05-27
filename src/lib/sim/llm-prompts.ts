@@ -5,15 +5,47 @@ interface MarketContext {
   tick: number;
   totalPeriods: number;
   ticksPerPeriod: number;
-  fv: number;
-  bestBid: number | null;
-  bestAsk: number | null;
+  fv: number;           // backward compat (asset 0)
+  bestBid: number | null;  // backward compat (asset 0)
+  bestAsk: number | null;  // backward compat (asset 0)
   lastPrices: number[];
-  vwap: number;
+  vwap: number;         // backward compat (asset 0)
   totalShares: number;
+  // Multi-asset additions
+  assets?: {
+    assetId: string;
+    fv: number;
+    bestBid: number | null;
+    bestAsk: number | null;
+    vwap: number;
+    lastPrices: number[];
+    holdings: number;   // agent's shares for this asset (filled per-agent before prompt build)
+  }[];
 }
 
-function marketRules(config?: Pick<SimConfig, 'assetClass' | 'nPeriods'>): string {
+// ---------------------------------------------------------------------------
+// Single-asset description helpers
+// ---------------------------------------------------------------------------
+
+function getSingleAssetDescription(assetClass: AssetClass, nPeriods: number): string {
+  const T = nPeriods;
+  switch (assetClass) {
+    case 'linear-declining':
+      return `This asset has a finite life of ${T} periods. Each period it pays a dividend of 0 or 10¢ (equal probability). Fundamental value declines linearly: FV_t = 5·(${T}-t+1).`;
+    case 'constant-perpetual':
+      return `This asset lives forever. Each period it pays 4 or 6¢ (expected 5¢). Discount rate = 5%. Fundamental value = 100¢ (constant).`;
+    case 'linear-growth':
+      return `This asset has a finite life of ${T} periods. Expected dividend E[d_t] = 2 + 0.3t (Gaussian noise sigma=1). FV_t = (2 + 0.3t)/0.05 (Gordon perpetuity on rising dividend).`;
+    case 'cyclical':
+      return `This asset has a finite life of ${T} periods. Expected dividend E[d_t] = 5 + 2*sin(2pi(t-1)/10) (Gaussian noise sigma=1, cycle length 10). FV_t = E[d_t]/0.05.`;
+    case 'random-walk':
+      return `This asset has a finite life of ${T} periods. The fundamental value follows a random walk seeded each round; there is no predictable trend to exploit.`;
+    case 'jump-crash':
+      return `This asset has a finite life of ${T} periods. The fundamental value is stable most periods, but a latent crash event — randomly scheduled — can wipe out value instantly.`;
+  }
+}
+
+function marketRules(config?: Pick<SimConfig, 'assetClass' | 'nPeriods' | 'assets'>): string {
   const assetDesc = config ? assetEnvironmentBlock(config)
     : 'This asset has a finite life of 20 periods. Each period it pays a dividend of 0 or 10¢ (equal probability). FV declines linearly.';
   return `You are a trader in an experimental asset market.
@@ -30,10 +62,20 @@ const DECISION_PRINCIPLES = `Decision principles:
 - HOLD: do nothing this tick
 - spread: a number between 0.01 and 0.10 (1% to 10%) that determines how aggressively your limit order improves the current best quote`;
 
-const RESPONSE_FORMAT = `Respond with ONLY a raw JSON object. No markdown, no code blocks, no explanation outside the JSON:
+function getResponseFormat(isMultiAsset: boolean): string {
+  if (isMultiAsset) {
+    return `Respond with ONLY a raw JSON object. No markdown, no code blocks, no explanation outside the JSON:
+{"action": "BUY_NOW|SELL_NOW|BID|ASK_1|HOLD", "assetId": "linear-declining", "spread": 0.05, "reasoning": "brief reason"}`;
+  }
+  return `Respond with ONLY a raw JSON object. No markdown, no code blocks, no explanation outside the JSON:
 {"action": "BUY_NOW|SELL_NOW|BID|ASK_1|HOLD", "spread": 0.05, "reasoning": "brief reason"}`;
+}
 
-function planIISystemPrompt(agent: LLMAgentState, config?: Pick<SimConfig, 'assetClass' | 'nPeriods'>): string {
+function planIISystemPrompt(
+  agent: LLMAgentState,
+  config?: Pick<SimConfig, 'assetClass' | 'nPeriods' | 'assets'>,
+  isMultiAsset: boolean = false,
+): string {
   const rhoStr = agent.rho.toFixed(3);
   const utilityFn = agent.rho === 0
     ? 'U(w) = ln(w)  (risk-neutral, log utility)'
@@ -60,10 +102,14 @@ For a market buy at price p: EU = probability_of_gain × U(wealth + gain) + (1 -
 For a passive bid at price p: EU = p_fill × U(wealth_if_filled) + (1 - p_fill) × U(current_wealth)
 where p_fill ≈ 0.30 (probability a passive order gets filled).
 
-${RESPONSE_FORMAT}`;
+${getResponseFormat(isMultiAsset)}`;
 }
 
-function planIIISystemPrompt(agent: LLMAgentState, config?: Pick<SimConfig, 'assetClass' | 'nPeriods'>): string {
+function planIIISystemPrompt(
+  agent: LLMAgentState,
+  config?: Pick<SimConfig, 'assetClass' | 'nPeriods' | 'assets'>,
+  isMultiAsset: boolean = false,
+): string {
   const label = agent.riskPref === 'risk-loving'
     ? 'You are a RISK-LOVING trader. You enjoy taking big positions, riding momentum, and are comfortable with large swings in your portfolio value. You tend to buy into rising markets and hold through volatility.'
     : agent.riskPref === 'risk-neutral'
@@ -77,10 +123,33 @@ ${DECISION_PRINCIPLES}
 ## Your Risk Profile
 ${label}
 
-${RESPONSE_FORMAT}`;
+${getResponseFormat(isMultiAsset)}`;
 }
 
 function buildUserMessage(agent: LLMAgentState, ctx: MarketContext): string {
+  const isMultiAsset = ctx.assets && ctx.assets.length > 1;
+
+  if (isMultiAsset) {
+    let msg = `Period ${ctx.period}/${ctx.totalPeriods}, Tick ${ctx.tick}/${ctx.ticksPerPeriod}\n`;
+    msg += `Your cash: ${agent.cash.toFixed(1)}¢\n\n`;
+
+    for (const asset of ctx.assets!) {
+      const recentPrices = asset.lastPrices.length > 0
+        ? asset.lastPrices.map(p => p.toFixed(1)).join(', ')
+        : 'none yet';
+      msg += `【${asset.assetId}】\n`;
+      msg += `FV = ${asset.fv.toFixed(1)}¢ | Your holdings: ${asset.holdings} shares\n`;
+      msg += `Best bid: ${asset.bestBid?.toFixed(1) ?? 'none'} | Best ask: ${asset.bestAsk?.toFixed(1) ?? 'none'}\n`;
+      msg += `Recent prices: ${recentPrices} | VWAP: ${asset.vwap.toFixed(1)}¢\n\n`;
+    }
+
+    const totalWealth = agent.cash + ctx.assets!.reduce((s, a) => s + a.holdings * a.fv, 0);
+    msg += `Total wealth: ${totalWealth.toFixed(1)}¢\n`;
+    msg += `Your belief (subjective value): ${agent.belief.toFixed(1)}¢`;
+    return msg;
+  }
+
+  // Single-asset path (unchanged)
   const wealth = agent.cash + agent.shares * ctx.fv;
   const recentPrices = ctx.lastPrices.length > 0
     ? ctx.lastPrices.map(p => p.toFixed(1)).join(', ')
@@ -99,11 +168,13 @@ export function buildPrompt(
   plan: PlanType,
   agent: LLMAgentState,
   ctx: MarketContext,
-  config?: Pick<SimConfig, 'assetClass' | 'nPeriods' | 'boundedRationality' | 'regulator' | 'nAgents' | 'nFundamentalists' | 'nTrendFollowers' | 'riskSplit' | 'nRounds'>,
+  config?: Pick<SimConfig, 'assetClass' | 'nPeriods' | 'boundedRationality' | 'regulator' | 'nAgents' | 'nFundamentalists' | 'nTrendFollowers' | 'riskSplit' | 'nRounds' | 'assets'>,
 ): { system: string; user: string } {
+  const isMultiAsset = !!(ctx.assets && ctx.assets.length > 1);
+
   let system = plan === 'plan-ii'
-    ? planIISystemPrompt(agent, config)
-    : planIIISystemPrompt(agent, config);
+    ? planIISystemPrompt(agent, config, isMultiAsset)
+    : planIIISystemPrompt(agent, config, isMultiAsset);
 
   if (config?.boundedRationality) {
     system += buildBoundedRationalityBlock(config);
@@ -160,23 +231,17 @@ export function buildRegulatorWarning(
 
 /**
  * Returns a 1–2 sentence description of the current asset's dividend/FV structure.
+ * When config.assets has multiple entries, describes all of them.
  */
-export function assetEnvironmentBlock(config: { assetClass: AssetClass; nPeriods: number }): string {
-  const T = config.nPeriods;
-  switch (config.assetClass) {
-    case 'linear-declining':
-      return `This asset has a finite life of ${T} periods. Each period it pays a dividend of 0 or 10¢ (equal probability). Fundamental value declines linearly: FV_t = 5·(${T}-t+1).`;
-    case 'constant-perpetual':
-      return `This asset lives forever. Each period it pays 4 or 6¢ (expected 5¢). Discount rate = 5%. Fundamental value = 100¢ (constant).`;
-    case 'linear-growth':
-      return `This asset has a finite life of ${T} periods. Expected dividend E[d_t] = 2 + 0.3t (Gaussian noise sigma=1). FV_t = (2 + 0.3t)/0.05 (Gordon perpetuity on rising dividend).`;
-    case 'cyclical':
-      return `This asset has a finite life of ${T} periods. Expected dividend E[d_t] = 5 + 2*sin(2pi(t-1)/10) (Gaussian noise sigma=1, cycle length 10). FV_t = E[d_t]/0.05.`;
-    case 'random-walk':
-      return `This asset has a finite life of ${T} periods. The fundamental value follows a random walk seeded each round; there is no predictable trend to exploit.`;
-    case 'jump-crash':
-      return `This asset has a finite life of ${T} periods. The fundamental value is stable most periods, but a latent crash event — randomly scheduled — can wipe out value instantly.`;
+export function assetEnvironmentBlock(config: { assetClass: AssetClass; nPeriods: number; assets?: { id: string; weight: number }[] }): string {
+  const assets = config.assets;
+  if (assets && assets.length > 1) {
+    return assets.map((a, i) => {
+      const desc = getSingleAssetDescription(a.id as AssetClass, config.nPeriods);
+      return `Asset ${i + 1} (${a.id}): ${desc}`;
+    }).join('\n');
   }
+  return getSingleAssetDescription(config.assetClass, config.nPeriods);
 }
 
 /**

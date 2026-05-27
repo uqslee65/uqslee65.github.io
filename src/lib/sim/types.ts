@@ -40,6 +40,7 @@ export interface LLMDecision {
   action: LLMAction;
   spread: number;
   reasoning?: string;
+  assetId?: string;  // which asset to trade (multi-asset only)
 }
 
 export interface LLMConfig {
@@ -219,6 +220,8 @@ export interface LLMPeriodRecord {
   agentStates: LLMAgentState[];
   trustMatrix: number[][];
   broadcastMessages?: { agentId: number; message: string; tick: number }[];
+  // Multi-asset data (populated when nAssets > 1)
+  assets?: { assetId: string; fv: number; meanPrice: number; trades: { buyer: number; seller: number; price: number; tick: number; assetIdx?: number }[] }[];
 }
 
 export interface LLMSessionResult {

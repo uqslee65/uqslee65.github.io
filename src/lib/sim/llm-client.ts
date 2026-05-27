@@ -136,7 +136,8 @@ export function parseDecision(raw: string): LLMDecision {
     let spread = parseFloat(parsed.spread) || 0.05;
     spread = Math.max(0.01, Math.min(0.10, spread));
 
-    return { action, spread, reasoning: parsed.reasoning };
+    const assetId = typeof parsed.assetId === 'string' ? parsed.assetId : undefined;
+    return { action, spread, reasoning: parsed.reasoning, assetId };
   } catch {
     return DEFAULT_DECISION;
   }

@@ -1,8 +1,9 @@
 import { useSimulator } from './SimulatorProvider';
 import { Figure } from './Figure';
+import { resolveAssetData } from '../../lib/sim/assetHelpers';
 
 export function PriceChart() {
-  const { roundPeriods, roundIdx } = useSimulator();
+  const { roundPeriods, roundIdx, selectedAssetIdx } = useSimulator();
 
   const width = 600;
   const height = 260;
@@ -65,8 +66,8 @@ export function PriceChart() {
     );
   }
 
-  const allPrices = periods.map(p => p.meanPrice);
-  const allFVs = periods.map(p => p.fv);
+  const allPrices = periods.map(p => resolveAssetData(p, selectedAssetIdx).meanPrice);
+  const allFVs = periods.map(p => resolveAssetData(p, selectedAssetIdx).fv);
   const yMin = Math.min(...allPrices, ...allFVs) * 0.85;
   const yMax = Math.max(...allPrices, ...allFVs) * 1.15;
 
@@ -76,10 +77,10 @@ export function PriceChart() {
     pad.top + h - ((v - yMin) / (yMax - yMin)) * h;
 
   const fvPath = periods.map((p, i) =>
-    `${i === 0 ? 'M' : 'L'}${xScale(i)},${yScale(p.fv)}`
+    `${i === 0 ? 'M' : 'L'}${xScale(i)},${yScale(resolveAssetData(p, selectedAssetIdx).fv)}`
   ).join(' ');
   const pricePath = visible.map((p, i) =>
-    `${i === 0 ? 'M' : 'L'}${xScale(i)},${yScale(p.meanPrice)}`
+    `${i === 0 ? 'M' : 'L'}${xScale(i)},${yScale(resolveAssetData(p, selectedAssetIdx).meanPrice)}`
   ).join(' ');
 
   const gridLines = [0.25, 0.5, 0.75].map(f => yMin + f * (yMax - yMin));
@@ -103,7 +104,7 @@ export function PriceChart() {
         {visible.length > 0 && (
           <circle
             cx={xScale(currentIdx)}
-            cy={yScale(visible[currentIdx].meanPrice)}
+            cy={yScale(resolveAssetData(visible[currentIdx], selectedAssetIdx).meanPrice)}
             r="4"
             fill="var(--accent)"
           />

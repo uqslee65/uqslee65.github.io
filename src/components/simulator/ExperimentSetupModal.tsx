@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { useSimulator } from './SimulatorProvider';
 import { testConnection } from '../../lib/sim/llm-client';
-import type { AssetClass, PlanType, LLMConfig } from '../../lib/sim/types';
+import type { AssetClass, PlanType, LLMConfig, LLMProvider, AssetConfig } from '../../lib/sim/types';
 import { LLM_SCALED_DEFAULTS } from '../../lib/sim/types';
 import { RiskPreferences } from './config/RiskPreferences';
+import { PROVIDER_PRESETS } from '../../lib/sim/providers';
 
 interface ExperimentSetupModalProps {
   onClose: () => void;
@@ -133,7 +134,26 @@ export function ExperimentSetupModal({
     apiKey:  config.llm?.apiKey  ?? '',
     model:   config.llm?.model   ?? (LLM_SCALED_DEFAULTS.llm?.model ?? 'llama3'),
     maxConcurrent: config.llm?.maxConcurrent ?? 3,
+    provider: config.llm?.provider ?? 'ollama',
+    apiFormat: config.llm?.apiFormat ?? 'ollama',
   }));
+
+  // Provider selection state
+  const [selectedProvider, setSelectedProvider] = useState<LLMProvider>(
+    config.llm?.provider ?? 'ollama'
+  );
+
+  // Multi-asset selection state
+  const [selectedAssets, setSelectedAssets] = useState<Set<AssetClass>>(() => {
+    const assets = config.assets ?? [{ id: config.assetClass, weight: 1 }];
+    return new Set(assets.map((a: AssetConfig) => a.id));
+  });
+  const [assetWeights, setAssetWeights] = useState<Record<string, number>>(() => {
+    const assets = config.assets ?? [{ id: config.assetClass, weight: 1 }];
+    const weights: Record<string, number> = {};
+    for (const a of assets) weights[a.id] = a.weight;
+    return weights;
+  });
 
   const [testing,    setTesting]    = useState(false);
   const [testResult, setTestResult] = useState<boolean | null>(null);
@@ -142,14 +162,8 @@ export function ExperimentSetupModal({
 
   // Derived
   const planIsLLM = config.plan !== 'plan-i';
-  const totalSteps = planIsLLM ? 4 : 3;
-
-  // Map logical steps (1,2,3_api,4_summary) to display position
-  // For plan-i: steps 1,2,4 → displayed as 1,2,3
-  // For plan-ii/iii: steps 1,2,3,4 → displayed as 1,2,3,4
-  const displayStep = planIsLLM
-    ? currentStep
-    : currentStep === 4 ? 3 : currentStep;
+  const totalSteps = planIsLLM ? 5 : 4;
+  const displayStep = currentStep;
 
   // Helpers to push LLM edits into both local and context
   const updateLlm = (patch: Partial<LLMConfig>) => {
@@ -171,27 +185,40 @@ export function ExperimentSetupModal({
 
   const handleNext = () => {
     if (currentStep === 1) { setCurrentStep(2); return; }
-    if (currentStep === 2) { setCurrentStep(planIsLLM ? 3 : 4); return; }
-    if (currentStep === 3) { setCurrentStep(4); return; }
+    if (currentStep === 2) {
+      // Sync selected assets to config
+      const assets: AssetConfig[] = [...selectedAssets].map(id => ({
+        id,
+        weight: selectedAssets.size === 1 ? 1 : (assetWeights[id] ?? 1 / selectedAssets.size),
+      }));
+      setConfig({ assets, assetClass: assets[0].id });
+      setCurrentStep(3);
+      return;
+    }
+    if (currentStep === 3) { setCurrentStep(planIsLLM ? 4 : 5); return; }
+    if (currentStep === 4) { setCurrentStep(5); return; }
   };
 
   const handleBack = () => {
     if (currentStep === 2) { setCurrentStep(1); return; }
     if (currentStep === 3) { setCurrentStep(2); return; }
-    if (currentStep === 4) { setCurrentStep(planIsLLM ? 3 : 2); return; }
+    if (currentStep === 4) { setCurrentStep(3); return; }
+    if (currentStep === 5) { setCurrentStep(planIsLLM ? 4 : 3); return; }
   };
 
   const handleRun = () => {
     if (saveAsDefaults) {
       const toSave = {
-        plan:       config.plan,
-        assetClass: config.assetClass,
-        nAgents:    config.nAgents,
-        riskSplit:  config.riskSplit,
+        plan:      config.plan,
+        assets:    [...selectedAssets].map(id => ({ id, weight: assetWeights[id] ?? 1 })),
+        nAgents:   config.nAgents,
+        riskSplit: config.riskSplit,
         llm: planIsLLM ? {
           baseUrl:       llmLocal.baseUrl,
           model:         llmLocal.model,
           maxConcurrent: llmLocal.maxConcurrent,
+          provider:      llmLocal.provider,
+          apiFormat:     llmLocal.apiFormat,
           // intentionally omit apiKey
         } : undefined,
       };
@@ -203,6 +230,16 @@ export function ExperimentSetupModal({
 
   // --- Risk split labels ---
   const [lov, neu, av] = config.riskSplit;
+
+  // --- Summary asset display ---
+  const assetSummary = selectedAssets.size === 1
+    ? ASSET_OPTIONS.find(a => a.id === [...selectedAssets][0])?.label ?? ''
+    : [...selectedAssets].map(id => {
+        const label = ASSET_OPTIONS.find(a => a.id === id)?.label ?? id;
+        const totalRaw = [...selectedAssets].reduce((s, aid) => s + (assetWeights[aid] ?? 1), 0);
+        const pct = Math.round(((assetWeights[id] ?? 1) / totalRaw) * 100);
+        return `${label} (${pct}%)`;
+      }).join(' + ');
 
   return (
     <div
@@ -288,32 +325,38 @@ export function ExperimentSetupModal({
           </div>
         )}
 
-        {/* ── Step 2: Configure Experiment ── */}
+        {/* ── Step 2: Asset Portfolio ── */}
         {currentStep === 2 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {/* Asset class */}
-            <div>
-              <p style={{ ...labelSm, marginBottom: '0.5rem', display: 'block' }}>Asset Class</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                {ASSET_OPTIONS.map(a => (
-                  <label
-                    key={a.id}
-                    style={{
-                      display: 'flex', alignItems: 'flex-start', gap: '0.6rem',
-                      padding: '0.5rem 0.75rem',
-                      border: `1px solid ${config.assetClass === a.id ? 'var(--accent)' : 'var(--border)'}`,
-                      borderRadius: '6px',
-                      background: config.assetClass === a.id ? 'color-mix(in srgb, var(--accent) 6%, var(--bg-card))' : 'var(--bg-card)',
-                      cursor: 'pointer',
-                      transition: 'border-color 0.15s, background 0.15s',
-                    }}
-                  >
+            <p style={{ fontSize: '0.75rem', color: 'var(--fg-2)', marginBottom: '0.25rem' }}>
+              Select one or more asset classes for the experiment.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+              {ASSET_OPTIONS.map(a => {
+                const checked = selectedAssets.has(a.id);
+                return (
+                  <label key={a.id} style={{
+                    display: 'flex', alignItems: 'flex-start', gap: '0.6rem',
+                    padding: '0.5rem 0.75rem',
+                    border: `1px solid ${checked ? 'var(--accent)' : 'var(--border)'}`,
+                    borderRadius: '6px',
+                    background: checked ? 'color-mix(in srgb, var(--accent) 6%, var(--bg-card))' : 'var(--bg-card)',
+                    cursor: 'pointer',
+                    transition: 'border-color 0.15s, background 0.15s',
+                  }}>
                     <input
-                      type="radio"
-                      name="assetClass"
-                      value={a.id}
-                      checked={config.assetClass === a.id}
-                      onChange={() => setConfig({ assetClass: a.id })}
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => {
+                        const next = new Set(selectedAssets);
+                        if (checked && next.size > 1) next.delete(a.id);
+                        else next.add(a.id);
+                        setSelectedAssets(next);
+                        // Initialize weight for newly added asset
+                        if (!checked) {
+                          setAssetWeights(prev => ({ ...prev, [a.id]: 1 }));
+                        }
+                      }}
                       style={{ marginTop: '0.1rem', accentColor: 'var(--accent)' }}
                     />
                     <div>
@@ -321,10 +364,42 @@ export function ExperimentSetupModal({
                       <span style={{ fontSize: '0.72rem', color: 'var(--fg-2)', display: 'block', lineHeight: 1.4 }}>{a.desc}</span>
                     </div>
                   </label>
-                ))}
-              </div>
+                );
+              })}
             </div>
 
+            {/* Weight sliders — only shown when 2+ assets selected */}
+            {selectedAssets.size > 1 && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <p style={{ ...labelSm, marginBottom: '0.5rem', display: 'block' }}>Portfolio Weights</p>
+                {[...selectedAssets].map(id => {
+                  const label = ASSET_OPTIONS.find(a => a.id === id)?.label ?? id;
+                  const rawWeight = assetWeights[id] ?? 1;
+                  const totalRaw = [...selectedAssets].reduce((s, aid) => s + (assetWeights[aid] ?? 1), 0);
+                  const pct = Math.round((rawWeight / totalRaw) * 100);
+                  return (
+                    <div key={id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--fg)', minWidth: '120px' }}>{label}</span>
+                      <input
+                        type="range" min={1} max={10} step={1}
+                        value={rawWeight}
+                        onChange={e => setAssetWeights(prev => ({ ...prev, [id]: Number(e.target.value) }))}
+                        style={{ flex: 1, accentColor: 'var(--accent)' }}
+                      />
+                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--fg)', minWidth: '2.5rem', textAlign: 'right' }}>
+                        {pct}%
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── Step 3: Agents + Risk Preferences ── */}
+        {currentStep === 3 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             {/* Number of agents */}
             <div>
               <p style={{ ...labelSm, marginBottom: '0.4rem', display: 'block' }}>
@@ -354,14 +429,38 @@ export function ExperimentSetupModal({
           </div>
         )}
 
-        {/* ── Step 3: API Key (LLM plans only) ── */}
-        {currentStep === 3 && planIsLLM && (
+        {/* ── Step 4: API Config (LLM plans only) ── */}
+        {currentStep === 4 && planIsLLM && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
             <p style={{ fontSize: '0.75rem', color: 'var(--fg-2)', margin: 0 }}>
               Configure the LLM backend for {config.plan === 'plan-ii' ? 'Plan II' : 'Plan III'}.
               The API key is used only in-browser and is never sent to any server other than the
               configured Base URL.
             </p>
+
+            {/* Provider dropdown */}
+            <div>
+              <label style={{ ...labelSm, display: 'block', marginBottom: '0.3rem' }}>Provider</label>
+              <select
+                value={selectedProvider}
+                onChange={e => {
+                  const key = e.target.value as LLMProvider;
+                  setSelectedProvider(key);
+                  const preset = PROVIDER_PRESETS[key];
+                  updateLlm({
+                    baseUrl:   preset.baseUrl,
+                    apiFormat: preset.apiFormat,
+                    provider:  key,
+                    model:     preset.models[0] ?? llmLocal.model,
+                  });
+                }}
+                style={{ ...inputStyle, width: 'auto' }}
+              >
+                {Object.entries(PROVIDER_PRESETS).map(([key, preset]) => (
+                  <option key={key} value={key}>{preset.label}</option>
+                ))}
+              </select>
+            </div>
 
             <div>
               <label style={{ ...labelSm, display: 'block', marginBottom: '0.3rem' }}>API Key</label>
@@ -388,13 +487,26 @@ export function ExperimentSetupModal({
 
             <div>
               <label style={{ ...labelSm, display: 'block', marginBottom: '0.3rem' }}>Model</label>
-              <input
-                type="text"
-                value={llmLocal.model}
-                onChange={e => updateLlm({ model: e.target.value })}
-                placeholder="llama3"
-                style={inputStyle}
-              />
+              {PROVIDER_PRESETS[selectedProvider]?.models.length > 0 ? (
+                <select
+                  value={llmLocal.model}
+                  onChange={e => updateLlm({ model: e.target.value })}
+                  style={{ ...inputStyle, width: 'auto' }}
+                >
+                  {PROVIDER_PRESETS[selectedProvider].models.map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                  <option value="__custom__">Custom…</option>
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  value={llmLocal.model}
+                  onChange={e => updateLlm({ model: e.target.value })}
+                  placeholder="model-name"
+                  style={inputStyle}
+                />
+              )}
             </div>
 
             <div>
@@ -434,8 +546,8 @@ export function ExperimentSetupModal({
           </div>
         )}
 
-        {/* ── Step 4: Summary & Run ── */}
-        {currentStep === 4 && (
+        {/* ── Step 5: Summary & Run ── */}
+        {currentStep === 5 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             <p style={{ fontSize: '0.75rem', color: 'var(--fg-2)', margin: 0 }}>
               Review your experiment configuration before running.
@@ -444,14 +556,15 @@ export function ExperimentSetupModal({
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <tbody>
                 {[
-                  { label: 'Plan',        value: PLAN_OPTIONS.find(p => p.id === config.plan)?.label + ' — ' + PLAN_OPTIONS.find(p => p.id === config.plan)?.short },
-                  { label: 'Asset Class', value: ASSET_OPTIONS.find(a => a.id === config.assetClass)?.label ?? config.assetClass },
-                  { label: 'Agents',      value: String(config.nAgents) },
+                  { label: 'Plan',       value: PLAN_OPTIONS.find(p => p.id === config.plan)?.label + ' — ' + PLAN_OPTIONS.find(p => p.id === config.plan)?.short },
+                  { label: 'Assets',     value: assetSummary },
+                  { label: 'Agents',     value: String(config.nAgents) },
                   {
                     label: 'Risk Split',
                     value: `${Math.round(lov * 100)}% Loving / ${Math.round(neu * 100)}% Neutral / ${Math.round(av * 100)}% Averse`,
                   },
                   ...(planIsLLM ? [
+                    { label: 'Provider',    value: PROVIDER_PRESETS[selectedProvider]?.label ?? selectedProvider },
                     { label: 'LLM Model',   value: llmLocal.model || '—' },
                     { label: 'Base URL',    value: llmLocal.baseUrl || '—' },
                     { label: 'API Key',     value: llmLocal.apiKey ? '••••' + llmLocal.apiKey.slice(-4) : 'Not set' },
@@ -492,7 +605,7 @@ export function ExperimentSetupModal({
                 fontSize: '0.75rem',
                 color: '#ef4444',
               }}>
-                No API key set. Go back to Step 3 to configure one before running.
+                No API key set. Go back to Step 4 to configure one before running.
               </div>
             )}
           </div>
@@ -508,12 +621,12 @@ export function ExperimentSetupModal({
             )}
           </div>
           <div style={{ display: 'flex', gap: '0.5rem' }}>
-            {currentStep < 4 && (
+            {currentStep < 5 && (
               <button onClick={handleNext} style={btnPrimary}>
                 Next →
               </button>
             )}
-            {currentStep === 4 && (
+            {currentStep === 5 && (
               <>
                 <button onClick={onClose} style={btnBase}>Cancel</button>
                 <button

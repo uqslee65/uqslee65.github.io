@@ -12,6 +12,59 @@ import type { SimConfig } from '../../lib/sim/types';
 import { DLM_DEFAULTS, LLM_SCALED_DEFAULTS } from '../../lib/sim/types';
 import { runLLMSession } from '../../lib/sim/llm-engine';
 
+// --- Results upload ---
+
+const BACKEND_URL_KEY = 'sim-backend-url';
+const UPLOAD_QUEUE_KEY = 'sim-upload-queue';
+
+function getBackendUrl(): string {
+  try { return localStorage.getItem(BACKEND_URL_KEY) ?? ''; } catch { return ''; }
+}
+
+function setBackendUrl(url: string) {
+  try { localStorage.setItem(BACKEND_URL_KEY, url); } catch {}
+}
+
+async function uploadResults(
+  data: Record<string, unknown>,
+  onSuccess?: () => void,
+  onError?: (msg: string) => void,
+): Promise<boolean> {
+  const url = getBackendUrl();
+  if (!url) {
+    onError?.('Results backend URL not configured. Set it in simulator settings (localStorage key: sim-backend-url).');
+    return false;
+  }
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        onSuccess?.();
+        return true;
+      }
+      if (attempt < 2) await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+    } catch {
+      if (attempt < 2) await new Promise(r => setTimeout(r, 2000 * (attempt + 1)));
+    }
+  }
+
+  try {
+    const queue = JSON.parse(localStorage.getItem(UPLOAD_QUEUE_KEY) ?? '[]');
+    queue.push({ ...data, queuedAt: new Date().toISOString() });
+    localStorage.setItem(UPLOAD_QUEUE_KEY, JSON.stringify(queue));
+  } catch {}
+
+  onError?.('Results upload failed after 3 attempts. Queued for retry.');
+  return false;
+}
+
+export { getBackendUrl, setBackendUrl };
+
 // --- Published bubble metrics targets by round (DLM 2005, Table 2) ---
 export const PUBLISHED: Record<number, BubbleMetrics> = {
   1: { haesselR2: 0.37, normAbsDev: 1.67, normAvgDev: 0.12, amplitude: 0.81, turnover: 0 },
@@ -33,6 +86,8 @@ interface SimulatorContextValue {
   llmProgress: TickProgress | null;
   replayMode: 'live' | 'replay';
   replayTick: number;
+  selectedAssetIdx: number;
+  setSelectedAssetIdx: (i: number) => void;
 
   // Derived helpers (computed in provider, exposed to avoid duplication)
   isLLM: boolean;
@@ -95,6 +150,10 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
   const [replayMode, setReplayMode] = useState<'live' | 'replay'>('live');
   const [replayTick, setReplayTick] = useState(0);
 
+  // Multi-asset selection
+  const [selectedAssetIdx, setSelectedAssetIdxState] = useState(0);
+  const setSelectedAssetIdx = useCallback((i: number) => setSelectedAssetIdxState(i), []);
+
   // Error state
   const [error, setErrorState] = useState<string | null>(null);
   const setError = useCallback((msg: string) => {
@@ -155,6 +214,10 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
       setPlaying(false);
       setReplayMode('live');
     }
+    // Reset asset selection when asset list changes (guards out-of-bounds)
+    if (partial.assets !== undefined || partial.assetClass !== undefined) {
+      setSelectedAssetIdxState(0);
+    }
   }, [config.plan]);
 
   const runPlanI = useCallback(() => {
@@ -163,6 +226,11 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
       setSession(result);
       setCurrentIdx(result.periods.length - 1);
       setPlaying(false);
+      uploadResults(
+        { exportedAt: new Date().toISOString(), config, periods: result.periods },
+        () => console.log('[Simulator] Results uploaded'),
+        (msg) => setError(msg),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Plan I simulation failed');
     }
@@ -198,6 +266,11 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
       );
       setLlmSession(result);
       setLlmIdx(result.periods.length - 1);
+      uploadResults(
+        { exportedAt: new Date().toISOString(), config, periods: result.periods, plan: result.plan },
+        () => console.log('[Simulator] Results uploaded'),
+        (msg) => setError(msg),
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'LLM run failed');
     } finally {
@@ -278,6 +351,7 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
     setReplayMode('live');
     setReplayTick(0);
     setErrorState(null);
+    setSelectedAssetIdxState(0);
     // Regenerate seed
     setConfigState(prev => ({ ...prev, seed: Math.floor(Math.random() * 9999) + 1 }));
   }, []);
@@ -319,6 +393,8 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
     llmProgress,
     replayMode,
     replayTick,
+    selectedAssetIdx,
+    setSelectedAssetIdx,
     isLLM,
     activePeriods: activePeriods as (PeriodRecord | LLMPeriodRecord)[] | undefined,
     activeIdx,
