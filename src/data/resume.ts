@@ -39,6 +39,8 @@ export interface ResearchProject {
   period: string;
   details: string;
   funded?: boolean;
+  supervisors?: string;
+  note?: string;
 }
 
 export interface VolunteeringEntry {
@@ -249,12 +251,47 @@ export const RESUME: ResumeData = {
 
   researchProjects: [
     {
-      title: "DLM (2005) Virtual Trading Platform",
-      organisation: "University of Queensland",
-      period: "2025–present",
-      details:
-        "Browser-based replication of Dufwenberg, Lindqvist & Moore (AER 2005) asset market bubble experiment. Three-plan factorial: algorithmic belief update, LLM + utility forms, LLM + risk label. Interactive dashboard with 12 chart figures, agent cards, order book, trade feed, and replay.",
-      funded: false,
+      title: "ESG (Indigenous Outcomes) Modelling",
+      organisation: "UQ Business School",
+      period: "2025–2026",
+      details: "Data governance and textual modelling in ASX100 firm Indigenous engagement",
+      supervisors: "A/Prof. Jacquelyn Humphrey & A/Prof. Min Zhu",
+    },
+    {
+      title: "Multisource Attention-Conditioned Sentiment on Volatility",
+      organisation: "Australian Institute for Business and Economics (AIBE)",
+      period: "2025–2026",
+      details: "Sentiment attention pressure on post-earnings volatility",
+      supervisors: "Prof. Flavio Menezes",
+    },
+    {
+      title: "Cyber Risk Premium with PU Machine Learning",
+      organisation: "UQ Business School",
+      period: "2025–2026",
+      details: "PU methods outperformed supervised benchmark; Fama-MacBeth regressions; H-L portfolio sorts",
+      supervisors: "A/Prof. Min Zhu",
+      note: "PhD Thesis",
+    },
+    {
+      title: "Portfolio Holdings Disclosure & Index-Hugging",
+      organisation: "UQ Business School",
+      period: "2025–",
+      details: "Portfolios shifted materially; derivative divestment; expect index-hugging",
+      supervisors: "A/Prof. Min Zhu",
+    },
+    {
+      title: "Open Banking & Mortgage Rate Dispersion/Refinancing",
+      organisation: "UQ Business School",
+      period: "2024–2025",
+      details: "Loan aggregation products moved usage off-API; increased refinancing",
+      supervisors: "A/Prof. Min Zhu",
+    },
+    {
+      title: "Crisis As An Enabler for Rapid Growth of Businesses",
+      organisation: "UQ Business School",
+      period: "2024",
+      details: "doc2vec ML models on cumulative abnormal returns",
+      supervisors: "Dr. Karolina Mikolajewska-Zajac",
     },
   ],
 
@@ -295,28 +332,28 @@ export const RESUME: ResumeData = {
     {
       role: "Volunteer Leader",
       organisation: "People's Association",
-      period: "Jun 2017–Feb 2020",
+      period: "2017–2020",
       details:
         "Lifelong Learning @ Radin Mas: monthly initiative educating elderly on digital literacy, contactless payments, online security.",
     },
     {
       role: "Overall Student Leader",
       organisation: "Purple Parade, Central Singapore CDC",
-      period: "Jul–Oct 2018",
+      period: "2018",
       details:
         "Coordinated 200-person contingent of student volunteers & PwDs for awareness game booth.",
     },
     {
       role: "Logistics & Manpower",
       organisation: "World Vision (NP Initiative)",
-      period: "Apr–Jun 2018",
+      period: "2018",
       details:
         "The Survival Fund: fundraising pop-up booths for disaster-struck countries.",
     },
     {
       role: "Volunteer",
       organisation: "National Youth Council Singapore",
-      period: "Jul 2017–present",
+      period: "2017–present",
       details:
         "THK Paddy Project: rice packing & distribution. Thye Hua Kwan IRIR Harmony Nite 2017.",
     },
@@ -329,7 +366,7 @@ export const RESUME: ResumeData = {
     {
       role: "Customer Service / Admin",
       organisation: "Immigration & Checkpoints Authority (ICA)",
-      period: "Dec 2016–Mar 2017",
+      period: "2016–2017",
       details: "Customer service and administrative support.",
     },
   ],
@@ -352,10 +389,22 @@ export const RESUME: ResumeData = {
 
   teaching: [
     {
-      role: "Teaching Assistant",
-      organisation: "UQ Business School",
+      role: "Teaching Assistant — Portfolio Management",
+      organisation: "University of Queensland",
       period: "2025–present",
-      details: "Portfolio Management (postgraduate); Corporate Finance & Basic Finance (undergraduate). 200+ students.",
+      details: "Postgraduate. 200+ students across all courses.",
+    },
+    {
+      role: "Teaching Assistant — Corporate Finance",
+      organisation: "University of Queensland",
+      period: "2025–present",
+      details: "Undergraduate.",
+    },
+    {
+      role: "Teaching Assistant — Basic Finance",
+      organisation: "University of Queensland",
+      period: "2025–present",
+      details: "Undergraduate.",
     },
   ],
 

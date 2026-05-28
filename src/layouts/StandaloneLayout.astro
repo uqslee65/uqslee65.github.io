@@ -1,0 +1,69 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = 'DLM (2005) Bubble Simulator — Interactive SSW double auction replication' } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+  </head>
+  <body>
+    <nav class="standalone-nav">
+      <div class="nav-inner">
+        <span class="nav-brand">DLM (2005) Bubble Simulator</span>
+      </div>
+    </nav>
+    <main class="main-content">
+      <slot />
+    </main>
+  </body>
+</html>
+
+<style>
+  .standalone-nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--bg-raised);
+    border-bottom: 1px solid var(--border);
+    height: 48px;
+  }
+  .nav-inner {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+  .nav-brand {
+    font-family: var(--font-mono, monospace);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.04em;
+  }
+  .main-content {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    min-height: calc(100vh - 48px);
+  }
+</style>

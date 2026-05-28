@@ -1,0 +1,76 @@
+---
+import StandaloneLayout from '../layouts/StandaloneLayout.astro';
+import BubbleSimulator from '../components/BubbleSimulator';
+---
+
+<StandaloneLayout title="DLM (2005) Bubble Simulator">
+  <div class="sim-page">
+    <div class="sim-header">
+      <p class="sim-subtitle">
+        Interactive replication of Dufwenberg, Lindqvist & Moore (AER 2005).
+        SSW double auction with heterogeneous agents, experience-indexed belief updating, and round-4 novice replacement.
+      </p>
+    </div>
+
+    <BubbleSimulator client:load />
+
+    <div class="sim-footer">
+      <details>
+        <summary>About this simulation</summary>
+        <div class="about-content">
+          <p>
+            Browser-based agent simulation of the SSW (Smith, Suchanek & Williams 1988)
+            asset market experiment as implemented by DLM (2005). Agents trade a finite-lived
+            asset over multiple periods across rounds. The fundamental value declines linearly
+            as the asset approaches expiry.
+          </p>
+          <p>
+            <strong>Agent types:</strong> Speculators (weak FV tracking, belief bias), Moderates
+            (partial FV tracking), and Aware agents (strong FV tracking, trigger crash).
+            Experience reduces bubble magnitude through across-round learning.
+          </p>
+          <p>
+            <strong>Key finding:</strong> Bubbles diminish with experience, and replacing
+            experienced agents with novices does NOT reignite them — the experienced majority
+            anchors prices near fundamental value.
+          </p>
+        </div>
+      </details>
+    </div>
+  </div>
+</StandaloneLayout>
+
+<style>
+  .sim-page {
+    padding: 1.5rem 1rem;
+  }
+  .sim-header {
+    margin-bottom: 1.5rem;
+  }
+  .sim-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    line-height: 1.5;
+    max-width: 640px;
+  }
+  .sim-footer {
+    margin-top: 2rem;
+    border-top: 1px solid var(--border);
+    padding-top: 1rem;
+  }
+  .sim-footer summary {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  .about-content {
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--text-dim);
+    line-height: 1.6;
+    max-width: 640px;
+  }
+  .about-content p {
+    margin-bottom: 0.5rem;
+  }
+</style>
