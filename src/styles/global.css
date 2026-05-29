@@ -33,7 +33,7 @@
 
 html {
   font-family: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
-  font-size: 14px;
+  font-size: 15px;
   background: var(--bg);
   color: var(--text);
   scroll-behavior: smooth;
@@ -87,7 +87,7 @@ a:hover {
   letter-spacing: -0.02em;
 }
 .stat-chip .label {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--text-faint);
   margin-top: 0.25rem;
   text-transform: uppercase;
@@ -101,7 +101,7 @@ a:hover {
 }
 .nav-tab {
   padding: 0.625rem 1rem;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-dim);
   border-bottom: 1px solid transparent;
@@ -125,7 +125,7 @@ a:hover {
 .tag {
   display: inline-block;
   padding: 0.2rem 0.6rem;
-  font-size: 10px;
+  font-size: 11px;
   border: 1px solid var(--border);
   background: var(--bg-surface);
   color: var(--text-dim);
@@ -133,7 +133,7 @@ a:hover {
 }
 
 .mono-label {
-  font-size: 10px;
+  font-size: 11px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-faint);
