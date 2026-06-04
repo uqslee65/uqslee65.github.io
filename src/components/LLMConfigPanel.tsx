@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { LLMConfig } from '../lib/sim/types';
-import { testConnection } from '../lib/sim/llm-client';
+import type { LLMConfig } from 'zigan-simulation';
+import { testConnection } from 'zigan-simulation';
 
 interface Props {
   config: LLMConfig;
