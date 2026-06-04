@@ -19,6 +19,12 @@ export { DLM_DEFAULTS } from './types';
 
 const P_FILL_PASSIVE = 0.30;
 
+// Behavioral prior bias is strongest for novices and fades as traders gain experience
+// (DLM's central mechanism: experience erodes the bias that drives bubbles). The bias
+// applied in round r is beliefBias * BIAS_EXPERIENCE_DECAY^roundsCompleted, so it decays
+// smoothly across rounds 1->3 and re-enters when novices arrive at the replacement round.
+const BIAS_EXPERIENCE_DECAY = 0.6;
+
 function sampleRho(pref: RiskPreference, rng: PRNG): number {
   switch (pref) {
     case 'risk-loving': return rng.uniform(-0.9, -0.1);
@@ -34,6 +40,20 @@ function assignRiskPreference(
   if (fraction < riskSplit[0]) return 'risk-loving';
   if (fraction < riskSplit[0] + riskSplit[1]) return 'risk-neutral';
   return 'risk-averse';
+}
+
+/** Pearson correlation of two equal-length series; returns 1 on degenerate input. */
+function pearson(a: number[], b: number[]): number {
+  const n = Math.min(a.length, b.length);
+  if (n === 0) return 1;
+  const ma = a.reduce((s, x) => s + x, 0) / n;
+  const mb = b.reduce((s, x) => s + x, 0) / n;
+  let num = 0, da = 0, db = 0;
+  for (let i = 0; i < n; i++) {
+    const x = a[i] - ma, y = b[i] - mb;
+    num += x * y; da += x * x; db += y * y;
+  }
+  return (da > 0 && db > 0) ? num / Math.sqrt(da * db) : 1;
 }
 
 // --- PRNG (seeded xoshiro128**) ---
@@ -94,14 +114,6 @@ export interface Trade {
   seller: number;
   price: number;
   tick: number;
-  assetIdx?: number;  // which asset this trade was for
-}
-
-export interface AssetPeriodData {
-  assetId: string;  // string to avoid importing AssetClass here
-  fv: number;
-  meanPrice: number;
-  trades: Trade[];
 }
 
 export class OrderBook {
@@ -118,7 +130,7 @@ export class OrderBook {
     this.asks.sort((a, b) => a.price - b.price);
   }
 
-  match(agents: Agent[], tick: number, assetIdx: number = 0): Trade[] {
+  match(agents: Agent[], tick: number): Trade[] {
     const trades: Trade[] = [];
     while (this.bids.length > 0 && this.asks.length > 0) {
       const bestBid = this.bids[0];
@@ -130,12 +142,12 @@ export class OrderBook {
       const buyer = agents[bestBid.agentId];
       const seller = agents[bestAsk.agentId];
       const tradePrice = (bestBid.price + bestAsk.price) / 2;
-      if (buyer.cash < tradePrice || seller.sharesPerAsset[assetIdx] < 1) continue;
+      if (buyer.cash < tradePrice || seller.shares < 1) continue;
       buyer.cash -= tradePrice;
-      buyer.sharesPerAsset[assetIdx] += 1;
+      buyer.shares += 1;
       seller.cash += tradePrice;
-      seller.sharesPerAsset[assetIdx] -= 1;
-      trades.push({ buyer: bestBid.agentId, seller: bestAsk.agentId, price: tradePrice, tick, assetIdx });
+      seller.shares -= 1;
+      trades.push({ buyer: bestBid.agentId, seller: bestAsk.agentId, price: tradePrice, tick });
     }
     return trades;
   }
@@ -156,7 +168,7 @@ export type AgentType = 'utility' | 'fundamentalist' | 'trend-follower';
 export class Agent {
   id: number;
   cash: number;
-  sharesPerAsset: number[];  // multi-asset share counts; index 0 = primary asset
+  shares: number;
   beliefBias: number;
   belief: number;
   roundsCompleted: number;
@@ -166,22 +178,16 @@ export class Agent {
 
   private fv1: number;
 
-  // Backward-compat accessors — all existing callers using .shares continue to work
-  get shares(): number { return this.sharesPerAsset[0]; }
-  set shares(v: number) { this.sharesPerAsset[0] = v; }
-
   constructor(
     id: number, cash: number, shares: number,
     beliefBias: number, type: AgentType,
     fv1: number = FV_1,
     riskPref: RiskPreference = 'risk-neutral',
     rho: number = 0,
-    nAssets: number = 1,
   ) {
     this.id = id;
     this.cash = cash;
-    this.sharesPerAsset = new Array(nAssets).fill(0);
-    this.sharesPerAsset[0] = shares;  // first asset gets the endowed shares
+    this.shares = shares;
     this.beliefBias = beliefBias;
     this.fv1 = fv1;
     this.belief = fv1 * (1 + beliefBias);
@@ -201,13 +207,21 @@ export class Agent {
     return this.roundsCompleted > 0;
   }
 
-  valuation(
+  /**
+   * Pre-blend (private) prior valuation V_prior and the agent's self-weight omega.
+   * V_prior = max(0, [alpha*FV~ + (1-alpha)*H](1+bias)(1+u)), matching m0nius v3 §2.
+   * The peer blend (V_post = omega*V_prior + (1-omega)*mBar) is applied once per period in
+   * runRound using the CROSS-SECTIONAL mean of current priors (mBar), not a lagged price —
+   * this is the m0nius m̄_t peer-message mean and is what keeps prices tracking current FV.
+   */
+  priorValuation(
     fv: number, period: number, rng: PRNG,
     exp: ExperienceCurveConfig, heuristics: HeuristicWeights,
     lastPrice: number, prevPrice: number, lastDividend: number,
-    discountRate: number, priorBias: boolean, priorNoise: boolean, vwap: number,
+    discountRate: number, priorBias: boolean, priorNoise: boolean,
+    valuationNoise: number = 0.03,
     br?: BoundedRationalityConfig,
-  ): number {
+  ): { vPrior: number; omega: number } {
     const effectiveRC = br?.enabled ? Math.min(this.roundsCompleted, br.T) : this.roundsCompleted;
 
     const perceivedFV = br?.enabled ? Math.max(0, fv + rng.normal(0, br.sigma)) : fv;
@@ -215,26 +229,33 @@ export class Agent {
     const alpha_i = this.type === 'fundamentalist' ? 1.0
       : this.type === 'trend-follower' ? 0.0
       : Math.min(1, exp.alpha0 + exp.gammaAlpha * effectiveRC);
-    const sigma_i = exp.sigma0 * Math.exp(-exp.gammaSigma * effectiveRC);
     const omega_i = Math.min(1.0, exp.omega0 + exp.deltaOmega * Math.min(exp.kMax, effectiveRC));
     const H = this.heuristic(heuristics, lastPrice, prevPrice, lastDividend, perceivedFV, discountRate);
     const blend = alpha_i * perceivedFV + (1 - alpha_i) * H;
-    const bias = priorBias ? this.beliefBias : 0;
-    const noise = priorNoise ? rng.normal(0, sigma_i) : 0;
-    const V_prior = Math.max(0, blend * (1 + bias) + noise);
-    const peerSignal = vwap > 0 ? vwap : perceivedFV;
+    const bias = priorBias ? this.beliefBias * Math.pow(BIAS_EXPERIENCE_DECAY, this.roundsCompleted) : 0;
+    // m0nius prior noise: small multiplicative jitter U[-vn, +vn] (default ±3%), scaled by
+    // the experience factor sigma_i/sigma0 (=1 for novices, decays toward 0 with rounds) so
+    // beliefs sharpen as agents gain experience.
+    const u = priorNoise ? rng.uniform(-valuationNoise, valuationNoise) : 0;
+    const V_prior = Math.max(0, blend * (1 + bias) * (1 + u));
 
-    return Math.max(1.0, omega_i * V_prior + (1 - omega_i) * peerSignal);
+    return { vPrior: V_prior, omega: omega_i };
+  }
+
+  /**
+   * Blend a prior valuation with the cross-sectional peer mean mBar.
+   * V_post = max(1, omega*V_prior + (1-omega)*mBar).
+   */
+  blendBelief(vPrior: number, omega: number, mBar: number): number {
+    return Math.max(1.0, omega * vPrior + (1 - omega) * mBar);
   }
 
   maybeSubmit(
-    fv: number, lastPrice: number, period: number, book: OrderBook, rng: PRNG,
-    config: SimConfig, prevPrice: number, lastDividend: number, vwap: number,
+    fv: number, book: OrderBook, rng: PRNG, config: SimConfig,
   ) {
     const br = config.boundedRationality;
-    const v = this.valuation(fv, period, rng, config.experience, config.heuristics,
-      lastPrice, prevPrice, lastDividend, config.discountRate,
-      config.priorBias, config.priorNoise, vwap, br);
+    // Belief (V_post) is formed once per period in runRound; reuse it for every tick.
+    const v = this.belief;
 
     // N limits order book visibility
     const bestBid = br?.enabled && br.N === 0 ? null : book.bestBidPrice;
@@ -314,117 +335,6 @@ export class Agent {
     best.submit();
   }
 
-  /**
-   * Multi-asset EU argmax. Called when nAssets > 1.
-   * Agent picks ONE action across ALL assets per tick (shared cash = capital constraint).
-   *
-   * NOTE: wealthWith uses fvs[j] (true FV) as the mark-to-market price for each asset,
-   * while valuation() is still called per-asset to advance the RNG consistently with the
-   * single-asset path. If subjective valuation should drive wealth calc, replace fvs[j]
-   * with v in the wealthWith lambda — confirm with spec author.
-   */
-  maybeSubmitMulti(
-    fvs: number[], lastPrices: number[], period: number, books: OrderBook[], rng: PRNG,
-    config: SimConfig, prevPrices: number[], lastDividends: number[], vwaps: number[],
-  ) {
-    const br = config.boundedRationality;
-    const nAssets = books.length;
-
-    // Total wealth across all assets (marked at true FV)
-    let totalWealth = this.cash;
-    for (let j = 0; j < nAssets; j++) {
-      totalWealth += this.sharesPerAsset[j] * fvs[j];
-    }
-    const U0 = this.crraUtility(totalWealth);
-
-    type MultiAction = { name: string; eu: number; assetIdx: number; submit: () => void };
-    const actions: MultiAction[] = [];
-
-    // HOLD — always available (asset-agnostic)
-    actions.push({ name: 'hold', eu: U0, assetIdx: -1, submit: () => {} });
-
-    for (let j = 0; j < nAssets; j++) {
-      // Call valuation() per asset to advance RNG consistently with single-asset path
-      this.valuation(fvs[j], period, rng, config.experience, config.heuristics,
-        lastPrices[j], prevPrices[j], lastDividends[j], config.discountRate,
-        config.priorBias, config.priorNoise, vwaps[j], br);
-
-      const bestBid = br?.enabled && br.N === 0 ? null : books[j].bestBidPrice;
-      const bestAsk = br?.enabled && br.N === 0 ? null : books[j].bestAskPrice;
-
-      // Wealth if action succeeds — adjust only asset j's shares, all else unchanged
-      const wealthWith = (deltaCash: number, deltaShares: number) => {
-        let w = this.cash + deltaCash;
-        for (let k = 0; k < nAssets; k++) {
-          const s = this.sharesPerAsset[k] + (k === j ? deltaShares : 0);
-          w += s * fvs[k];
-        }
-        return w;
-      };
-
-      // BUY_NOW
-      if (bestAsk !== null && this.cash >= bestAsk) {
-        const w1 = wealthWith(-bestAsk, 1);
-        actions.push({
-          name: 'buy_now', eu: this.crraUtility(w1), assetIdx: j,
-          submit: () => books[j].submitBid(bestAsk + 0.01, this.id),
-        });
-      }
-
-      // SELL_NOW
-      if (bestBid !== null && this.sharesPerAsset[j] > 0) {
-        const w1 = wealthWith(bestBid, -1);
-        actions.push({
-          name: 'sell_now', eu: this.crraUtility(w1), assetIdx: j,
-          submit: () => books[j].submitAsk(bestBid - 0.01, this.id),
-        });
-      }
-
-      // PASSIVE BID
-      const bidPrice = bestBid !== null ? bestBid + 0.5 : fvs[j] * 0.95;
-      if (bidPrice > 0 && bidPrice <= this.cash) {
-        const w1 = wealthWith(-bidPrice, 1);
-        const eu = P_FILL_PASSIVE * this.crraUtility(w1) + (1 - P_FILL_PASSIVE) * U0;
-        actions.push({
-          name: 'bid', eu, assetIdx: j,
-          submit: () => books[j].submitBid(bidPrice, this.id),
-        });
-      }
-
-      // PASSIVE ASK
-      const askPrice = bestAsk !== null ? bestAsk - 0.5 : fvs[j] * 1.05;
-      if (askPrice > 0 && this.sharesPerAsset[j] > 0) {
-        const w1 = wealthWith(askPrice, -1);
-        const eu = P_FILL_PASSIVE * this.crraUtility(w1) + (1 - P_FILL_PASSIVE) * U0;
-        actions.push({
-          name: 'ask', eu, assetIdx: j,
-          submit: () => books[j].submitAsk(askPrice, this.id),
-        });
-      }
-    }
-
-    // K-limit + argmax + execution error (same logic as maybeSubmit)
-    let candidates = actions;
-    if (br?.enabled && br.K < actions.length) {
-      const nonHold = actions.slice(1);
-      const k = Math.min(br.K - 1, nonHold.length);
-      const indices = rng.choiceN(nonHold.length, k);
-      candidates = [actions[0], ...indices.map(i => nonHold[i])];
-    }
-
-    let best = candidates[0];
-    for (let i = 1; i < candidates.length; i++) {
-      if (candidates[i].eu > best.eu + rng.normal(0, 0.001)) best = candidates[i];
-    }
-
-    if (br?.enabled && br.p > 0 && rng.next() < br.p) {
-      const validActions = candidates.filter(a => a.name !== 'hold');
-      if (validActions.length > 0) best = rng.choice(validActions);
-    }
-
-    best.submit();
-  }
-
   learn() {
     this.roundsCompleted++;
   }
@@ -462,41 +372,30 @@ export class Agent {
 
 // --- Factory ---
 
-function generateEndowment(rng: PRNG, config: SimConfig): { cash: number; sharesPerAsset: number[] } {
+function generateEndowment(rng: PRNG, config: SimConfig): { cash: number; shares: number } {
   const [minCash, maxCash] = config.endowmentCash;
   const cash = Math.round(rng.uniform(minCash, maxCash));
-  const nAssets = config.assets?.length ?? 1;
-  const sharesPerAsset = new Array(nAssets).fill(0);
-  for (let j = 0; j < nAssets; j++) {
-    const weight = config.assets?.[j]?.weight ?? 1;
-    const pool = config.endowmentShares;
-    const baseShares = pool[Math.floor(rng.next() * pool.length)];
-    sharesPerAsset[j] = nAssets === 1 ? baseShares : Math.max(1, Math.round(baseShares * weight));
-  }
-  return { cash, sharesPerAsset };
+  const pool = config.endowmentShares;
+  const shares = pool[Math.floor(rng.next() * pool.length)];
+  return { cash, shares };
 }
 
 function makeAgent(
   id: number,
-  endow: { cash: number; sharesPerAsset: number[] },
+  endow: { cash: number; shares: number },
   rng: PRNG,
   fv1: number,
   riskPref: RiskPreference,
 ): Agent {
   const biasDir = rng.next() < 0.33 ? 1 : rng.next() < 0.5 ? -1 : 0;
-  const bias = biasDir * 0.15;
-  const nAssets = endow.sharesPerAsset.length;
-  const agent = new Agent(
-    id, endow.cash, endow.sharesPerAsset[0],
+  // Novice behavioral-bias magnitude, calibrated so round-1 mean-abs-deviation matches the
+  // m0nius batch (~3.6¢); experience decays it via BIAS_EXPERIENCE_DECAY.
+  const bias = biasDir * 0.12;
+  return new Agent(
+    id, endow.cash, endow.shares,
     bias, 'utility',
     fv1, riskPref, sampleRho(riskPref, rng),
-    nAssets,
   );
-  // Copy remaining asset shares (index 0 already set by constructor)
-  for (let j = 1; j < nAssets; j++) {
-    agent.sharesPerAsset[j] = endow.sharesPerAsset[j];
-  }
-  return agent;
 }
 
 // --- Simulation state (for incremental stepping) ---
@@ -508,7 +407,6 @@ export interface PeriodRecord {
   meanPrice: number;    // backward-compat: always assets[0].meanPrice
   trades: Trade[];      // backward-compat: always assets[0].trades
   agentStates: { id: number; belief: number; cash: number; shares: number; type: AgentType; rho: number; riskPref: RiskPreference }[];
-  assets?: AssetPeriodData[];  // per-asset data (populated when nAssets > 1)
 }
 
 export interface SessionResult {
@@ -535,13 +433,13 @@ export function fundamentalValue(
 
 /**
  * Run one round of CDA trading, returning one PeriodRecord per period.
+ * Single asset per round (config.assetClass) — there is no multi-asset portfolio.
  *
- * @param agents     Mutable agent array (updated in-place)
- * @param roundNum   1-indexed round number (recorded in output)
- * @param rng        Seeded PRNG
- * @param config     SimConfig — reads nPeriods, ticksPerPeriod, nAgents, fv1, assetClass
- * @param fvPath     Pre-generated FV path for asset 0 (single-asset backward compat)
- * @param fvPaths    Pre-generated FV paths per asset (multi-asset; overrides fvPath when provided)
+ * @param agents   Mutable agent array (updated in-place)
+ * @param roundNum 1-indexed round number (recorded in output)
+ * @param rng      Seeded PRNG
+ * @param config   SimConfig — reads nPeriods, ticksPerPeriod, nAgents, fv1, assetClass
+ * @param fvPath   Pre-generated FV path (used by stochastic asset classes)
  */
 export function runRound(
   agents: Agent[],
@@ -549,159 +447,91 @@ export function runRound(
   rng: PRNG,
   config: SimConfig = DLM_DEFAULTS,
   fvPath: number[] = [],
-  fvPaths?: number[][],
 ): PeriodRecord[] {
   const { nPeriods, ticksPerPeriod, fv1 } = config;
   const nAgents = agents.length;
-  // For single-asset, assetClass is the canonical field; assets[] is only authoritative for nAssets > 1.
-  const rawAssetConfigs = config.assets ?? [{ id: config.assetClass, weight: 1 }];
-  const nAssets = rawAssetConfigs.length;
-  // For single-asset, always use config.assetClass regardless of what assets[0].id says.
-  const assetConfigs = nAssets === 1
-    ? [{ id: config.assetClass, weight: rawAssetConfigs[0].weight }]
-    : rawAssetConfigs;
-
-  // Resolve per-asset FV path arrays
-  const resolvedFvPaths: number[][] = fvPaths ?? [fvPath];
 
   const records: PeriodRecord[] = [];
 
   for (const agent of agents) agent.resetBelief();
 
-  // Per-asset price tracking state
-  const lastPrices = new Array(nAssets).fill(fv1);
-  const prevPrices = new Array(nAssets).fill(fv1);
-  const lastDividends = new Array(nAssets).fill(config.expectedDiv);
-  const vwaps = new Array(nAssets).fill(fv1);
+  let lastPrice = fv1;
+  let prevPrice = fv1;
+  let lastDividend = config.expectedDiv;
 
   for (let period = 1; period <= nPeriods; period++) {
-    // Compute FV per asset for this period
-    const fvs = assetConfigs.map((ac, j) =>
-      computeFV(period, nPeriods, { ...config, assetClass: ac.id }, resolvedFvPaths[j] ?? [])
-    );
+    const fv = computeFV(period, nPeriods, config, fvPath);
+    const book = new OrderBook();
+    const allTrades: Trade[] = [];
+    let halted = false;
 
-    if (nAssets === 1) {
-      // --- Single-asset path (identical to pre-refactor behavior) ---
-      const fv = fvs[0];
-      const book = new OrderBook();
-      const allTrades: Trade[] = [];
-      let halted = false;
+    // Form each agent's belief (V_post) once for the whole period: compute all priors,
+    // take their cross-sectional mean (m0nius m̄_t peer signal), then blend.
+    const priors = agents.map(a => a.priorValuation(
+      fv, period, rng, config.experience, config.heuristics,
+      lastPrice, prevPrice, lastDividend, config.discountRate,
+      config.priorBias, config.priorNoise, config.valuationNoise, config.boundedRationality));
+    // Peer signal m̄_t weights confident (experienced, high-ω) agents more: experienced
+    // traders anchor the market near FV, so even a minority of them suppresses bubbles
+    // disproportionately (DLM point 2). In an all-novice round (equal ω) this is the plain
+    // mean, so the round-1 bubble is unaffected.
+    const wSum = priors.reduce((s, p) => s + p.omega, 0) || 1;
+    const mBar = priors.reduce((s, p) => s + p.omega * p.vPrior, 0) / wSum;
+    // Social learning (DLM point 2): novices defer to the experienced consensus when
+    // veterans are present, so they put LESS weight on their own (biased) prior as the
+    // veteran fraction rises. With no veterans (round 1) this is a no-op, so the round-1
+    // bubble is unaffected; in a mixed replacement round even a minority of veterans
+    // pulls novices toward fundamentals, abating the bubble for both treatments.
+    const vetFrac = nAgents > 0
+      ? agents.filter(a => a.roundsCompleted > 0).length / nAgents
+      : 0;
+    agents.forEach((a, i) => {
+      const omega = a.roundsCompleted === 0
+        ? priors[i].omega * (1 - vetFrac)
+        : priors[i].omega;
+      a.belief = a.blendBelief(priors[i].vPrior, omega, mBar);
+    });
 
-      for (let tick = 0; tick < ticksPerPeriod; tick++) {
-        if (halted) break;
+    for (let tick = 0; tick < ticksPerPeriod; tick++) {
+      if (halted) break;
 
-        const order = rng.permutation(nAgents);
-        for (const idx of order) {
-          agents[idx].maybeSubmit(fv, lastPrices[0], period, book, rng, config,
-            prevPrices[0], lastDividends[0], vwaps[0]);
-        }
-        const trades = book.match(agents, tick, 0);
-        allTrades.push(...trades);
+      const order = rng.permutation(nAgents);
+      for (const idx of order) {
+        agents[idx].maybeSubmit(fv, book, rng, config);
+      }
+      const trades = book.match(agents, tick);
+      allTrades.push(...trades);
 
-        if (config.regulator?.enabled && trades.length > 0) {
-          const lastTradePrice = trades[trades.length - 1].price;
-          if (fv > 0 && Math.abs(lastTradePrice - fv) / fv > config.regulator.threshold) {
-            halted = true;
-          }
+      if (config.regulator?.enabled && trades.length > 0) {
+        const lastTradePrice = trades[trades.length - 1].price;
+        if (fv > 0 && Math.abs(lastTradePrice - fv) / fv > config.regulator.threshold) {
+          halted = true;
         }
       }
-
-      const prices = allTrades.map(t => t.price);
-      const meanPrice = prices.length > 0
-        ? prices.reduce((a, b) => a + b, 0) / prices.length
-        : lastPrices[0] * 0.95;
-      prevPrices[0] = lastPrices[0];
-      lastPrices[0] = meanPrice;
-
-      const dividend = generateDividend(rng, config, period, resolvedFvPaths[0], nPeriods);
-      for (const agent of agents) agent.cash += agent.shares * dividend;
-      vwaps[0] = meanPrice;
-      lastDividends[0] = dividend;
-
-      records.push({
-        round: roundNum,
-        period,
-        fv,
-        meanPrice,
-        trades: allTrades,
-        agentStates: agents.map(a => ({
-          id: a.id, belief: a.belief, cash: a.cash, shares: a.shares, type: a.type,
-          rho: a.rho, riskPref: a.riskPref,
-        })),
-      });
-
-    } else {
-      // --- Multi-asset path ---
-      const books = Array.from({ length: nAssets }, () => new OrderBook());
-      const allTradesByAsset: Trade[][] = Array.from({ length: nAssets }, () => []);
-      let halted = false;
-
-      for (let tick = 0; tick < ticksPerPeriod; tick++) {
-        if (halted) break;
-
-        const order = rng.permutation(nAgents);
-        for (const idx of order) {
-          agents[idx].maybeSubmitMulti(
-            fvs, lastPrices, period, books, rng, config,
-            prevPrices, lastDividends, vwaps,
-          );
-        }
-
-        // Match all books; circuit breaker checks asset 0
-        for (let j = 0; j < nAssets; j++) {
-          const trades = books[j].match(agents, tick, j);
-          allTradesByAsset[j].push(...trades);
-
-          if (j === 0 && config.regulator?.enabled && trades.length > 0) {
-            const lastTradePrice = trades[trades.length - 1].price;
-            if (fvs[0] > 0 && Math.abs(lastTradePrice - fvs[0]) / fvs[0] > config.regulator.threshold) {
-              halted = true;
-            }
-          }
-        }
-      }
-
-      // Compute per-asset mean prices and pay dividends
-      const assetData: AssetPeriodData[] = [];
-      for (let j = 0; j < nAssets; j++) {
-        const tradePrices = allTradesByAsset[j].map(t => t.price);
-        const meanPriceJ = tradePrices.length > 0
-          ? tradePrices.reduce((a, b) => a + b, 0) / tradePrices.length
-          : lastPrices[j] * 0.95;
-        prevPrices[j] = lastPrices[j];
-        lastPrices[j] = meanPriceJ;
-
-        const dividend = generateDividend(rng, config, period, resolvedFvPaths[j] ?? [], nPeriods);
-        for (const agent of agents) agent.cash += agent.sharesPerAsset[j] * dividend;
-        vwaps[j] = meanPriceJ;
-        lastDividends[j] = dividend;
-
-        assetData.push({
-          assetId: assetConfigs[j].id,
-          fv: fvs[j],
-          meanPrice: meanPriceJ,
-          trades: allTradesByAsset[j],
-        });
-      }
-
-      // All trades flattened for the backward-compat top-level trades field
-      const allTrades = allTradesByAsset.flat();
-
-      records.push({
-        round: roundNum,
-        period,
-        fv: assetData[0].fv,
-        meanPrice: assetData[0].meanPrice,
-        trades: assetData[0].trades,
-        agentStates: agents.map(a => ({
-          id: a.id, belief: a.belief, cash: a.cash, shares: a.shares, type: a.type,
-          rho: a.rho, riskPref: a.riskPref,
-        })),
-        assets: assetData,
-      });
-
-      void allTrades; // suppress unused-var lint; allTrades used via assetData[0].trades
     }
+
+    const prices = allTrades.map(t => t.price);
+    const meanPrice = prices.length > 0
+      ? prices.reduce((a, b) => a + b, 0) / prices.length
+      : lastPrice * 0.95;
+    prevPrice = lastPrice;
+    lastPrice = meanPrice;
+
+    const dividend = generateDividend(rng, config, period, fvPath, nPeriods);
+    for (const agent of agents) agent.cash += agent.shares * dividend;
+    lastDividend = dividend;
+
+    records.push({
+      round: roundNum,
+      period,
+      fv,
+      meanPrice,
+      trades: allTrades,
+      agentStates: agents.map(a => ({
+        id: a.id, belief: a.belief, cash: a.cash, shares: a.shares, type: a.type,
+        rho: a.rho, riskPref: a.riskPref,
+      })),
+    });
   }
 
   return records;
@@ -741,17 +571,23 @@ export function runSession(
   const { nAgents, nRounds, fv1 } = config;
   const rng = new PRNG(config.seed);
 
-  const rawAssetConfigs = config.assets ?? [{ id: config.assetClass, weight: 1 }];
-  const nAssets = rawAssetConfigs.length;
-  // For single-asset, config.assetClass is canonical; assets[] only authoritative for nAssets > 1.
-  const assetConfigs = nAssets === 1
-    ? [{ id: config.assetClass, weight: rawAssetConfigs[0].weight }]
-    : rawAssetConfigs;
+  // Single asset per session. An optional postAssetClass swaps in at the replacement
+  // round (r = nRounds); the pre/post FV-path correlation drives the experience blend.
+  const preAsset = config.assetClass;
+  const swap = !!config.postAssetClass && config.postAssetClass !== preAsset;
+  const postAsset = swap ? config.postAssetClass! : preAsset;
 
-  // Generate one FV path per asset (seed offset by prime * asset index for independence)
-  const fvPaths = assetConfigs.map((ac, j) =>
-    generateFVPath(config.seed + j * 7919, { ...config, assetClass: ac.id })
-  );
+  const preFvPath = generateFVPath(config.seed, { ...config, assetClass: preAsset });
+  const postFvPath = swap
+    ? generateFVPath(config.seed + 7919, { ...config, assetClass: postAsset })
+    : preFvPath;
+
+  // |corr| of the two assets' FV paths over the session (1 when no swap / identical).
+  const preSeries = Array.from({ length: config.nPeriods }, (_, t) =>
+    computeFV(t + 1, config.nPeriods, { ...config, assetClass: preAsset }, preFvPath));
+  const postSeries = Array.from({ length: config.nPeriods }, (_, t) =>
+    computeFV(t + 1, config.nPeriods, { ...config, assetClass: postAsset }, postFvPath));
+  const assetCorr = swap ? Math.abs(pearson(preSeries, postSeries)) : 1;
 
   // Generate endowments per agent from config ranges (not hardcoded table)
   const agentEndowments = Array.from({ length: nAgents }, () => generateEndowment(rng, config));
@@ -775,17 +611,31 @@ export function runSession(
     // Restore endowments each round (DLM convention)
     for (let i = 0; i < agents.length; i++) {
       agents[i].cash = agentEndowments[i].cash;
-      agents[i].sharesPerAsset = [...agentEndowments[i].sharesPerAsset];
+      agents[i].shares = agentEndowments[i].shares;
     }
 
-    if (roundNum === nRounds) {
+    const isSwapRound = roundNum === nRounds;
+
+    if (isSwapRound) {
+      // R4-2/3 keeps 2/3 experienced (replace 1/3); R4-1/3 keeps 1/3 (replace 2/3).
       const replaceFraction = config.treatment === 'R4-2/3' ? 1 / 3 : 2 / 3;
       const nReplace = Math.max(1, Math.round(nAgents * replaceFraction));
       const replaceIds = rng.choiceN(nAgents, nReplace);
+      const replaced = new Set(replaceIds);
       for (const idx of replaceIds) {
         const riskPref = assignRiskPreference(idx, nAgents, config.riskSplit);
         const freshEndow = generateEndowment(rng, config);
         agents[idx] = makeAgent(idx, freshEndow, rng, fv1, riskPref);
+      }
+
+      // P4 — experience does not transfer across (uncorrelated) assets: when the asset
+      // swaps at the replacement round, discount surviving veterans' experience toward
+      // novice by (1 - |corr|). corr = 1 (same asset) keeps experience fully intact.
+      if (swap) {
+        for (let i = 0; i < agents.length; i++) {
+          if (replaced.has(i)) continue;
+          agents[i].roundsCompleted = Math.round(agents[i].roundsCompleted * assetCorr);
+        }
       }
 
       for (let i = 0; i < Math.min(config.nFundamentalists, agents.length); i++) {
@@ -797,8 +647,11 @@ export function runSession(
       }
     }
 
-    // Pass fvPaths for multi-asset; for single-asset, fvPaths[0] == the old fvPath
-    const records = runRound(agents, roundNum, rng, config, fvPaths[0], nAssets > 1 ? fvPaths : undefined);
+    // The replacement round trades the post-swap asset; earlier rounds trade the pre asset.
+    const roundAsset = isSwapRound ? postAsset : preAsset;
+    const roundFvPath = isSwapRound ? postFvPath : preFvPath;
+    const roundConfig = roundAsset === config.assetClass ? config : { ...config, assetClass: roundAsset };
+    const records = runRound(agents, roundNum, rng, roundConfig, roundFvPath);
     allPeriods.push(...records);
 
     for (const agent of agents) agent.learn();

@@ -6,7 +6,7 @@ import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 import { resolveAssetData } from '../../../lib/sim/assetHelpers';
 
 export function Fig2SignedMispricing() {
-  const { activePeriods, selectedAssetIdx } = useSimulator();
+  const { activePeriods } = useSimulator();
   const periods = activePeriods ?? [];
 
   const draw = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
@@ -57,7 +57,7 @@ export function Fig2SignedMispricing() {
     const ch = h - pad.top - pad.bottom;
 
     const values = periods.map(p => {
-      const { fv, meanPrice } = resolveAssetData(p, selectedAssetIdx);
+      const { fv, meanPrice } = resolveAssetData(p, 0);
       return (meanPrice - fv) / fv;
     });
     const absMax = Math.max(Math.abs(Math.min(...values)), Math.abs(Math.max(...values)), 0.05);
@@ -94,9 +94,9 @@ export function Fig2SignedMispricing() {
     ctx.textAlign = 'center';
     ctx.fillText('1', xAt(0), h - 4);
     ctx.fillText(String(periods.length), xAt(periods.length - 1), h - 4);
-  }, [periods, selectedAssetIdx]);
+  }, [periods]);
 
-  const canvasRef = useCanvas(draw, [periods, selectedAssetIdx]);
+  const canvasRef = useCanvas(draw, [periods]);
 
   return (
     <Figure

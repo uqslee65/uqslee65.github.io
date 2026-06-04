@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSimulator } from './SimulatorProvider';
 import { testConnection } from '../../lib/sim/llm-client';
-import type { AssetClass, PlanType, LLMConfig, LLMProvider, AssetConfig } from '../../lib/sim/types';
+import type { AssetClass, PlanType, LLMConfig, LLMProvider } from '../../lib/sim/types';
 import { LLM_SCALED_DEFAULTS } from '../../lib/sim/types';
 import { RiskPreferences } from './config/RiskPreferences';
 import { PROVIDER_PRESETS } from '../../lib/sim/providers';
@@ -147,18 +147,6 @@ export function ExperimentSetupModal({
     config.llm?.provider ?? 'gemini'
   );
 
-  // Multi-asset selection state
-  const [selectedAssets, setSelectedAssets] = useState<Set<AssetClass>>(() => {
-    const assets = config.assets ?? [{ id: config.assetClass, weight: 1 }];
-    return new Set(assets.map((a: AssetConfig) => a.id));
-  });
-  const [assetWeights, setAssetWeights] = useState<Record<string, number>>(() => {
-    const assets = config.assets ?? [{ id: config.assetClass, weight: 1 }];
-    const weights: Record<string, number> = {};
-    for (const a of assets) weights[a.id] = a.weight;
-    return weights;
-  });
-
   const [testing,    setTesting]    = useState(false);
   const [testResult, setTestResult] = useState<boolean | null>(null);
 
@@ -189,16 +177,7 @@ export function ExperimentSetupModal({
 
   const handleNext = () => {
     if (currentStep === 1) { setCurrentStep(2); return; }
-    if (currentStep === 2) {
-      // Sync selected assets to config
-      const assets: AssetConfig[] = [...selectedAssets].map(id => ({
-        id,
-        weight: selectedAssets.size === 1 ? 1 : (assetWeights[id] ?? 1 / selectedAssets.size),
-      }));
-      setConfig({ assets, assetClass: assets[0].id });
-      setCurrentStep(3);
-      return;
-    }
+    if (currentStep === 2) { setCurrentStep(3); return; }
     if (currentStep === 3) { setCurrentStep(planIsLLM ? 4 : 5); return; }
     if (currentStep === 4) { setCurrentStep(5); return; }
   };
@@ -213,10 +192,11 @@ export function ExperimentSetupModal({
   const handleRun = () => {
     if (saveAsDefaults) {
       const toSave = {
-        plan:      config.plan,
-        assets:    [...selectedAssets].map(id => ({ id, weight: assetWeights[id] ?? 1 })),
-        nAgents:   config.nAgents,
-        riskSplit: config.riskSplit,
+        plan:           config.plan,
+        assetClass:     config.assetClass,
+        postAssetClass: config.postAssetClass,
+        nAgents:        config.nAgents,
+        riskSplit:      config.riskSplit,
         llm: planIsLLM ? {
           baseUrl:       llmLocal.baseUrl,
           model:         llmLocal.model,
@@ -236,14 +216,13 @@ export function ExperimentSetupModal({
   const [lov, neu, av] = config.riskSplit;
 
   // --- Summary asset display ---
-  const assetSummary = selectedAssets.size === 1
-    ? ASSET_OPTIONS.find(a => a.id === [...selectedAssets][0])?.label ?? ''
-    : [...selectedAssets].map(id => {
-        const label = ASSET_OPTIONS.find(a => a.id === id)?.label ?? id;
-        const totalRaw = [...selectedAssets].reduce((s, aid) => s + (assetWeights[aid] ?? 1), 0);
-        const pct = Math.round(((assetWeights[id] ?? 1) / totalRaw) * 100);
-        return `${label} (${pct}%)`;
-      }).join(' + ');
+  const assetLabel = ASSET_OPTIONS.find(a => a.id === config.assetClass)?.label ?? config.assetClass;
+  const postAssetLabel = config.postAssetClass
+    ? ASSET_OPTIONS.find(a => a.id === config.postAssetClass)?.label ?? config.postAssetClass
+    : undefined;
+  const assetSummary = postAssetLabel
+    ? `${assetLabel} → ${postAssetLabel} at R4`
+    : assetLabel;
 
   return (
     <div
@@ -330,75 +309,107 @@ export function ExperimentSetupModal({
           </div>
         )}
 
-        {/* ── Step 2: Asset Portfolio ── */}
+        {/* ── Step 2: Asset Selection ── */}
         {currentStep === 2 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <p style={{ fontSize: '0.75rem', color: 'var(--fg-2)', marginBottom: '0.25rem' }}>
-              Select one or more asset classes for the experiment.
+              Select the asset class for this experiment.
             </p>
+
+            {/* Single-asset radio list */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
               {ASSET_OPTIONS.map(a => {
-                const checked = selectedAssets.has(a.id);
+                const selected = config.assetClass === a.id;
                 return (
-                  <label key={a.id} style={{
-                    display: 'flex', alignItems: 'flex-start', gap: '0.6rem',
-                    padding: '0.5rem 0.75rem',
-                    border: `1px solid ${checked ? 'var(--accent)' : 'var(--border)'}`,
-                    borderRadius: '6px',
-                    background: checked ? 'color-mix(in srgb, var(--accent) 6%, var(--bg-card))' : 'var(--bg-card)',
-                    cursor: 'pointer',
-                    transition: 'border-color 0.15s, background 0.15s',
-                  }}>
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => {
-                        const next = new Set(selectedAssets);
-                        if (checked && next.size > 1) next.delete(a.id);
-                        else next.add(a.id);
-                        setSelectedAssets(next);
-                        // Initialize weight for newly added asset
-                        if (!checked) {
-                          setAssetWeights(prev => ({ ...prev, [a.id]: 1 }));
-                        }
-                      }}
-                      style={{ marginTop: '0.1rem', accentColor: 'var(--accent)' }}
-                    />
+                  <button
+                    key={a.id}
+                    onClick={() => setConfig({ assetClass: a.id })}
+                    style={{
+                      display: 'flex', alignItems: 'flex-start', gap: '0.6rem',
+                      padding: '0.5rem 0.75rem',
+                      border: `2px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
+                      borderRadius: '6px',
+                      background: selected ? 'color-mix(in srgb, var(--accent) 8%, var(--bg-card))' : 'var(--bg-card)',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      width: '100%',
+                      transition: 'border-color 0.15s, background 0.15s',
+                    }}
+                  >
+                    <div style={{
+                      marginTop: '0.15rem',
+                      width: '14px', height: '14px', flexShrink: 0,
+                      borderRadius: '50%',
+                      border: `2px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
+                      background: selected ? 'var(--accent)' : 'transparent',
+                    }} />
                     <div>
                       <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--fg)' }}>{a.label}</span>
                       <span style={{ fontSize: '0.72rem', color: 'var(--fg-2)', display: 'block', lineHeight: 1.4 }}>{a.desc}</span>
                     </div>
-                  </label>
+                  </button>
                 );
               })}
             </div>
 
-            {/* Weight sliders — only shown when 2+ assets selected */}
-            {selectedAssets.size > 1 && (
-              <div style={{ marginTop: '0.5rem' }}>
-                <p style={{ ...labelSm, marginBottom: '0.5rem', display: 'block' }}>Portfolio Weights</p>
-                {[...selectedAssets].map(id => {
-                  const label = ASSET_OPTIONS.find(a => a.id === id)?.label ?? id;
-                  const rawWeight = assetWeights[id] ?? 1;
-                  const totalRaw = [...selectedAssets].reduce((s, aid) => s + (assetWeights[aid] ?? 1), 0);
-                  const pct = Math.round((rawWeight / totalRaw) * 100);
-                  return (
-                    <div key={id} style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.4rem' }}>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--fg)', minWidth: '120px' }}>{label}</span>
-                      <input
-                        type="range" min={1} max={10} step={1}
-                        value={rawWeight}
-                        onChange={e => setAssetWeights(prev => ({ ...prev, [id]: Number(e.target.value) }))}
-                        style={{ flex: 1, accentColor: 'var(--accent)' }}
-                      />
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--fg)', minWidth: '2.5rem', textAlign: 'right' }}>
-                        {pct}%
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+            {/* Swap toggle */}
+            <div style={{
+              borderTop: '1px solid var(--border)',
+              paddingTop: '0.75rem',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.5rem',
+            }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }}>
+                <input
+                  type="checkbox"
+                  checked={config.postAssetClass !== undefined}
+                  onChange={e => setConfig({ postAssetClass: e.target.checked ? (config.assetClass === ASSET_OPTIONS[0].id ? ASSET_OPTIONS[1].id : ASSET_OPTIONS[0].id) : undefined })}
+                  style={{ accentColor: 'var(--accent)' }}
+                />
+                <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--fg)' }}>
+                  Swap to a different asset in round 4
+                </span>
+              </label>
+              <p style={{ fontSize: '0.72rem', color: 'var(--fg-3)', margin: 0, lineHeight: 1.5 }}>
+                The market trades ONE asset; round 4 can optionally swap to a different asset, and traders' experience transfers only insofar as the two assets' fundamentals correlate.
+              </p>
+
+              {/* Post-asset selector — shown only when swap is enabled */}
+              {config.postAssetClass !== undefined && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', marginTop: '0.25rem' }}>
+                  <span style={{ ...labelSm, display: 'block' }}>Round-4 asset</span>
+                  {ASSET_OPTIONS.map(a => {
+                    const selected = config.postAssetClass === a.id;
+                    return (
+                      <button
+                        key={a.id}
+                        onClick={() => setConfig({ postAssetClass: a.id as AssetClass })}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '0.5rem',
+                          padding: '0.35rem 0.6rem',
+                          border: `2px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
+                          borderRadius: '6px',
+                          background: selected ? 'color-mix(in srgb, var(--accent) 8%, var(--bg-card))' : 'var(--bg-card)',
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          width: '100%',
+                          transition: 'border-color 0.15s, background 0.15s',
+                        }}
+                      >
+                        <div style={{
+                          width: '12px', height: '12px', flexShrink: 0,
+                          borderRadius: '50%',
+                          border: `2px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
+                          background: selected ? 'var(--accent)' : 'transparent',
+                        }} />
+                        <span style={{ fontSize: '0.78rem', fontWeight: selected ? 600 : 400, color: 'var(--fg)' }}>{a.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
 

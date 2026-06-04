@@ -213,8 +213,8 @@ export function SimulatorProvider({ children }: { children: ReactNode }) {
       setPlaying(false);
       setReplayMode('live');
     }
-    // Reset asset selection when asset list changes (guards out-of-bounds)
-    if (partial.assets !== undefined || partial.assetClass !== undefined) {
+    // Reset asset selection index when assetClass changes
+    if (partial.assetClass !== undefined) {
       setSelectedAssetIdxState(0);
     }
   }, [config.plan]);

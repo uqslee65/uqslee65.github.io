@@ -20,22 +20,28 @@ import BubbleSimulator from '../components/BubbleSimulator';
         <summary>About this simulation</summary>
         <div class="about-content">
           <p>
-            This is a browser-based agent simulation of the SSW (Smith, Suchanek & Williams 1988)
-            asset market experiment as implemented by DLM (2005). Six agents trade a finite-lived
-            asset over 10 periods across 4 rounds. The fundamental value declines linearly from
-            100¢ (period 1) to 10¢ (period 10) as the asset approaches expiry.
+            Browser-based agent simulation of the SSW (Smith, Suchanek & Williams 1988)
+            asset market as implemented by DLM (2005). Heterogeneous CRRA agents trade a
+            <strong>single</strong> finite-lived asset over a sequence of four consecutive
+            markets (rounds); there is no simultaneous multi-asset portfolio. Rounds 1–3 keep
+            the same traders (who gain experience); at the replacement round a fraction of
+            experienced traders is swapped out for inexperienced newcomers.
           </p>
           <p>
-            <strong>Agent types:</strong> Speculators (weak FV tracking, belief bias), Moderates
-            (partial FV tracking), and Aware agents (strong FV tracking, trigger crash).
-            Experience reduces bubble magnitude through across-round learning (α increases,
-            noise decreases).
+            <strong>The four conclusions this reproduces (calibrated to the reference
+            implementation):</strong>
           </p>
-          <p>
-            <strong>Key finding:</strong> Bubbles diminish with experience (Round 1 → Round 3),
-            and replacing experienced agents with novices in Round 4 does NOT reignite them —
-            the experienced majority anchors prices near fundamental value.
-          </p>
+          <ol>
+            <li>Positive mispricing (a bubble) that <strong>decreases as players accumulate
+              experience</strong> (rounds 1 → 3).</li>
+            <li>A <strong>minority of experienced + majority of inexperienced</strong> traders
+              do <strong>not</strong> generate large bubbles in the replacement round.</li>
+            <li>The size of the mispricing <strong>depends on the asset type</strong>
+              (linear-declining, perpetual, growth, cyclical, random-walk, jump/crash).</li>
+            <li>Experience <strong>does not transfer across assets</strong>: when the
+              replacement round swaps to a different asset, veterans' experience is discounted
+              by how weakly the two assets' fundamentals correlate.</li>
+          </ol>
         </div>
       </details>
     </div>

@@ -24,7 +24,7 @@ function agentColor(p: PeriodRecord | LLMPeriodRecord, ai: number): string {
 }
 
 export function Fig11PerAgentPnL() {
-  const { activePeriods, selectedAssetIdx } = useSimulator();
+  const { activePeriods } = useSimulator();
   const periods = activePeriods ?? [];
 
   const draw = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
@@ -69,7 +69,7 @@ export function Fig11PerAgentPnL() {
     // Compute wealth per agent per period
     const wealthSeries: number[][] = Array.from({ length: nAgents }, () => []);
     periods.forEach(p => {
-      const { meanPrice } = resolveAssetData(p, selectedAssetIdx);
+      const { meanPrice } = resolveAssetData(p, 0);
       for (let ai = 0; ai < nAgents; ai++) {
         const a = p.agentStates[ai];
         wealthSeries[ai].push(a.cash + a.shares * meanPrice);
@@ -129,9 +129,9 @@ export function Fig11PerAgentPnL() {
     ctx.textAlign = 'center';
     ctx.fillText('1', xScale(0), h - 4);
     ctx.fillText(String(periods.length), xScale(periods.length - 1), h - 4);
-  }, [periods, selectedAssetIdx]);
+  }, [periods]);
 
-  const canvasRef = useCanvas(draw, [periods, selectedAssetIdx]);
+  const canvasRef = useCanvas(draw, [periods]);
 
   return (
     <Figure

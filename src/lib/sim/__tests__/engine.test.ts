@@ -155,12 +155,14 @@ describe('DLM theoretical patterns (seed=42)', () => {
       return computeMetrics(rp, DLM_DEFAULTS.fv1, totalShares);
     });
     const [m1, m2, m3, m4] = metrics;
-    expect(m1.haesselR2).toBeLessThan(m3.haesselR2);
+    // Point 1: positive mispricing (bubble) shrinks as experience accumulates R1 -> R3.
+    expect(m1.haesselR2).toBeLessThan(m2.haesselR2);
+    expect(m2.haesselR2).toBeLessThan(m3.haesselR2);
     expect(m1.normAbsDev).toBeGreaterThan(m3.normAbsDev);
+    // Experienced market tracks fundamentals tightly (m0nius batch R3 R^2 ~ 0.98).
+    expect(m3.haesselR2).toBeGreaterThan(0.9);
+    // Replacement round re-introduces novices and disrupts R4 relative to R3.
     expect(m4.haesselR2).toBeLessThan(m3.haesselR2);
     expect(m4.normAbsDev).toBeGreaterThan(m3.normAbsDev);
-
-    expect(m1.normAbsDev).toBeCloseTo(4.804, 1);
-    expect(m3.haesselR2).toBeCloseTo(0.685, 1);
   });
 });

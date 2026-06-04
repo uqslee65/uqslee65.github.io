@@ -13,11 +13,6 @@ export type AssetClass =
   | 'random-walk'
   | 'jump-crash';
 
-export interface AssetConfig {
-  id: AssetClass;
-  weight: number;
-}
-
 export type LLMProvider = 'deepseek' | 'ollama' | 'openai' | 'anthropic' | 'gemini' | 'custom';
 export type ApiFormat = 'ollama' | 'openai-compat' | 'anthropic' | 'gemini';
 
@@ -27,7 +22,6 @@ export interface LLMAgentState {
   rho: number;
   cash: number;
   shares: number;
-  sharesPerAsset?: number[];
   bias: number;
   omega: number;
   belief: number;
@@ -40,7 +34,6 @@ export interface LLMDecision {
   action: LLMAction;
   spread: number;
   reasoning?: string;
-  assetId?: string;  // which asset to trade (multi-asset only)
 }
 
 export interface LLMConfig {
@@ -86,7 +79,11 @@ export interface HeuristicWeights {
 export interface SimConfig {
   plan: PlanType;
   assetClass: AssetClass;
-  assets?: AssetConfig[];
+  // Optional asset for the replacement round (r = nRounds): when set and different from
+  // assetClass, the market swaps to this asset at the replacement round and experienced
+  // traders' experience is discounted toward novice by (1 - |corr|) of the two FV paths.
+  // Single asset per session — there is no simultaneous multi-asset portfolio.
+  postAssetClass?: AssetClass;
   seed: number;
   nAgents: number;
   nRounds: number;
@@ -101,6 +98,7 @@ export interface SimConfig {
   endowmentCash: [number, number];    // U[min, max] in cents
   endowmentShares: number[];          // possible share counts (pick uniformly)
   discountRate: number;               // for perpetual/growth assets
+  valuationNoise: number;             // prior-noise half-width as a multiplicative fraction (m0nius default 0.03 = ±3%)
   experience: ExperienceCurveConfig;
   heuristics: HeuristicWeights;
   boundedRationality: BoundedRationalityConfig;
@@ -116,8 +114,8 @@ export interface SimConfig {
 // --- Shared defaults for sub-configs ---
 
 export const DEFAULT_EXPERIENCE: ExperienceCurveConfig = {
-  alpha0: 0.40,
-  sigma0: 15,
+  alpha0: 1.0,
+  sigma0: 5,
   omega0: 0.60,
   gammaAlpha: 0.15,
   gammaSigma: 0.30,
@@ -154,7 +152,6 @@ export const DEFAULT_REGULATOR: RegulatorConfig = {
 export const DLM_DEFAULTS: SimConfig = {
   plan: 'plan-i',
   assetClass: 'linear-declining',
-  assets: [{ id: 'linear-declining', weight: 1 }],
   seed: 42,
   nAgents: 10,
   nRounds: 4,
@@ -168,6 +165,7 @@ export const DLM_DEFAULTS: SimConfig = {
   endowmentCash: [800, 1200],
   endowmentShares: [2, 3, 4],
   discountRate: 0.05,
+  valuationNoise: 0.03,
   experience: DEFAULT_EXPERIENCE,
   heuristics: DEFAULT_HEURISTICS,
   boundedRationality: DEFAULT_BOUNDED_RATIONALITY,
@@ -186,7 +184,6 @@ export const DLM_DEFAULTS: SimConfig = {
 export const LLM_SCALED_DEFAULTS: SimConfig = {
   plan: 'plan-ii',
   assetClass: 'linear-declining',
-  assets: [{ id: 'linear-declining', weight: 1 }],
   seed: 42,
   nAgents: 10,
   nRounds: 4,
@@ -200,6 +197,7 @@ export const LLM_SCALED_DEFAULTS: SimConfig = {
   endowmentCash: [800, 1200],
   endowmentShares: [2, 3, 4],
   discountRate: 0.05,
+  valuationNoise: 0.03,
   experience: DEFAULT_EXPERIENCE,
   heuristics: DEFAULT_HEURISTICS,
   boundedRationality: DEFAULT_BOUNDED_RATIONALITY,
@@ -220,8 +218,6 @@ export interface LLMPeriodRecord {
   agentStates: LLMAgentState[];
   trustMatrix: number[][];
   broadcastMessages?: { agentId: number; message: string; tick: number }[];
-  // Multi-asset data (populated when nAssets > 1)
-  assets?: { assetId: string; fv: number; meanPrice: number; trades: { buyer: number; seller: number; price: number; tick: number; assetIdx?: number }[] }[];
 }
 
 export interface LLMSessionResult {

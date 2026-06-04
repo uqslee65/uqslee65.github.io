@@ -6,7 +6,7 @@ import { FIGURE_TOOLTIPS } from '../../../lib/sim/tooltips';
 import { resolveAssetData } from '../../../lib/sim/assetHelpers';
 
 export function Fig3Volume() {
-  const { activePeriods, activeIdx, selectedAssetIdx } = useSimulator();
+  const { activePeriods, activeIdx } = useSimulator();
   const periods = activePeriods ?? [];
 
   const draw = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
@@ -50,7 +50,7 @@ export function Fig3Volume() {
     const cw = w - pad.left - pad.right;
     const ch = h - pad.top - pad.bottom;
 
-    const volumes = periods.map(p => resolveAssetData(p, selectedAssetIdx).trades.length);
+    const volumes = periods.map(p => resolveAssetData(p, 0).trades.length);
     const maxVol = Math.max(...volumes, 1);
     const barW = Math.max(2, cw / periods.length - 2);
     const xAt = (i: number) => pad.left + (i + 0.5) * (cw / periods.length);
@@ -73,9 +73,9 @@ export function Fig3Volume() {
     ctx.textAlign = 'center';
     ctx.fillText('1', xAt(0), h - 4);
     ctx.fillText(String(periods.length), xAt(periods.length - 1), h - 4);
-  }, [periods, activeIdx, selectedAssetIdx]);
+  }, [periods, activeIdx]);
 
-  const canvasRef = useCanvas(draw, [periods, activeIdx, selectedAssetIdx]);
+  const canvasRef = useCanvas(draw, [periods, activeIdx]);
 
   return (
     <Figure figNum="3" title="Trade Volume" titleTooltip={FIGURE_TOOLTIPS['fig3']} note="Number of trades per period. Highlighted bar = current period.">

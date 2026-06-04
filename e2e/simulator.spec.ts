@@ -13,7 +13,6 @@ test.beforeEach(async ({ request }) => {
 
 async function openSetupAndRun(page: import('@playwright/test').Page, opts?: {
   selectPlanII?: boolean;
-  addSecondAsset?: boolean;
   configureGemini?: boolean;
   overrideConfig?: Record<string, unknown>;
   setupBackendUrl?: boolean;
@@ -39,11 +38,7 @@ async function openSetupAndRun(page: import('@playwright/test').Page, opts?: {
   // Step 1: Plan selection — click Next
   await page.getByRole('button', { name: 'Next →' }).click();
 
-  // Step 2: Asset portfolio
-  if (opts?.addSecondAsset) {
-    const perpetualCheckbox = page.locator('label', { hasText: 'Constant Perpetual' }).locator('input[type="checkbox"]');
-    await perpetualCheckbox.check();
-  }
+  // Step 2: Single asset (default Linear Declining) — optional R4 swap is set via overrideConfig
   await page.getByRole('button', { name: 'Next →' }).click();
 
   // Step 3: Agents + risk
@@ -104,30 +99,26 @@ test('Plan I single-asset smoke', async ({ page }) => {
   }
 });
 
-// --- Test 2: Plan I multi-asset smoke ---
-test('Plan I multi-asset smoke', async ({ page }) => {
+// --- Test 2: Plan I round-4 asset-swap smoke (single asset, swaps at the replacement round) ---
+test('Plan I R4 asset-swap smoke', async ({ page }) => {
   test.setTimeout(60_000);
-  await openSetupAndRun(page, { addSecondAsset: true });
+  await openSetupAndRun(page, { overrideConfig: { postAssetClass: 'cyclical' } });
 
-  // Asset tabs should appear for multi-asset
-  const tabs = page.getByTestId('asset-tabs');
-  await expect(tabs).toBeVisible({ timeout: 10_000 });
-
-  // Verify two tabs exist
-  const tabButtons = tabs.locator('button');
-  await expect(tabButtons).toHaveCount(2);
-
-  // Click second tab (Constant Perpetual)
-  await tabButtons.nth(1).click();
-  await page.waitForTimeout(300);
-
-  // Click first tab back (Linear Declining)
-  await tabButtons.nth(0).click();
-  await page.waitForTimeout(300);
-
-  // Verify chart still has data
-  await expect(page.getByTestId('price-chart')).toBeVisible();
+  // Single price chart (no multi-asset tabs — portfolios are not supported).
+  await expect(page.getByTestId('price-chart')).toBeVisible({ timeout: 10_000 });
   await expect(page.getByTestId('fv-path')).toBeVisible();
+  await expect(page.getByTestId('asset-tabs')).toHaveCount(0);
+
+  // Download JSON and verify the swap is recorded and the session is single-asset.
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByTestId('download-json').click(),
+  ]);
+  const data = JSON.parse(fs.readFileSync((await download.path())!, 'utf-8'));
+  expect(data.config.plan).toBe('plan-i');
+  expect(data.config.postAssetClass).toBe('cyclical');
+  expect(data.config.assets).toBeUndefined();
+  expect(data.periods).toHaveLength(80);
 });
 
 // --- Test 3: Plan II Gemini smoke ---

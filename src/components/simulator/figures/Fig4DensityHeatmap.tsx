@@ -8,7 +8,7 @@ import { resolveAssetData } from '../../../lib/sim/assetHelpers';
 const N_BINS = 20;
 
 export function Fig4DensityHeatmap() {
-  const { activePeriods, selectedAssetIdx } = useSimulator();
+  const { activePeriods } = useSimulator();
   const periods = activePeriods ?? [];
 
   const draw = useCallback((ctx: CanvasRenderingContext2D, w: number, h: number) => {
@@ -54,8 +54,8 @@ export function Fig4DensityHeatmap() {
 
     // Collect all trade prices for range
     const allPrices: number[] = [];
-    periods.forEach(p => resolveAssetData(p, selectedAssetIdx).trades.forEach(t => allPrices.push(t.price)));
-    const fvs = periods.map(p => resolveAssetData(p, selectedAssetIdx).fv);
+    periods.forEach(p => resolveAssetData(p, 0).trades.forEach(t => allPrices.push(t.price)));
+    const fvs = periods.map(p => resolveAssetData(p, 0).fv);
     const allVals = [...allPrices, ...fvs];
     if (allVals.length === 0) return;
 
@@ -68,7 +68,7 @@ export function Fig4DensityHeatmap() {
       Math.min(N_BINS - 1, Math.floor(((price - pMin) / (pMax - pMin)) * N_BINS));
 
     periods.forEach((p, pi) => {
-      resolveAssetData(p, selectedAssetIdx).trades.forEach(t => {
+      resolveAssetData(p, 0).trades.forEach(t => {
         grid[pi][toBin(t.price)]++;
       });
     });
@@ -102,7 +102,7 @@ export function Fig4DensityHeatmap() {
     periods.forEach((p, pi) => {
       const x1 = pad.left + pi * cellW;
       const x2 = x1 + cellW;
-      const y = pad.top + ch - ((resolveAssetData(p, selectedAssetIdx).fv - pMin) / (pMax - pMin)) * ch;
+      const y = pad.top + ch - ((resolveAssetData(p, 0).fv - pMin) / (pMax - pMin)) * ch;
       ctx.beginPath();
       ctx.moveTo(x1, y);
       ctx.lineTo(x2, y);
@@ -119,9 +119,9 @@ export function Fig4DensityHeatmap() {
     ctx.textAlign = 'center';
     ctx.fillText('1', pad.left + cellW / 2, h - 4);
     ctx.fillText(String(periods.length), pad.left + (periods.length - 0.5) * cellW, h - 4);
-  }, [periods, selectedAssetIdx]);
+  }, [periods]);
 
-  const canvasRef = useCanvas(draw, [periods, selectedAssetIdx]);
+  const canvasRef = useCanvas(draw, [periods]);
 
   return (
     <Figure

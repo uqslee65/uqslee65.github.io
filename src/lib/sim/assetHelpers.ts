@@ -2,17 +2,16 @@ import type { PeriodRecord } from './engine';
 import type { LLMPeriodRecord } from './types';
 
 /**
- * Resolves per-asset data from a period record, falling back to the top-level
- * backward-compat fields (fv, meanPrice, trades) when multi-asset data is absent.
+ * Returns the top-level fv/meanPrice/trades from a period record.
+ * The assetIdx param is accepted but ignored — records are single-asset only.
  */
 export function resolveAssetData(
   p: PeriodRecord | LLMPeriodRecord,
-  assetIdx: number,
+  _assetIdx?: number,
 ) {
-  const assetData = 'assets' in p && p.assets?.[assetIdx];
   return {
-    fv: assetData ? assetData.fv : p.fv,
-    meanPrice: assetData ? assetData.meanPrice : p.meanPrice,
-    trades: assetData ? assetData.trades : p.trades,
+    fv: p.fv,
+    meanPrice: p.meanPrice,
+    trades: p.trades,
   };
 }

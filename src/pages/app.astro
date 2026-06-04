@@ -20,19 +20,16 @@ import BubbleSimulator from '../components/BubbleSimulator';
         <div class="about-content">
           <p>
             Browser-based agent simulation of the SSW (Smith, Suchanek & Williams 1988)
-            asset market experiment as implemented by DLM (2005). Agents trade a finite-lived
-            asset over multiple periods across rounds. The fundamental value declines linearly
-            as the asset approaches expiry.
+            asset market as implemented by DLM (2005). Heterogeneous CRRA agents trade a
+            <strong>single</strong> finite-lived asset across four consecutive rounds (no
+            multi-asset portfolio); experienced traders are partially replaced by novices at
+            the replacement round, optionally swapping to a different asset.
           </p>
           <p>
-            <strong>Agent types:</strong> Speculators (weak FV tracking, belief bias), Moderates
-            (partial FV tracking), and Aware agents (strong FV tracking, trigger crash).
-            Experience reduces bubble magnitude through across-round learning.
-          </p>
-          <p>
-            <strong>Key finding:</strong> Bubbles diminish with experience, and replacing
-            experienced agents with novices does NOT reignite them — the experienced majority
-            anchors prices near fundamental value.
+            <strong>Reproduces the four conclusions:</strong> (1) positive mispricing that
+            decreases with experience; (2) a minority of experienced + majority of
+            inexperienced traders do not generate large bubbles; (3) mispricing depends on the
+            asset type; (4) experience does not transfer across uncorrelated assets.
           </p>
         </div>
       </details>
