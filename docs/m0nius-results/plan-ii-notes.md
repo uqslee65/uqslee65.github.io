@@ -38,6 +38,21 @@ declining DLM asset, not a temperature/risk artifact. Strongly implies the refer
 (if it exists) used a different/stronger model, OR Plan II per-round numbers were never part of
 the m0nius reference at all (the validated reference was Plan I only).
 
+**Plan III is ALSO degenerate (4th attempt):** label-only prompt (utility omitted), default
+risk 33/34/33, temp 0.4 → 69 ASK / 1 HOLD / 0 BID (early-aborted). So the collapse is **not**
+caused by the utility function in the prompt — it is Flash-Lite uniformly selling the declining
+DLM asset, identical across Plan II and Plan III.
+
+## CONCLUSION (Flash-Lite)
+
+Under Gemini Flash-Lite, **both** LLM plans collapse to a one-sided (all-ASK) market on the
+declining asset → no liquidity → per-round meanDev is undefined. This is itself a finding:
+a cheap, capable LLM coordinates on the single rational strategy (sell a declining asset),
+destroying the two-sided trading that the human/algorithmic DLM market relies on. A per-round
+mispricing reconciliation for Plan II/III is therefore **not possible with Flash-Lite**; it
+would require a model that sustains heterogeneous beliefs (stronger Gemini / GPT / Claude),
+which trades off against the cost constraint.
+
 ## Options (need a decision — each costs Gemini quota)
 
 1. **Tune for trading** (raise temperature → behavioral diversity; or risk-loving-heavy mix →
