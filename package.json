@@ -23,7 +23,7 @@
     "rehype-katex": "^7.0.1",
     "remark-math": "^6.0.0",
     "tailwindcss": "^4.1.0",
-    "zigan-simulation": "file:vendor/zigan-simulation-1.0.1.tgz"
+    "zigan-simulation": "file:vendor/zigan-simulation-1.0.2.tgz"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
