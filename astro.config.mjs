@@ -1,14 +1,9 @@
 import { defineConfig } from 'astro/config';
-import { fileURLToPath } from 'node:url';
 import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 import mdx from '@astrojs/mdx';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
-
-// The simulator lives in the sibling package ../zigan-simulation; resolve it to source so
-// Vite transpiles its TS/TSX as first-party code (and dedupe React to avoid a second copy).
-const ziganEntry = fileURLToPath(new URL('../zigan-simulation/src/index.ts', import.meta.url));
 
 export default defineConfig({
   site: 'https://uqslee65.github.io',
@@ -19,12 +14,16 @@ export default defineConfig({
   },
   vite: {
     plugins: [tailwindcss()],
+    // The simulator is the zigan-simulation package, vendored as a tarball under vendor/ so
+    // CI (GitHub Pages) can build it without the sibling source checkout. ssr.noExternal makes
+    // Vite transpile its TS/TSX; dedupe React so there is only one copy.
     resolve: {
-      alias: { 'zigan-simulation': ziganEntry },
       dedupe: ['react', 'react-dom'],
     },
+    ssr: {
+      noExternal: ['zigan-simulation'],
+    },
     server: {
-      fs: { allow: ['..'] },
       proxy: {
         '/ollama': {
           target: 'http://localhost:11434',
