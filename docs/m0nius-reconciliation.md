@@ -146,3 +146,37 @@ numbers m0nius reports. To never repeat that:
 4. **Scope warning**: grid × 3 plans, II/III LLM-bound & stochastic both sides = real tokens
    (m0nius's + ours) + slow (single browser, batch-averaged). Confirm dimensions before
    running 100+ cells; `log()` any silent cap.
+
+---
+
+## 9. Progress — 2026-06-06 session
+
+### Headless harness (the unlock)
+m0nius is a client-side app exposing its engine as globals: **`window.App`** (controller/store)
+and **`window.AI`** (LLM client). Key facts:
+- `App.tunables` = `{expAlpha0, expSigma0, expOmega0, expGammaAlpha, expGammaSigma, betaAnchor/Trend/Dividend/Narrative, biasAmount, applyBias, applyNoise, valuationNoise, …}` — set directly (no slider wrangling). `_syncTunableConfigs()` folds them into the engine on `rebuild()`.
+- `App.seed` is real (UI hides it); `reset()` re-rolls per session → 10-session batches are stochastic (average is the reference).
+- `App.config.ticksPerFrame` + `tickInterval` = pacing; cranking them (turbo) runs a **Plan I 10-session batch headless in ~4s** via `App.start()` (poll `App._batchRunning`/`_exportSessions.length>=10`).
+- Results: `App.batchResults` / `App._buildBatchExport()` → per-(session,round) `{meanDev, turnover, volume, payoff}`. **meanDev = mean over the round's trades of |price − FV(period)|.** This is m0nius's OWN number (closes S921).
+- Asset ids: `linearDeclining, constantPerpetual, linearGrowth, cyclicalSine, randomWalk, jumpCrash`.
+- A reusable in-page harness was installed at `window.__H` (turbo + apply(cfg) + run(cfg) + grid/runChunk). Ephemeral (lost on reload); re-derive from this doc.
+
+### Resolved OPEN probes (§7)
+- **Export schema**: `{meta, sessions, batchSummary}`. `meta.exportedAt` is a stamp only — **NO runtime/compute field**. Per-round = meanDev + turnover only (no per-round R²/amplitude). Runtimes must be MEASURED, not exported.
+- **Plan II/III runnable?** YES — m0nius runs the LLM client-side. Gemini key auths through m0nius's proxy (`…rootdirectorylab.com/v1beta`, Google-compatible). One Flash-Lite call = "OK" in ~3.9s.
+- **Provider/model**: Gemini, `gemini-3.1-flash-lite-preview` (user-supplied key; key NOT stored here — in-browser only; rotate after use).
+- **N=10 vs "fixed N=100"**: `App.TOTAL_N=10`; the N=100 tooltip is a rescale note, not the agent count.
+- **Prior bias**: ours `DLM_DEFAULTS.priorBias=true, priorNoise=true` — same as m0nius `applyBias/applyNoise=true`. Engines match at the tuned point via *different* bias/noise mechanisms.
+- **random-walk/jump-crash**: exist on BOTH (ours `AssetClass` has them).
+- **Re-verify default**: PASSED — m0nius baseline {3.58,2.54,1.72,2.28} ≈ stored {3.65,2.49,1.72,2.28}.
+
+### Plan I — DONE (config sweep, ours vs theirs)
+- m0nius 22-config sweep: `m0nius-results/plan-i-m0nius.json`
+- ours 22-config sweep (vendored engine, 10 seeds): `m0nius-results/plan-i-ours.json` (runner: `scripts/our-plan-i-grid.test.ts` + `scripts/vitest.grid.config.mts`)
+- comparison + two-lever analysis + findings: `m0nius-results/plan-i-comparison.md`
+- Headline: match holds at baseline + on N/risk/standard-assets/α₀-near-knee; diverges on σ₀ (inert in ours), ω₀ (muted in ours), random-walk (12¢ vs 1.3¢), high-α₀ bias floor, γα sensitivity. Ours = faithful *reduced* model calibrated at default, not a bit-for-bit reimplementation.
+
+### Plan II/III — runtime reality (BLOCKS full sweep)
+- Per-agent LLM call each period → ≈ N×periods×rounds×sessions = **~8,000 calls/config** at ~2–4s ≈ **hours/config**. Full 22×2 sweep infeasible as stated.
+- Runtime metric (user's 3rd ask) only needs a few runs: per-call latency × call count (from `App.logger.llmCalls`) + total wall-clock, **same Gemini model both sides**. Plan I runtime is animation/turbo-dominated → not compared.
+- **Status: awaiting feasible Plan II/III scope decision.**

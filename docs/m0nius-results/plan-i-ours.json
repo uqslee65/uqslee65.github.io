@@ -1,0 +1,574 @@
+{
+  "_meta": {
+    "source": "OUR engine — vendored zigan-simulation 1.0.5 (node_modules/zigan-simulation/src/lib/sim)",
+    "generatedAt": "2026-06-06",
+    "plan": "I (algorithmic; structural partial-adjustment bubble)",
+    "seeds": [
+      1,
+      98,
+      195,
+      292,
+      389,
+      486,
+      583,
+      680,
+      777,
+      874
+    ],
+    "method": "runSession() per seed; per-round meanDev = mean over the round trades of |trade.price - period.fv|; turnover = trades/(N*3); averaged over 10 seeds. IDENTICAL meanDev definition to m0nius.",
+    "ours_defaults": {
+      "alpha0": 0.6,
+      "gammaAlpha": 0.09,
+      "sigma0": 5,
+      "omega0": 0.6,
+      "gammaSigma": 0.3,
+      "priorBias": true
+    },
+    "caveats": [
+      "CALIBRATION LEVERS: ours alpha0 default=0.6, m0nius=1.0; ours gammaAlpha=0.09, m0nius=0.15. For g02-g04/g09-g10 ours is set to the SAME ABSOLUTE value m0nius used, so absolute deltas there are NOT apples-to-apples — see alphaSweep for the offset overlay.",
+      "TREATMENT: ours has a 2-level enum (replace 1/3 = R4-2/3, replace 2/3 = R4-1/3). m0nius default rate=0.5 has no exact counterpart -> R4 at rate 0.5 (g01-g14,g17-g22) is NOT exactly comparable. R1-R3 are pre-replacement and always comparable. g15 (0.333->R4-2/3) and g16 (0.667->R4-1/3) are exact.",
+      "priorBias AND priorNoise are both ON in ours DLM_DEFAULTS (true/true) — same as m0nius (applyBias/applyNoise=true). Not modified. The engines match at the tuned point but use different internal bias/noise mechanisms (see comparison doc).",
+      "EMPIRICAL: ours experience.sigma0 and gammaSigma are ~inert on mean|dev| (g05==g06==g11==g12==baseline), whereas m0nius's expSigma0 actively scales mispricing — a real behavioral divergence, not a runner bug."
+    ]
+  },
+  "results": [
+    {
+      "id": "g01",
+      "label": "baseline (default)",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.34,
+          "turn": 14.55
+        },
+        "2": {
+          "dev": 2.4,
+          "turn": 15.1
+        },
+        "3": {
+          "dev": 1.81,
+          "turn": 15.36
+        },
+        "4": {
+          "dev": 2.18,
+          "turn": 9.13
+        }
+      }
+    },
+    {
+      "id": "g02",
+      "label": "alpha0=0.5",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 4.7,
+          "turn": 14.73
+        },
+        "2": {
+          "dev": 3.49,
+          "turn": 14.61
+        },
+        "3": {
+          "dev": 2.64,
+          "turn": 15.16
+        },
+        "4": {
+          "dev": 3.26,
+          "turn": 8.54
+        }
+      }
+    },
+    {
+      "id": "g03",
+      "label": "alpha0=1.5",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 0.48,
+          "turn": 14.24
+        },
+        "2": {
+          "dev": 0.52,
+          "turn": 14.53
+        },
+        "3": {
+          "dev": 0.59,
+          "turn": 15.48
+        },
+        "4": {
+          "dev": 0.53,
+          "turn": 14.94
+        }
+      }
+    },
+    {
+      "id": "g04",
+      "label": "alpha0=2.0",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 0.48,
+          "turn": 14.24
+        },
+        "2": {
+          "dev": 0.52,
+          "turn": 14.53
+        },
+        "3": {
+          "dev": 0.59,
+          "turn": 15.48
+        },
+        "4": {
+          "dev": 0.53,
+          "turn": 14.94
+        }
+      }
+    },
+    {
+      "id": "g05",
+      "label": "sigma0=2",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.34,
+          "turn": 14.55
+        },
+        "2": {
+          "dev": 2.4,
+          "turn": 15.1
+        },
+        "3": {
+          "dev": 1.81,
+          "turn": 15.36
+        },
+        "4": {
+          "dev": 2.18,
+          "turn": 9.13
+        }
+      }
+    },
+    {
+      "id": "g06",
+      "label": "sigma0=10",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.34,
+          "turn": 14.55
+        },
+        "2": {
+          "dev": 2.4,
+          "turn": 15.1
+        },
+        "3": {
+          "dev": 1.81,
+          "turn": 15.36
+        },
+        "4": {
+          "dev": 2.18,
+          "turn": 9.13
+        }
+      }
+    },
+    {
+      "id": "g07",
+      "label": "omega0=0.3",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.1,
+          "turn": 13.03
+        },
+        "2": {
+          "dev": 2.27,
+          "turn": 14.06
+        },
+        "3": {
+          "dev": 1.55,
+          "turn": 14.03
+        },
+        "4": {
+          "dev": 1.84,
+          "turn": 9.88
+        }
+      }
+    },
+    {
+      "id": "g08",
+      "label": "omega0=0.9",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.57,
+          "turn": 15.55
+        },
+        "2": {
+          "dev": 2.67,
+          "turn": 15.77
+        },
+        "3": {
+          "dev": 1.9,
+          "turn": 15.87
+        },
+        "4": {
+          "dev": 2.59,
+          "turn": 9.74
+        }
+      }
+    },
+    {
+      "id": "g09",
+      "label": "gammaAlpha=0.05",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.34,
+          "turn": 14.55
+        },
+        "2": {
+          "dev": 2.88,
+          "turn": 15.27
+        },
+        "3": {
+          "dev": 2.44,
+          "turn": 15.07
+        },
+        "4": {
+          "dev": 2.59,
+          "turn": 11.33
+        }
+      }
+    },
+    {
+      "id": "g10",
+      "label": "gammaAlpha=0.30",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.34,
+          "turn": 14.55
+        },
+        "2": {
+          "dev": 0.97,
+          "turn": 14.69
+        },
+        "3": {
+          "dev": 0.55,
+          "turn": 14.71
+        },
+        "4": {
+          "dev": 1.9,
+          "turn": 8.7
+        }
+      }
+    },
+    {
+      "id": "g11",
+      "label": "gammaSigma=0.15",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.34,
+          "turn": 14.55
+        },
+        "2": {
+          "dev": 2.4,
+          "turn": 15.1
+        },
+        "3": {
+          "dev": 1.81,
+          "turn": 15.36
+        },
+        "4": {
+          "dev": 2.18,
+          "turn": 9.13
+        }
+      }
+    },
+    {
+      "id": "g12",
+      "label": "gammaSigma=0.50",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.34,
+          "turn": 14.55
+        },
+        "2": {
+          "dev": 2.4,
+          "turn": 15.1
+        },
+        "3": {
+          "dev": 1.81,
+          "turn": 15.36
+        },
+        "4": {
+          "dev": 2.18,
+          "turn": 9.13
+        }
+      }
+    },
+    {
+      "id": "g13",
+      "label": "N=6",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.3,
+          "turn": 14.43
+        },
+        "2": {
+          "dev": 2.41,
+          "turn": 14.31
+        },
+        "3": {
+          "dev": 1.73,
+          "turn": 14.78
+        },
+        "4": {
+          "dev": 2.21,
+          "turn": 9.2
+        }
+      }
+    },
+    {
+      "id": "g14",
+      "label": "N=20",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.39,
+          "turn": 14.73
+        },
+        "2": {
+          "dev": 2.5,
+          "turn": 15.01
+        },
+        "3": {
+          "dev": 1.85,
+          "turn": 15.03
+        },
+        "4": {
+          "dev": 2.38,
+          "turn": 10.9
+        }
+      }
+    },
+    {
+      "id": "g15",
+      "label": "rate=0.333 (replace 1/3)",
+      "rate": 0.333,
+      "per": {
+        "1": {
+          "dev": 3.34,
+          "turn": 14.55
+        },
+        "2": {
+          "dev": 2.4,
+          "turn": 15.1
+        },
+        "3": {
+          "dev": 1.81,
+          "turn": 15.36
+        },
+        "4": {
+          "dev": 2.18,
+          "turn": 9.13
+        }
+      }
+    },
+    {
+      "id": "g16",
+      "label": "rate=0.667 (replace 2/3)",
+      "rate": 0.667,
+      "per": {
+        "1": {
+          "dev": 3.34,
+          "turn": 14.55
+        },
+        "2": {
+          "dev": 2.4,
+          "turn": 15.1
+        },
+        "3": {
+          "dev": 1.81,
+          "turn": 15.36
+        },
+        "4": {
+          "dev": 2.98,
+          "turn": 13.7
+        }
+      }
+    },
+    {
+      "id": "g17",
+      "label": "asset=constantPerpetual",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 0.77,
+          "turn": 16.91
+        },
+        "2": {
+          "dev": 0.86,
+          "turn": 16.28
+        },
+        "3": {
+          "dev": 0.94,
+          "turn": 16.3
+        },
+        "4": {
+          "dev": 0.97,
+          "turn": 15.65
+        }
+      }
+    },
+    {
+      "id": "g18",
+      "label": "asset=linearGrowth",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 4.16,
+          "turn": 15.41
+        },
+        "2": {
+          "dev": 2.78,
+          "turn": 15.99
+        },
+        "3": {
+          "dev": 1.64,
+          "turn": 16.78
+        },
+        "4": {
+          "dev": 1.44,
+          "turn": 13.62
+        }
+      }
+    },
+    {
+      "id": "g19",
+      "label": "asset=cyclicalSine",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 7.77,
+          "turn": 15.24
+        },
+        "2": {
+          "dev": 5.69,
+          "turn": 14.89
+        },
+        "3": {
+          "dev": 3.87,
+          "turn": 16.17
+        },
+        "4": {
+          "dev": 2.9,
+          "turn": 12.22
+        }
+      }
+    },
+    {
+      "id": "g20",
+      "label": "asset=randomWalk",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 1.64,
+          "turn": 16.02
+        },
+        "2": {
+          "dev": 1.39,
+          "turn": 16.05
+        },
+        "3": {
+          "dev": 1.28,
+          "turn": 16.63
+        },
+        "4": {
+          "dev": 1.18,
+          "turn": 16.27
+        }
+      }
+    },
+    {
+      "id": "g21",
+      "label": "risk loving-heavy 70/15/15",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.37,
+          "turn": 14.44
+        },
+        "2": {
+          "dev": 2.47,
+          "turn": 15.22
+        },
+        "3": {
+          "dev": 1.76,
+          "turn": 15.2
+        },
+        "4": {
+          "dev": 2.15,
+          "turn": 8.93
+        }
+      }
+    },
+    {
+      "id": "g22",
+      "label": "risk averse-heavy 15/15/70",
+      "rate": 0.5,
+      "per": {
+        "1": {
+          "dev": 3.35,
+          "turn": 15.87
+        },
+        "2": {
+          "dev": 2.5,
+          "turn": 16.83
+        },
+        "3": {
+          "dev": 1.78,
+          "turn": 16.45
+        },
+        "4": {
+          "dev": 2.21,
+          "turn": 10.39
+        }
+      }
+    }
+  ],
+  "alphaSweep": [
+    {
+      "alpha0": 0.2,
+      "R1": 14.61,
+      "R3": 7.51
+    },
+    {
+      "alpha0": 0.4,
+      "R1": 6.7,
+      "R3": 3.75
+    },
+    {
+      "alpha0": 0.6,
+      "R1": 3.34,
+      "R3": 1.81
+    },
+    {
+      "alpha0": 0.8,
+      "R1": 1.49,
+      "R3": 0.61
+    },
+    {
+      "alpha0": 1,
+      "R1": 0.48,
+      "R3": 0.59
+    },
+    {
+      "alpha0": 1.5,
+      "R1": 0.48,
+      "R3": 0.59
+    }
+  ]
+}
