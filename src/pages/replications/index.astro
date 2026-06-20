@@ -1,0 +1,186 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+const replications = (await getCollection('replications')).sort(
+  (a, b) => b.data.date.localeCompare(a.data.date)
+);
+---
+
+<BaseLayout title="Replications">
+  <main class="replications-page">
+    <header class="replications-header">
+      <p class="eyebrow">Research Replications</p>
+      <h1>Replication Work</h1>
+      <p class="lede">
+        Finance paper replications surfaced from the nightly replication pipeline.
+      </p>
+    </header>
+
+    <section class="replication-list" aria-label="Replication papers">
+      {replications.map((rep) => (
+        <article class="replication-row">
+          <div>
+            <a href={`/replications/${rep.id}`} class="replication-title">{rep.data.title}</a>
+            <p class="replication-meta">
+              {rep.data.authors.join(', ')}
+              {rep.data.year ? ` (${rep.data.year})` : ''}
+            </p>
+            {rep.data.tldr && <p class="replication-tldr">{rep.data.tldr}</p>}
+            {(rep.data.venue || rep.data.year) && (
+              <p class="replication-venue">
+                {rep.data.venue}{rep.data.venue && rep.data.year ? ' · ' : ''}{rep.data.year}
+              </p>
+            )}
+          </div>
+          <div class="replication-status">
+            <span class={`status status-${rep.data.status}`}>{rep.data.status}</span>
+            {rep.data.gate_total !== undefined && rep.data.gate_total > 0 && (
+              <span class="gate" title={`${rep.data.gate_passed}/${rep.data.gate_total} gates passed`}>
+                <span class="gate-bar" style={`--pct: ${Math.round((rep.data.gate_passed! / rep.data.gate_total) * 100)}%`}></span>
+                <span class="gate-label">{rep.data.gate_passed}/{rep.data.gate_total}</span>
+              </span>
+            )}
+          </div>
+        </article>
+      ))}
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  .replications-page {
+    max-width: 56rem;
+    margin: 0 auto;
+    padding: 3rem 1.5rem 4rem;
+  }
+
+  .replications-header {
+    margin-bottom: 2rem;
+  }
+
+  .eyebrow {
+    margin: 0 0 0.5rem;
+    color: var(--text-faint);
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: 2rem;
+  }
+
+  .lede {
+    color: var(--text-dim);
+    max-width: 40rem;
+  }
+
+  .replication-list {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .replication-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .replication-title {
+    color: var(--text);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .replication-title:hover {
+    text-decoration: underline;
+  }
+
+  .replication-meta,
+  .replication-tldr {
+    margin: 0.4rem 0 0;
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    line-height: 1.55;
+  }
+
+  .replication-venue {
+    margin: 0.2rem 0 0;
+    color: var(--text-faint);
+    font-size: 0.78rem;
+    font-style: italic;
+  }
+
+  .replication-status {
+    display: flex;
+    align-items: flex-end;
+    gap: 0.4rem;
+    flex-direction: column;
+    min-width: 5.5rem;
+  }
+
+  .status {
+    font-size: 0.75rem;
+    color: var(--text-faint);
+  }
+
+  .gate {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .gate-bar {
+    display: inline-block;
+    width: 3rem;
+    height: 3px;
+    background: var(--border);
+    border-radius: 9999px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gate-bar::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: var(--pct, 0%);
+    background: var(--text-faint);
+    border-radius: 9999px;
+  }
+
+  .gate-label {
+    font-size: 0.72rem;
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .status-complete {
+    color: var(--status-complete);
+  }
+
+  .status-partial {
+    color: var(--status-partial);
+  }
+
+  .status-planned {
+    color: var(--status-planned);
+  }
+
+  @media (max-width: 640px) {
+    .replication-row {
+      grid-template-columns: 1fr;
+    }
+
+    .replication-status {
+      align-items: flex-start;
+      flex-direction: row;
+    }
+  }
+</style>

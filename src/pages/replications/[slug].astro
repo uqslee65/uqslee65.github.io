@@ -57,9 +57,9 @@ const authorsLine =
         </div>
       )}
 
-      <!-- Action buttons -->
+      <!-- Action buttons (only render present artifacts) -->
       <div class="action-row">
-        {rep.data.slides_url ? (
+        {rep.data.slides_url && (
           <a
             href={rep.data.slides_url}
             target="_blank"
@@ -68,13 +68,9 @@ const authorsLine =
           >
             Conference Slides
           </a>
-        ) : (
-          <span class="action-btn action-btn--disabled" aria-disabled="true">
-            Conference Slides
-          </span>
         )}
 
-        {rep.data.notebook_url ? (
+        {rep.data.notebook_url && (
           <a
             href={rep.data.notebook_url}
             target="_blank"
@@ -83,13 +79,9 @@ const authorsLine =
           >
             Jupyter Notebook
           </a>
-        ) : (
-          <span class="action-btn action-btn--disabled" aria-disabled="true">
-            Jupyter Notebook
-          </span>
         )}
 
-        {rep.data.paper_url ? (
+        {rep.data.paper_url && (
           <a
             href={rep.data.paper_url}
             target="_blank"
@@ -98,12 +90,17 @@ const authorsLine =
           >
             View Paper
           </a>
-        ) : (
-          <span class="action-btn action-btn--disabled" aria-disabled="true">
-            View Paper
-          </span>
+        )}
+
+        {!rep.data.slides_url && !rep.data.notebook_url && !rep.data.paper_url && (
+          <span class="artifacts-pending">Artifacts pending</span>
         )}
       </div>
+
+      <!-- Last synced timestamp -->
+      {rep.data.generated_at && (
+        <p class="last-synced">Last synced: {rep.data.generated_at}</p>
+      )}
     </header>
 
     <!-- MDX body -->
@@ -246,11 +243,16 @@ const authorsLine =
     color: #fff;
   }
 
-  .action-btn--disabled {
-    background: var(--bg-surface);
+  .artifacts-pending {
+    font-size: 0.78rem;
     color: var(--text-faint);
-    cursor: default;
-    opacity: 0.55;
+    font-style: italic;
+  }
+
+  .last-synced {
+    margin-top: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--text-faint);
   }
 
   /* ---- Prose body ---- */

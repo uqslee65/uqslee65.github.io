@@ -27,6 +27,13 @@ const replications = defineCollection({
     notebook_url: z.string().optional(),
     slides_url: z.string().optional(),
     paper_url: z.string().optional(),
+    gate_status: z.enum(['PASS', 'FAIL', 'HELD', 'CRASH', 'MISSING']).optional(),
+    gate_passed: z.number().optional(),
+    gate_failed: z.number().optional(),
+    gate_total: z.number().optional(),
+    handoff_source: z.string().optional(),
+    generated_from_handoff: z.boolean().default(false),
+    generated_at: z.string().optional(),
     featured: z.boolean().default(false),
   }),
 });
