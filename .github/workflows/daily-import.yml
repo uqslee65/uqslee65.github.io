@@ -1,0 +1,84 @@
+name: Daily Replication Import
+
+# Runs nightly to pull fresh handoff JSON from the sibling repo and commit any
+# content drift into src/content/replications/.
+#
+# LIMITATION: replications:import reads
+#   ../phd-finance-replications/_run/public_handoff/*.json
+# which is a sibling directory on disk.  In CI that path does not exist by
+# default.  The step below checks out the sibling repo into the expected
+# relative path so the script resolves it correctly.  If the sibling repo is
+# private and the checkout token lacks access, gate the import step with
+# `if: steps.checkout_replications.outcome == 'success'` — see the inline
+# comment.
+
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout phd-finance-student
+        uses: actions/checkout@v4
+        with:
+          # Fetch full history so the subsequent commit can push cleanly.
+          fetch-depth: 0
+
+      # Check out the sibling replications repo at the path the import script
+      # expects: ../phd-finance-replications relative to the student repo.
+      # If this repo is private, add `token: ${{ secrets.REPLICATIONS_PAT }}`
+      # and gate subsequent steps with
+      #   if: steps.checkout_replications.outcome == 'success'
+      - name: Checkout phd-finance-replications (sibling)
+        id: checkout_replications
+        uses: actions/checkout@v4
+        with:
+          repository: uqslee65/phd-finance-replications
+          path: ../phd-finance-replications
+          # Sparse checkout — we only need the public handoff artefacts.
+          sparse-checkout: |
+            _run/public_handoff
+          sparse-checkout-cone-mode: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Dry-run: reports any drift without writing files.
+      # A non-zero exit code here does NOT fail the job; we log it and proceed.
+      - name: Check replication drift
+        run: npm run replications:check
+        continue-on-error: true
+
+      # Write updated frontmatter from the handoff JSON into the MDX files.
+      # Gated so we skip gracefully when the sibling checkout failed (e.g. the
+      # replications repo is private and the workflow token has no access).
+      - name: Import replication handoff
+        if: steps.checkout_replications.outcome == 'success'
+        run: npm run replications:import
+
+      # Commit only when files actually changed.
+      - name: Commit content changes
+        if: steps.checkout_replications.outcome == 'success'
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add src/content/replications/
+          if git diff --cached --quiet; then
+            echo "No content changes — nothing to commit."
+          else
+            git commit -m "chore(replications): nightly handoff import [skip ci]"
+            git push
+          fi
