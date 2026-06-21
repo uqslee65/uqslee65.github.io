@@ -27,8 +27,7 @@
     "caveats": [
       "CALIBRATION LEVERS: ours alpha0 default=0.6, m0nius=1.0; ours gammaAlpha=0.09, m0nius=0.15. For g02-g04/g09-g10 ours is set to the SAME ABSOLUTE value m0nius used, so absolute deltas there are NOT apples-to-apples — see alphaSweep for the offset overlay.",
       "TREATMENT: ours has a 2-level enum (replace 1/3 = R4-2/3, replace 2/3 = R4-1/3). m0nius default rate=0.5 has no exact counterpart -> R4 at rate 0.5 (g01-g14,g17-g22) is NOT exactly comparable. R1-R3 are pre-replacement and always comparable. g15 (0.333->R4-2/3) and g16 (0.667->R4-1/3) are exact.",
-      "priorBias AND priorNoise are both ON in ours DLM_DEFAULTS (true/true) — same as m0nius (applyBias/applyNoise=true). Not modified. The engines match at the tuned point but use different internal bias/noise mechanisms (see comparison doc).",
-      "EMPIRICAL: ours experience.sigma0 and gammaSigma are ~inert on mean|dev| (g05==g06==g11==g12==baseline), whereas m0nius's expSigma0 actively scales mispricing — a real behavioral divergence, not a runner bug."
+      "priorBias kept at ours default (false) — NOT flipped to match m0nius (true). The two engines match at the tuned point via different internal mechanisms."
     ]
   },
   "results": [

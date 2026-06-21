@@ -8,6 +8,10 @@
     "preview": "astro preview",
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
+    "test:plan-i": "vitest run --config scripts/vitest.grid.config.mts",
+    "replications:import": "node scripts/import-replication-handoff.mjs --write",
+    "replications:check": "node scripts/import-replication-handoff.mjs --check",
+    "replications:check:strict": "node scripts/import-replication-handoff.mjs --check --strict",
     "server": "tsx server/index.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
